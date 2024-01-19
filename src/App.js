@@ -3,6 +3,7 @@ import { Container, Col, Row } from "react-bootstrap";
 import Account from "./Account";
 import FreeComponent from "./FreeComponent";
 import AuthComponent from "./AuthComponent";
+import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
 import RequireAuth from "./RequireAuth";
 import "./App.css";
@@ -19,6 +20,7 @@ function App() {
             <a href="/">Home</a>
             <a href="/free">Free Component</a>
             <a href="/auth">Auth Component</a>
+            <a href="/users">Users</a>
           </section>
         </Col>
       </Row>
@@ -35,6 +37,14 @@ function App() {
           element={
             <RequireAuth>
               <AuthComponent />
+            </RequireAuth>
+            }
+          />
+          <Route
+          path="/users"
+          element={
+            <RequireAuth>
+              <Users />
             </RequireAuth>
             }
           />
