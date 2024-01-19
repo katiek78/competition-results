@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { Container, Col, Row } from "react-bootstrap";
+import { Container, Col, Row, Button } from "react-bootstrap";
 import Account from "./Account";
 import FreeComponent from "./FreeComponent";
 import AuthComponent from "./AuthComponent";
@@ -7,8 +7,16 @@ import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
 import RequireAuth from "./RequireAuth";
 import "./App.css";
+import Cookies from "universal-cookie";
 
 function App() {
+    // logout
+    const logout = () => {
+      const cookies = new Cookies();
+      cookies.remove("TOKEN", { path: "/" });
+      window.location.href = "/";
+    }
+  
   return (
     <>
     <Container>
@@ -21,6 +29,9 @@ function App() {
             <a href="/free">Free Component</a>
             <a href="/auth">Auth Component</a>
             <a href="/users">Users</a>
+            <Button type="submit" variant="danger" onClick={() => logout()}>
+              Logout
+            </Button>
           </section>
         </Col>
       </Row>
