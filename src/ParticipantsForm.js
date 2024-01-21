@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+// CompetitionForm.js
+
+import React, { useEffect, useState } from 'react';
 import axios from "axios";
 import Cookies from "universal-cookie";
 
@@ -6,8 +8,12 @@ const cookies = new Cookies();
 
 const token = cookies.get("TOKEN");
 
-const Users = () => {
+
+const ParticipantsForm = ({ onSubmitParticipant }) => {
+
     const [users, setUsers] = useState([]);
+    const [id, setId] = useState('');
+
 
     useEffect(() => {
         // set configurations
@@ -33,18 +39,29 @@ const Users = () => {
         console.log(error);
         });
     }, [])
-  
-    
-  return (
-    <div>
-      <h1 className="text-center">Users</h1>
-        {users.map((user) => {
-            return (
-            <div>{user.email}</div>
-            )
-        })}
-    </div>
-  );
+
+
+
+const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmitParticipant(id);
 }
 
-export default Users;
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>
+        Competitor:
+        </label>
+        <select value={id} onChange={(e) => setId(e.target.value)}>
+        <option value="" disabled>Select a competitor</option>
+        {users?.map((user) => <option key={user._id} value={user._id}>{user.email}</option>)}
+
+        </select>
+   
+     
+      <button type="submit">Add participant</button>
+    </form>
+  );
+};
+
+export default ParticipantsForm;
