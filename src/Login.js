@@ -9,6 +9,7 @@ export default function Login() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [login, setLogin] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const handleSubmit = (e) => {
         // prevent the form from refreshing the whole page
@@ -28,6 +29,7 @@ export default function Login() {
         axios(configuration)
         .then((result) => {
             setLogin(true);
+            setIsSubmitted(true);
 
              // set the cookie
             cookies.set("TOKEN", result.data.token, {
@@ -37,12 +39,13 @@ export default function Login() {
             console.log(result.data.email);
             console.log(result.data.id);
            
-            // redirect user to the auth page
-            window.location.href = "/auth";
+            // redirect user to the home page
+            window.location.href = "/";
         })
         .catch((error) => {
         error = new Error();
         console.log(error);
+        setIsSubmitted(true);
         });
       }
 
@@ -83,9 +86,10 @@ export default function Login() {
           Login
         </Button>
           {/* display success message */}
-          {login ? (
+          {/* {login && (
           <p className="text-success">Logged in successfully</p>
-        ) : (
+        )} */}
+        {!login && isSubmitted && (
           <p className="text-danger">Login failed</p>
         )}
       </Form>

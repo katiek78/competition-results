@@ -38,7 +38,29 @@
 }
 
 
-.current-account {
+
+#navigation a {
   font-weight: bold;
-  padding-right: 8px;
+  font-size: 1.2em;
+  color: black;
+  padding: 0px 8px;
+  text-decoration: none;
+}
+
+.maintext {
+  border: 2px solid #3498db; /* Border color */
+  border-radius: 10px;
+  text-align: center;
+  padding: 20px; /* Increased padding */
+  font-size: 1.5em;
+  background-color: #ecf0f1; /* Background color */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle lift */
+  color: #2c3e50; /* Text color */
+  transition: background-color 0.3s, box-shadow 0.3s; /* Smooth transition effect */
+}
+
+.menuIcon {
+  font-size: 1.5em;
+  color: black;
+  padding: 0px 3px;
 }

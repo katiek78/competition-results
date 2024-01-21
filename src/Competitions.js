@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
+import { Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
@@ -74,7 +75,7 @@ const Competitions = () => {
     <div>
       <h1 className="text-center">Competitions</h1>
 
-      <button onClick={() => setShowForm(true)}>Add Competition</button>
+      <Button onClick={() => setShowForm(true)}>Add Competition</Button>
 
 {showForm && (
   <CompetitionForm onSubmitCompetition={handleAddCompetition} editing={false} />

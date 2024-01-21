@@ -2,20 +2,16 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
 import axios from "axios";
 import Cookies from "universal-cookie";
-import CompetitionForm from './CompetitionForm';
-import ParticipantsForm from "./ParticipantsForm";
 
 const cookies = new Cookies();
 
 const token = cookies.get("TOKEN");
 
-const CompetitionDetail = () => {
+const CompetitionResults = () => {
     const { id } = useParams();
     const [competitionData, setCompetitionData] = useState({});
     const [users, setUsers] = useState([]);
-    const [showForm, setShowForm] = useState(false);
-    const [showParticipantForm, setShowParticipantForm] = useState(false);
-
+    
     // Helper function to format date as 'YYYY-MM-DD'
     const formatDate = (date) => {
         const year = date.getFullYear();
@@ -23,56 +19,6 @@ const CompetitionDetail = () => {
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
     }
-
-    const handleEditCompetition = (modifiedCompetition) => {
-        // Edit the competition
-        setCompetitionData(modifiedCompetition);
-        saveCompetition(modifiedCompetition);
-        setShowForm(false);
-    };
-
-    const saveParticipant = async (participantId) => {
-        try {
-            const updatedCompetition = {
-                // ...competitionData,
-                compUsers: [...competitionData.compUsers, participantId],
-              };
-
-            // set configurations
-            const configuration = {
-                method: "put",
-                url: `https://competition-results.onrender.com/competition/${id}`,
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                data: updatedCompetition
-            };
-            const response = await axios(configuration);
-            console.log('Participant added:', response.data);
-        } catch (error) {
-            console.error('Error adding participant:', error);
-        }
-        
-    }
-
-    const saveCompetition = async (competition) => {
-        try {
-            // set configurations
-            const configuration = {
-                method: "put",
-                url: "https://competition-results.onrender.com/competitions",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-                data: competition
-            };
-            const response = await axios(configuration);
-            console.log('Competition saved:', response.data);
-        } catch (error) {
-            console.error('Error saving competition:', error);
-        }
-    };
-
 
     useEffect(() => {
         // set configurations        
@@ -126,23 +72,13 @@ const CompetitionDetail = () => {
 
     return (
         <div>
-            <h1 className="text-center">Competition setup: {competitionData.name}</h1>
+            <h1 className="text-center">Competition results: {competitionData.name}</h1>
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
-            <button onClick={() => setShowForm(true)}>Edit Competition</button>
-
-            {showForm && (
-                <CompetitionForm onSubmitCompetition={handleEditCompetition} form={{ compName: competitionData.name, dateStart: competitionData.dateStart, dateEnd: competitionData.dateEnd }} editing={true} />
-            )}
-
             <div>
-                <Link to={`/competition_results/${competitionData._id}`}>View Results</Link>
-                <h2> Registered participants:</h2>
-                <button onClick={() => setShowParticipantForm(true)}>New participant</button>
-
-                {showParticipantForm && (
-                    <ParticipantsForm onSubmitParticipant={saveParticipant} />
-                )}
+                <Link to={`/competition/${competitionData._id}`}>View Setup</Link>
+                <h2> Overall standings:</h2>
+              
                 {competitionData.compUsers?.map((userId) => {
                 // Find the user with the matching ID in the users array
                 const user = users.find((user) => user._id === userId);
@@ -162,4 +98,4 @@ const CompetitionDetail = () => {
     );
 }
 
-export default CompetitionDetail;
+export default CompetitionResults;

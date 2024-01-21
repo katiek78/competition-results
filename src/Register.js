@@ -5,7 +5,10 @@ import { Form, Button } from "react-bootstrap";
 export default function Register() {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [register, setRegister] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
 
     const handleSubmit = (e) => {
         // prevent the form from refreshing the whole page
@@ -17,6 +20,8 @@ export default function Register() {
             url: "https://competition-results.onrender.com/register",
             data: {
             email,
+            firstName,
+            lastName,
             password,
             },
         };
@@ -24,10 +29,15 @@ export default function Register() {
         axios(configuration)
         .then((result) => {
         setRegister(true);
+        setIsSubmitted(true);
+
+        // redirect user to the home page
+        window.location.href = "/";
         })
         .catch((error) => {
         error = new Error();
         console.log(error)
+        setIsSubmitted(true);
         }); 
         }
 
@@ -44,6 +54,30 @@ export default function Register() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter email"
+          />
+        </Form.Group>
+
+        {/* first name */}
+        <Form.Group controlId="formBasicFirstName">
+          <Form.Label>First name</Form.Label>
+          <Form.Control
+            type="text"
+            name="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="First name"
+          />
+        </Form.Group>
+
+        {/* last name */}
+        <Form.Group controlId="formBasicLastName">
+          <Form.Label>Last name</Form.Label>
+          <Form.Control
+            type="text"
+            name="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Last name"
           />
         </Form.Group>
 
@@ -68,9 +102,10 @@ export default function Register() {
           Register
         </Button>
 
-        {register ? (
+        {/* {register && (
           <p className="text-success">Registered successfully</p>
-        ) : (
+        )} */}
+        {!register && isSubmitted && (
           <p className="text-danger">Registration failed</p>
         )}
       </Form>
