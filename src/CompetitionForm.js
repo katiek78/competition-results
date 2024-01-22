@@ -18,7 +18,6 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   const [dateEnd, setDateEnd] = useState(editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date()));
   const [format, setFormat] = useState(editing ? form.format || 'n' : 'n');
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
 

@@ -4,6 +4,7 @@ import { Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
+import { nationalEvents, internationalEvents, worldEvents } from "./constants";
 
 const cookies = new Cookies();
 
@@ -22,6 +23,15 @@ const Competitions = () => {
       };
 
     const saveCompetition = async (competition) => {
+        console.log(competition.format)
+        //add disciplines
+        if (competition.format === 'n') {
+            console.log(nationalEvents)
+            competition.disciplines = [...nationalEvents];
+        } else if (competition.format === 'i') {
+            competition.disciplines = [...internationalEvents];
+        } else competition.disciplines = [...worldEvents];  
+
     try {
         // set configurations
         const configuration = {

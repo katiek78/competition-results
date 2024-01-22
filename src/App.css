@@ -48,6 +48,7 @@
 }
 
 .maintext {
+  margin:5px;
   border: 2px solid #3498db; /* Border color */
   border-radius: 10px;
   text-align: center;

@@ -76,7 +76,10 @@ const CompetitionResults = () => {
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
             <div>
-                <Link to={`/competition/${competitionData._id}`}>View Setup</Link>
+            <p class="maintext">
+                <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
+                </p>
+                
                 <h2> Overall standings:</h2>
               
                 {competitionData.compUsers?.map((userId) => {

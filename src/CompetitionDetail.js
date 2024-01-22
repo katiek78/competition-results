@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
-import { Button } from "react-bootstrap";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
 import ParticipantsForm from "./ParticipantsForm";
-import { formatNames } from "./constants"
+import { formatNames, nationalEvents, internationalEvents, worldEvents, getDisciplineNameFromRef } from "./constants"
 
 const cookies = new Cookies();
 
@@ -62,6 +62,15 @@ const CompetitionDetail = () => {
     }
 
     const saveCompetition = async (competition) => {
+        //work out if we need to change disciplines
+        if (competition.format !== competitionData.format) {
+            if (competition.format === 'n') {
+                console.log(nationalEvents)
+                competition.disciplines = [...nationalEvents];
+            } else if (competition.format === 'i') {
+                competition.disciplines = [...internationalEvents];
+            } else competition.disciplines = [...worldEvents];  
+        }
         try {
             // set configurations
             const configuration = {
@@ -136,16 +145,21 @@ const CompetitionDetail = () => {
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
             <h2 className="text-center">Format: {formatNames[competitionData.format] || 'not specified'}</h2>
 
-            <Button onClick={() => setShowForm(true)}>Edit Competition</Button>
+            <Button onClick={() => setShowForm(true)}>Edit competition details</Button>
 
             {showForm && (
                 <CompetitionForm onSubmitCompetition={handleEditCompetition} form={{ compName: competitionData.name, dateStart: competitionData.dateStart, dateEnd: competitionData.dateEnd }} editing={true} />
             )}
 
             <div>
-                <p>
+                <p class="maintext">
                 <Link to={`/competition_results/${competitionData._id}`}>View Results >>></Link>
                 </p>
+
+                <Container>
+                    <Row>
+                        <Col>
+                <h2>Registered participants: ({competitionData.compUsers?.length || 0})</h2>
                 <Button onClick={() => setShowParticipantForm(true)}>New participant</Button>
 
                 {showParticipantForm && (
@@ -160,8 +174,21 @@ const CompetitionDetail = () => {
                     <p key={userId}>{user?.email}</p>
                 );
                 })}
-                                
-            
+                </Col>
+                
+                <Col>
+                <h2>Disciplines:</h2>
+                {competitionData.disciplines?.map((discipline) => {
+                
+                // Display the user's email
+                return (
+                    <p key={discipline}>{getDisciplineNameFromRef(discipline)}</p>
+                );
+                })}
+                </Col>
+               
+                </Row>         
+                </Container>
             </div>
 
         </div>

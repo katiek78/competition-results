@@ -1,12 +1,12 @@
-const nationalEvents = ["5N1", "5N2", "15N", "5F", "5W", "D", "SC", "10C", "5I", "5B", "K1", "K2", "K3"];
+export const nationalEvents = ["5N1", "5N2", "15N", "5F", "5W", "D", "SC", "10C", "5I", "5B", "K1", "K2", "K3"];
 
-const internationalEvents = ["5N1", "5N2", "30N", "15F", "15W", "D", "SC", "30C", "5I", "30B", "K1", "K2", "K3"];
+export const internationalEvents = ["5N1", "5N2", "30N", "15F", "15W", "D", "SC", "30C", "5I", "30B", "K1", "K2", "K3"];
 
-const worldEvents = ["5N1", "5N2", "60N", "15F", "15W", "D", "SC", "SXC", "60C", "5I", "30B", "K1", "K2", "K3"];
+export const worldEvents = ["5N1", "5N2", "60N", "15F", "15W", "D", "SC", "SXC", "60C", "5I", "30B", "K1", "K2", "K3"];
 
 export const formatNames = { 'n': 'national', 'i': 'international', 'w': 'World Championship'}
 
-const disciplines = [
+export const disciplines = [
     {
         "ref": "5N1",
         "label": "5-minute Numbers Trial 1",
@@ -89,3 +89,11 @@ const disciplines = [
         "label": "30-Minute Binary",
     },
 ];
+
+export function getDisciplineNameFromRef(disciplineRef) {
+    const matchingDiscipline = disciplines.find(
+      (discipline) => discipline.ref === disciplineRef
+    );
+  
+    return matchingDiscipline ? matchingDiscipline.label : "Unknown Discipline";
+  }
