@@ -12,6 +12,7 @@ import CompetitionResults from "./CompetitionResults";
 import Home from "./Home";
 import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
+import { UserProvider } from "./UserProvider";
 import RequireAuth from "./RequireAuth";
 import axios from "axios";
 import "./App.css";
@@ -22,6 +23,7 @@ import { faUser } from '@fortawesome/free-solid-svg-icons';
 function App() {
     const [ userId, setUserId ] = useState('');
     const [ userEmail, setUserEmail ] = useState('');
+     const [forceUpdate, setForceUpdate] = useState(false);
 
     const cookies = new Cookies();
     const token = cookies.get("TOKEN");
@@ -60,6 +62,7 @@ function App() {
   
   return (
     <>
+    <UserProvider>
     <Container>
     <Row>
         <Col className="text-center">
@@ -68,20 +71,24 @@ function App() {
           <section id="navigation">
             <a href="/">Home</a>
             {/* <a href="/free">Free Component</a> */}
-            {/* <a href="/auth">Auth Component</a> */}
-            <a href="/competitions">Competitions</a>
-            <a href="/users">Users</a>
+            {/* <a href="/auth">Auth Component</a> */}            
+            <a href="/">My competitions</a>
             {token && 
+            <>
+              <a href="/competitions">Competitions</a>
+            <a href="/users">Users</a>
             <span>
             <Link to="/account"><FontAwesomeIcon className="menuIcon" icon={faUser} /><span className="current-account">{userEmail}</span></Link>
             <Button type="submit" variant="danger" onClick={() => logout()}>
               Logout
             </Button> 
-            </span>}
+            </span>
+            </>}
           </section>
         </Col>
       </Row>
    
+
 
       <Routes>
         <Route exact path="/" element={ <Home /> } />
@@ -109,9 +116,9 @@ function App() {
           />
           <Route
           path="/account"
-          element={
+          element={            
             <RequireAuth>
-              <Account />
+            <Account />
             </RequireAuth>
             }
           />
@@ -140,7 +147,9 @@ function App() {
             }
           />
       </Routes>
+     
     </Container>
+    </UserProvider>
     </>
   );
 }

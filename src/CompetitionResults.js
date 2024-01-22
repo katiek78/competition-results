@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
 import axios from "axios";
 import Cookies from "universal-cookie";
+import { getDisciplineNameFromRef } from "./constants";
 
 const cookies = new Cookies();
 
@@ -11,6 +12,7 @@ const CompetitionResults = () => {
     const { id } = useParams();
     const [competitionData, setCompetitionData] = useState({});
     const [users, setUsers] = useState([]);
+    const [selectedDiscipline, setSelectedDiscipline] = useState('');
     
     // Helper function to format date as 'YYYY-MM-DD'
     const formatDate = (date) => {
@@ -60,8 +62,8 @@ const CompetitionResults = () => {
             setUsers(result.data.users);
 
             //get logged-in user details
-            console.log(result.data.userId);
-            console.log(result.data.userEmail);
+            // console.log(result.data.userId);
+            // console.log(result.data.userEmail);
         })
         .catch((error) => {
         error = new Error();
@@ -80,8 +82,15 @@ const CompetitionResults = () => {
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
                 </p>
                 
-                <h2> Overall standings:</h2>
-              
+                <h2> {selectedDiscipline === '' ? "Overall standings" : getDisciplineNameFromRef(selectedDiscipline)}</h2>
+                <span className='disciplineHeading' onClick={() => setSelectedDiscipline('')}>Overall</span>
+                {competitionData.disciplines?.map((discipline) => 
+                    <span 
+                        key={discipline} 
+                        className={`disciplineHeading ${selectedDiscipline === discipline ? 'selected' : ''}`}
+                        onClick={() => setSelectedDiscipline(discipline)}>{getDisciplineNameFromRef(discipline)}
+                    </span>
+                )}
                 {competitionData.compUsers?.map((userId) => {
                 // Find the user with the matching ID in the users array
                 const user = users.find((user) => user._id === userId);

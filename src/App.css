@@ -66,8 +66,37 @@
   border-radius: 10px;
 }
 
+.niceForm > * {
+  padding: 2px;
+  margin: 5px;
+  border-radius: 10px;
+}
+
 .menuIcon {
   font-size: 1.5em;
   color: black;
   padding: 0px 3px;
+}
+
+.disciplineHeading {
+  display: inline-block;
+  font-size: 1em;
+  margin: 5px;
+  padding: 8px;
+  border: 1px solid black;
+  border-radius: 10px;
+  background-color: #F8D102; /* Funky background color */
+  color: #333; /* Text color */
+  cursor: pointer;
+  transition: background-color 0.3s ease; /* Smooth transition on hover */
+
+  /* Hover effect */
+  &:hover {
+    background-color: #FF9800; /* Change to a different color on hover */
+  }
+
+  &.selected {
+    background-color: #4CAF50; /* Change to a different color for selected */
+    color: #FFF; /* Change text color for selected */
+  }
 }

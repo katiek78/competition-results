@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from 'react-router-dom';
 import { Button } from "react-bootstrap";
+import { useUser } from './UserProvider';
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
@@ -11,9 +12,16 @@ const cookies = new Cookies();
 const token = cookies.get("TOKEN");
 
 const Competitions = () => {
+    const { user } = useUser();
+
     const [users, setUsers] = useState([]);
     const [competitions, setCompetitions] = useState([]);
     const [showForm, setShowForm] = useState(false);
+
+    useEffect(() => {
+        console.log('User in Account:', user);
+      }, [user]);
+
 
     const handleAddCompetition = (newCompetition) => {
         // Add the new competition to the state

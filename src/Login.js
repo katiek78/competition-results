@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useUser } from './UserProvider';
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
@@ -10,6 +11,7 @@ export default function Login() {
     const [password, setPassword] = useState("");
     const [login, setLogin] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const { updateUser } = useUser();
 
     const handleSubmit = (e) => {
         // prevent the form from refreshing the whole page
@@ -36,11 +38,15 @@ export default function Login() {
                 path: "/",
             });
 
-            console.log(result.data.email);
-            console.log(result.data.id);
+            // Update the user in the context provider
+            updateUser({ userId: result.data.id });
+
+            // console.log(result.data.email);
+            // console.log(result.data.id);
+
            
             // redirect user to the home page
-            window.location.href = "/";
+             window.location.href = "/";
         })
         .catch((error) => {
         error = new Error();

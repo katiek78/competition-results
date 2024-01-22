@@ -1,43 +1,85 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useUser } from './UserProvider';
 import { Container, Col, Row, Button } from "react-bootstrap";
 import Register from "./Register";
 import Login from "./Login";
 import axios from "axios";
 import Cookies from "universal-cookie";
+import NameForm from "./NameForm";
+import EmailForm from "./EmailForm";
 
 const cookies = new Cookies();
 
 export default function Account() {
-    const id = "skdlsdjf"
-   // const id = userId; //how to get id of current user so I can then do a get, or should we just pass all user data
-   // think just rewrite this whole thing so Account is an auth component and Register and Login are free ones (separate)
+    const { user } = useUser();
+    const [showNameInputs, setShowNameInputs] = useState(false);
+    const [showEmailInput, setShowEmailInput] = useState(false);
+
     const [userData, setUserData] = useState({});
     const token = cookies.get("TOKEN");
 
-    useEffect(() => {
-        // set configurations        
+useEffect(() => {
+    if (user && user.userId) {
         const configuration = {
-            method: "get",
-            url: `https://competition-results.onrender.com/user/${id}`,
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        };
-        // make the API call
-        axios(configuration)
+                        method: "get",
+                        url: `https://competition-results.onrender.com/user/${user.userId}`,
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    };
+
+      // Use the user ID to fetch additional user data
+      axios(configuration)
             .then((result) => {
-console.log(result.data)
-                setUserData(result.data);
-                
-                //get logged-in user details
-                // console.log(result.data.userId);
-                // console.log(result.data.userEmail);
-            })
-            .catch((error) => {
-                console.error('Error fetching user data:', error);
-            });
-    }, [])
+          // Update the user context with the complete user data
+        //   updateUser(result.data);
+      
+            setUserData(result.data)
+        })
+        .catch((error) => {
+          console.error('Error fetching user data:', error);
+        });
+    }
+  }, [user, token]);
+
+  const handleSubmitName = (firstName, lastName) => {
+    setShowNameInputs(false);
+    saveUser({firstName, lastName});
+  }
+
+  const handleSubmitEmail = (email) => {
+    setShowEmailInput(false);
+    saveUser({email});
+  }
+
+  const saveUser = async (changes) => {    
+        try {
+            const updatedUser = {
+                ...userData,
+                ...changes
+              };
+          
+            // set configurations
+            const configuration = {
+                method: "put",
+                url: `https://competition-results.onrender.com/user/${user.userId}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: updatedUser
+            };
+            const response = await axios(configuration);
+            console.log('User updated:', response.data);
+            setUserData({
+                ...userData,
+                ...changes
+              });
+           
+        } catch (error) {
+            console.error('Error updating user:', error);
+        }
+    
+  }
 
   return (
     <>
@@ -45,14 +87,17 @@ console.log(result.data)
         <Container>
           <Row>
             <h1>My account</h1>
-            <p>
-                Name: {userData.firstName} {userData.lastName}
-                <Button>Edit</Button>
-            </p>
-            <p>
-                Email: {userData.email}
-                <Button>Edit</Button>
-            </p>
+            <div className="maintext">
+         
+                {!showNameInputs && <>Name: {userData.firstName || ''} {userData.lastName || ''}<Button onClick={() => setShowNameInputs(true)}>Edit</Button></> }
+                {showNameInputs && <><NameForm onSubmitName={handleSubmitName} form={{'firstName': userData.firstName, 'lastName': userData.lastName }} /></>}
+           
+           <br />
+           {!showEmailInput && <>Email: {userData.email || ''}<Button onClick={() => setShowEmailInput(true)}>Edit</Button></> }
+                {showEmailInput && <><EmailForm onSubmitEmail={handleSubmitEmail} form={{'email': userData.email }} /></>}
+           
+          
+            </div>
           </Row>
 
           <Row>
