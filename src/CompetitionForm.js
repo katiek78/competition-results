@@ -1,9 +1,9 @@
 // CompetitionForm.js
 
 import React, { useState } from 'react';
+import { Button } from 'react-bootstrap';
 
 const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
-    console.log(form)
 
     // Helper function to format date as 'YYYY-MM-DD'
     const formatDate = (date) => {
@@ -16,7 +16,7 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   const [name, setName] = useState(editing ? form.compName : '');
   const [dateStart, setDateStart] = useState(editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date()));
   const [dateEnd, setDateEnd] = useState(editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date()));
-
+  const [format, setFormat] = useState(editing ? form.format || 'n' : 'n');
 
 
   const handleSubmit = (e) => {
@@ -34,9 +34,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
     name,
     dateStart,
     dateEnd,
+    format
     };
 
-    console.log(competition);
     // Call the onAddCompetition callback to add the competition
     onSubmitCompetition(competition);
 
@@ -44,26 +44,40 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
     setName('');
     setDateStart(formatDate(new Date()));
     setDateEnd(formatDate(new Date()));
+    setFormat('');
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="maintext" onSubmit={handleSubmit}>
       <label>
-        Name:
-        <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+        Name: 
       </label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+     
       <br />
       <label>
         Date Start:
+        </label>
         <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} />
-      </label>
+   
       <br />
       <label>
         Date End:
+        </label>
         <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} />
-      </label>
+      
       <br />
-      <button type="submit">Add Competition</button>
+      <label>
+        Format:
+        </label>
+        <select value={format} onChange={(e) => setFormat(e.target.value)}>
+            <option value="n">National format</option>
+            <option value="i">International format</option>
+            <option value="w">World championship format</option>
+        </select>
+      
+      <br />
+      <Button type="submit">{editing ? 'Save' : 'Add'} Competition</Button>
     </form>
   );
 };

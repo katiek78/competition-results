@@ -59,6 +59,12 @@
   transition: background-color 0.3s, box-shadow 0.3s; /* Smooth transition effect */
 }
 
+.maintext > * {
+  padding: 2px;
+  margin: 5px;
+  border-radius: 10px;
+}
+
 .menuIcon {
   font-size: 1.5em;
   color: black;

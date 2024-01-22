@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
+import { Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
 import ParticipantsForm from "./ParticipantsForm";
+import { formatNames } from "./constants"
 
 const cookies = new Cookies();
 
@@ -35,9 +37,11 @@ const CompetitionDetail = () => {
         try {
             const updatedCompetition = {
                 // ...competitionData,
-                compUsers: [...competitionData.compUsers, participantId],
+                compUsers: competitionData.compUsers
+                ? [...competitionData.compUsers, participantId]
+                : [participantId],
               };
-
+          
             // set configurations
             const configuration = {
                 method: "put",
@@ -49,6 +53,8 @@ const CompetitionDetail = () => {
             };
             const response = await axios(configuration);
             console.log('Participant added:', response.data);
+            setCompetitionData({...competitionData, compUsers: updatedCompetition.compUsers,});
+            setShowParticipantForm(false);
         } catch (error) {
             console.error('Error adding participant:', error);
         }
@@ -60,7 +66,7 @@ const CompetitionDetail = () => {
             // set configurations
             const configuration = {
                 method: "put",
-                url: "https://competition-results.onrender.com/competitions",
+                url: `https://competition-results.onrender.com/competition/${id}`,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -114,8 +120,8 @@ const CompetitionDetail = () => {
             setUsers(result.data.users);
 
             //get logged-in user details
-            console.log(result.data.userId);
-            console.log(result.data.userEmail);
+            // console.log(result.data.userId);
+            // console.log(result.data.userEmail);
         })
         .catch((error) => {
         error = new Error();
@@ -128,17 +134,19 @@ const CompetitionDetail = () => {
         <div>
             <h1 className="text-center">Competition setup: {competitionData.name}</h1>
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
+            <h2 className="text-center">Format: {formatNames[competitionData.format] || 'not specified'}</h2>
 
-            <button onClick={() => setShowForm(true)}>Edit Competition</button>
+            <Button onClick={() => setShowForm(true)}>Edit Competition</Button>
 
             {showForm && (
                 <CompetitionForm onSubmitCompetition={handleEditCompetition} form={{ compName: competitionData.name, dateStart: competitionData.dateStart, dateEnd: competitionData.dateEnd }} editing={true} />
             )}
 
             <div>
-                <Link to={`/competition_results/${competitionData._id}`}>View Results</Link>
-                <h2> Registered participants:</h2>
-                <button onClick={() => setShowParticipantForm(true)}>New participant</button>
+                <p>
+                <Link to={`/competition_results/${competitionData._id}`}>View Results >>></Link>
+                </p>
+                <Button onClick={() => setShowParticipantForm(true)}>New participant</Button>
 
                 {showParticipantForm && (
                     <ParticipantsForm onSubmitParticipant={saveParticipant} />

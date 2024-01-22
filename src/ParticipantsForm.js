@@ -1,6 +1,7 @@
 // CompetitionForm.js
 
 import React, { useEffect, useState } from 'react';
+import { Button } from 'react-bootstrap';
 import axios from "axios";
 import Cookies from "universal-cookie";
 
@@ -48,7 +49,7 @@ const handleSubmit = (e) => {
 }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form className="maintext" onSubmit={handleSubmit}>
       <label>
         Competitor:
         </label>
@@ -59,7 +60,7 @@ const handleSubmit = (e) => {
         </select>
    
      
-      <button type="submit">Add participant</button>
+      <Button type="submit">Add participant</Button>
     </form>
   );
 };
