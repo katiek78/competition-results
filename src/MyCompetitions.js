@@ -74,23 +74,37 @@ const MyCompetitions = () => {
     <div>
       <h1 className="text-center">My Competitions</h1>
 
-      {adminCompetitions && adminCompetitions
+      <table className="niceTable competitionTable">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Dates</th>    
+    </tr>
+  </thead>
+  <tbody>
+  {adminCompetitions && adminCompetitions
         .sort((a, b) => new Date(b.dateStart) - new Date(a.dateStart))
         .map((competition) => (
-          <div key={competition._id}>
-            <Link to={`/competition/${competition._id}`}>{competition.name} (ADMIN)</Link>
-            {/* - starts {formatDate(new Date(competition.dateStart))} */}
-          </div>
-        ))}
+          <tr key={competition._id}>          
+            <td><Link to={`/competition/${competition._id}`}>{competition.name} (ADMIN)</Link></td>
+            <td>{`${formatDate(new Date(competition.dateStart))} - ${formatDate(new Date(competition.dateEnd))}`}</td>
+          </tr>
+        ))
+        }
 
-    {competitions && competitions
+        {competitions && competitions
         .sort((a, b) => new Date(b.dateStart) - new Date(a.dateStart))
         .map((competition) => (
-          <div key={competition._id}>
-            <Link to={`/competition_results/${competition._id}`}>{competition.name}</Link>
-            {/* - starts {formatDate(new Date(competition.dateStart))} */}
-          </div>
-        ))}
+          <tr key={competition._id}>          
+            <td><Link to={`/competition_results/${competition._id}`}>{competition.name}</Link></td>
+            <td>{`${formatDate(new Date(competition.dateStart))} - ${formatDate(new Date(competition.dateEnd))}`}</td>
+          </tr>
+        ))
+        }
+
+        </tbody>
+        </table>
+
 
         
     </div>

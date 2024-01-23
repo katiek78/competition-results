@@ -94,7 +94,7 @@ const Users = () => {
   return (
     <div>
       <h1 className="text-center">Users</h1>
-      <Button onClick={addTestUser()}>Add test user</Button> 
+      <Button onClick={addTestUser}>Add test user</Button> 
       <table className="niceTable usersTable">
   <thead>
     <tr>
