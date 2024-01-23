@@ -102,15 +102,66 @@ const CompetitionResults = () => {
                     </span>
                 )}
 
+                {selectedDiscipline !== '' &&
+                <>
+             
+                <table className="niceTable">
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Competitor</th>
+      <th>Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    {competitionData.compResults
+      .filter((result) => result.discipline === selectedDiscipline)
+      .sort((a, b) => b.rawScore - a.rawScore)
+      .map((result, i) => {
+        // Find the user with the matching ID in the users array
+        const thisUser = users.find((u) => u._id === result.compUser);
+
+        return (
+          <tr key={result.compUser}>
+            <td>{i + 1}</td>
+            <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+            <td>{result.rawScore}</td>
+          </tr>
+        );
+      })}
+  </tbody>
+</table>
+
+                {/* {competitionData.compResults
+                    .filter((result) => result.discipline === selectedDiscipline)
+                    .sort((a, b) => b.rawScore - a.rawScore)
+                    .map((result) => {
+                        // Find the user with the matching ID in the users array
+                        const thisUser = users.find((u) => u._id === user.userId);
+                
+                        return (
+                        <p>{thisUser.firstName} {thisUser.lastName}  {result.rawScore}</p>
+                        )
+                })} */}
+                    
+                     {/* {competitionData.compResults.sort((a, b) => b.rawScore - a.rawScore)
+                    .map((result) => <p>{result.compUser} {result.rawScore} {result.discipline === selectedDiscipline && "match"}</p>)} */}
+                </>
+                }
+
+                {selectedDiscipline === '' &&
+                <>
                 {competitionData.compUsers?.map((userId) => {
                 // Find the user with the matching ID in the users array
-                const user = users.find((user) => user._id === userId);
+                const thisUser = users.find((user) => user._id === userId);
                 
                 // Display the user's email
                 return (
-                    <p key={userId}>{user?.firstName} {user?.lastName}</p>
+                    <p key={userId}>{thisUser?.firstName} {thisUser?.lastName}</p>
                 );
                 })}
+                </>
+               }
                                 
             
             </div>

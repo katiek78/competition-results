@@ -124,3 +124,42 @@
 .current-account {
   padding-left: 20px;
 }
+
+.niceTable {
+    border-collapse: collapse;
+    margin: 25px auto;
+    width: 70%;
+    font-size: 1em;
+    font-family: sans-serif;
+    min-width: 400px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.niceTable thead tr {
+  background-color: #4CAF50;
+  color: #ffffff;
+  text-align: left;
+}
+
+.niceTable th,
+.niceTable td {
+    padding: 12px 15px;
+}
+
+.niceTable tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+.niceTable tbody tr:nth-of-type(even) {
+  background-color: #f3f3f3;
+}
+
+.niceTable tbody tr:last-of-type {
+  border-bottom: 2px solid #009879;
+}
+
+.usersTable thead tr {
+  background-color: #9132c9;
+  color: #ffffff;
+  text-align: left;
+}
