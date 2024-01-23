@@ -78,7 +78,7 @@ const CompetitionResults = () => {
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
             <div>
-            <p class="maintext">
+            <p class="highlightText">
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
                 </p>
                 

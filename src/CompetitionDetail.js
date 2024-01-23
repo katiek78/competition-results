@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
 import { Container, Row, Col, Button } from "react-bootstrap";
+import { useUser } from "./UserProvider";
+import { fetchCurrentUserData } from "./utils";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
@@ -12,6 +14,8 @@ const cookies = new Cookies();
 const token = cookies.get("TOKEN");
 
 const CompetitionDetail = () => {
+    const { user } = useUser();
+    const [userData, setUserData] = useState({});
     const { id } = useParams();
     const [competitionData, setCompetitionData] = useState({});
     const [users, setUsers] = useState([]);
@@ -38,10 +42,10 @@ const CompetitionDetail = () => {
             const updatedCompetition = {
                 // ...competitionData,
                 compUsers: competitionData.compUsers
-                ? [...competitionData.compUsers, participantId]
-                : [participantId],
-              };
-          
+                    ? [...competitionData.compUsers, participantId]
+                    : [participantId],
+            };
+
             // set configurations
             const configuration = {
                 method: "put",
@@ -53,12 +57,40 @@ const CompetitionDetail = () => {
             };
             const response = await axios(configuration);
             console.log('Participant added:', response.data);
-            setCompetitionData({...competitionData, compUsers: updatedCompetition.compUsers,});
+            setCompetitionData({ ...competitionData, compUsers: updatedCompetition.compUsers, });
             setShowParticipantForm(false);
         } catch (error) {
             console.error('Error adding participant:', error);
         }
-        
+
+    }
+
+    const saveAdmin = async (participantId) => {
+        try {
+            const updatedCompetition = {
+                // ...competitionData,
+                compAdmins: competitionData.compAdmins
+                    ? [...competitionData.compAdmins, participantId]
+                    : [participantId],
+            };
+
+            // set configurations
+            const configuration = {
+                method: "put",
+                url: `https://competition-results.onrender.com/competition/${id}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: updatedCompetition
+            };
+            const response = await axios(configuration);
+            console.log('Admin added:', response.data);
+            setCompetitionData({ ...competitionData, compAdmins: updatedCompetition.compAdmins, });
+            setShowParticipantForm(false);
+        } catch (error) {
+            console.error('Error adding admin:', error);
+        }
+
     }
 
     const saveCompetition = async (competition) => {
@@ -69,7 +101,7 @@ const CompetitionDetail = () => {
                 competition.disciplines = [...nationalEvents];
             } else if (competition.format === 'i') {
                 competition.disciplines = [...internationalEvents];
-            } else competition.disciplines = [...worldEvents];  
+            } else competition.disciplines = [...worldEvents];
         }
         try {
             // set configurations
@@ -88,30 +120,75 @@ const CompetitionDetail = () => {
         }
     };
 
-
     useEffect(() => {
-        // set configurations        
-        const configuration = {
-            method: "get",
-            url: `https://competition-results.onrender.com/competition/${id}`,
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        };
-        // make the API call
-        axios(configuration)
-            .then((result) => {
+        const fetchData = async () => {
+            try {
+                const fetchedData = await fetchCurrentUserData(user.userId);
 
-                setCompetitionData(result.data);
-              
-                //get logged-in user details
-                // console.log(result.data.userId);
-                // console.log(result.data.userEmail);
-            })
-            .catch((error) => {
-                console.error('Error fetching competition data:', error);
-            });
-    }, [])
+                if (fetchedData) {
+                    // Do something with the userData
+                    setUserData(fetchedData);
+
+                    //Then get competition data
+                    // set configurations        
+                    const configuration = {
+                        method: "get",
+                        url: `https://competition-results.onrender.com/competition/${id}`,
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    };
+                    // make the API call
+                    axios(configuration)
+                        .then((result) => {
+                            setCompetitionData(result.data);
+                       
+                            //only allow users who are in compAdmins, or superAdmins                          
+                            if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin") {
+                                // redirect user to the home page
+                                window.location.href = "/";
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error fetching competition data:', error);
+                        });
+                } else {
+                    console.log('Failed to fetch user data');
+                }
+            } catch (error) {
+                console.error('Error in useEffect:', error);
+            }
+        };
+        fetchData();
+    }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+
+
+    // useEffect(() => {
+
+    //     // set configurations        
+    //     const configuration = {
+    //         method: "get",
+    //         url: `https://competition-results.onrender.com/competition/${id}`,
+    //         headers: {
+    //             Authorization: `Bearer ${token}`,
+    //         },
+    //     };
+    //     // make the API call
+    //     axios(configuration)
+    //         .then((result) => {
+
+    //             setCompetitionData(result.data);
+    //             //only allow users in compAdmins, or superAdmins
+    //             alert(userData.role); //undefined
+    //             if (result.data.compAdmins?.indexOf(user._id) === -1 && userData.role !== "superAdmin") {                
+    //                 // redirect user to the home page
+    //                 window.location.href = "/";
+    //             }               
+    //         })
+    //         .catch((error) => {
+    //             console.error('Error fetching competition data:', error);
+    //         });
+    // }, [userData])
 
     useEffect(() => {
         // set configurations
@@ -120,22 +197,22 @@ const CompetitionDetail = () => {
             url: "https://competition-results.onrender.com/users",
             headers: {
                 Authorization: `Bearer ${token}`,
-              },
+            },
         };
         // make the API call
         axios(configuration)
-        .then((result) => {
-            console.log(result);
-            setUsers(result.data.users);
+            .then((result) => {
+                console.log(result);
+                setUsers(result.data.users);
 
-            //get logged-in user details
-            // console.log(result.data.userId);
-            // console.log(result.data.userEmail);
-        })
-        .catch((error) => {
-        error = new Error();
-        console.log(error);
-        });
+                //get logged-in user details
+                // console.log(result.data.userId);
+                // console.log(result.data.userEmail);
+            })
+            .catch((error) => {
+                error = new Error();
+                console.log(error);
+            });
     }, [])
 
 
@@ -152,42 +229,59 @@ const CompetitionDetail = () => {
             )}
 
             <div>
-                <p class="maintext">
-                <Link to={`/competition_results/${competitionData._id}`}>View Results >>></Link>
+                <p className="highlightText">
+                    <Link to={`/competition_results/${competitionData._id}`}>View Results >>></Link>
                 </p>
 
                 <Container>
                     <Row>
                         <Col>
-                <h2>Registered participants: ({competitionData.compUsers?.length || 0})</h2>
-                <Button onClick={() => setShowParticipantForm(true)}>New participant</Button>
+                            <h2>Competition admins: ({competitionData.compAdmins?.length || 0})</h2>
+                            <Button onClick={() => setShowParticipantForm(true)}>New admin</Button>
 
-                {showParticipantForm && (
-                    <ParticipantsForm onSubmitParticipant={saveParticipant} />
-                )}
-                {competitionData.compUsers?.map((userId) => {
-                // Find the user with the matching ID in the users array
-                const user = users.find((user) => user._id === userId);
-                
-                // Display the user's email
-                return (
-                    <p key={userId}>{user?.email}</p>
-                );
-                })}
-                </Col>
-                
-                <Col>
-                <h2>Disciplines:</h2>
-                {competitionData.disciplines?.map((discipline) => {
-                
-                // Display the user's email
-                return (
-                    <p key={discipline}>{getDisciplineNameFromRef(discipline)}</p>
-                );
-                })}
-                </Col>
-               
-                </Row>         
+                            {showParticipantForm && (
+                                <ParticipantsForm onSubmitParticipant={saveAdmin} />
+                            )}
+                            {competitionData.compAdmins?.map((userId) => {
+                                // Find the user with the matching ID in the users array
+                                const user = users.find((user) => user._id === userId);
+
+                                // Display the user names
+                                return (
+                                    <p key={userId}>{user?.firstName} {user?.lastName}</p>
+                                );
+                            })}
+
+
+                            <h2>Registered participants: ({competitionData.compUsers?.length || 0})</h2>
+                            <Button onClick={() => setShowParticipantForm(true)}>New participant</Button>
+
+                            {showParticipantForm && (
+                                <ParticipantsForm onSubmitParticipant={saveParticipant} />
+                            )}
+                            {competitionData.compUsers?.map((userId) => {
+                                // Find the user with the matching ID in the users array
+                                const user = users.find((user) => user._id === userId);
+
+                                // Display the user names
+                                return (
+                                    <p key={userId}>{user?.firstName} {user?.lastName}</p>
+                                );
+                            })}
+                        </Col>
+
+                        <Col>
+                            <h2>Disciplines:</h2>
+                            {competitionData.disciplines?.map((discipline) => {
+
+                                // Display the user's email
+                                return (
+                                    <p key={discipline}>{getDisciplineNameFromRef(discipline)}</p>
+                                );
+                            })}
+                        </Col>
+
+                    </Row>
                 </Container>
             </div>
 

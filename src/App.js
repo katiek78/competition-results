@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useUser } from './UserProvider';
 import { Routes, Route, Link } from "react-router-dom";
 import { Container, Col, Row, Button } from "react-bootstrap";
 import Account from "./Account";
@@ -12,57 +13,79 @@ import CompetitionResults from "./CompetitionResults";
 import Home from "./Home";
 import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
-import { UserProvider } from "./UserProvider";
+import { UserProvider, clearUser } from "./UserProvider";
 import RequireAuth from "./RequireAuth";
-import axios from "axios";
 import "./App.css";
 import Cookies from "universal-cookie";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { fetchCurrentUserData } from "./utils";
 
 function App() {
-    const [ userId, setUserId ] = useState('');
-    const [ userEmail, setUserEmail ] = useState('');
-     const [forceUpdate, setForceUpdate] = useState(false);
-
+    // const [ userId, setUserId ] = useState('');
+    // const [ userEmail, setUserEmail ] = useState('');
+    const [userData, setUserData] = useState({});
+    const { user, clearUser } = useUser();
+   
     const cookies = new Cookies();
     const token = cookies.get("TOKEN");
   
     // logout
     const logout = () => {      
       cookies.remove("TOKEN", { path: "/" });
+      clearUser();
       window.location.href = "/";
     }
 
-    useEffect(() => {
-      if (!token) return;
+  //   useEffect(() => {
+  //     if (!token) return;
      
-      // set configurations
-      const configuration = {
-          method: "get",
-          url: "https://competition-results.onrender.com/",
-          headers: {
-              Authorization: `Bearer ${token}`,
-            },
-      };
-      // make the API call
-      axios(configuration)
-      .then((result) => {
+  //     // set configurations
+  //     const configuration = {
+  //         method: "get",
+  //         url: "https://competition-results.onrender.com/",
+  //         headers: {
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //     };
+  //     // make the API call
+  //     axios(configuration)
+  //     .then((result) => {
 
-          //get logged-in user details
-          setUserId(result.data.userId);
-          setUserEmail(result.data.userEmail);
-      })
-      .catch((error) => {
-      error = new Error();
-      console.log(error);
-      });
+  //         //get logged-in user details
+  //         setUserId(result.data.userId);
+  //         setUserEmail(result.data.userEmail);
+  //     })
+  //     .catch((error) => {
+  //     error = new Error();
+  //     console.log(error);
+  //     });
 
-  }, [token])
+  // }, [token])
+
+  useEffect(() => {
+    const fetchData = async () => {
+        try {
+            if (!user || !user.userId) return;
+            const fetchedData = await fetchCurrentUserData(user.userId);
+
+            if (fetchedData) {              
+                setUserData(fetchedData);
+                console.log(fetchedData)
+            } else {
+                console.log('Failed to fetch user data');
+            }
+        } catch (error) {
+            console.error('Error in useEffect:', error);
+        }
+    };
+    fetchData();
+}, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+
   
   return (
     <>
-    <UserProvider>
+    {/* <UserProvider> */}
     <Container>
     <Row>
         <Col className="text-center">
@@ -70,15 +93,19 @@ function App() {
 
           <section id="navigation">
             <a href="/">Home</a>
-            {/* <a href="/free">Free Component</a> */}
-            {/* <a href="/auth">Auth Component</a> */}            
+              
             <a href="/">My competitions</a>
-            {token && 
+            
+            {token && userData.role && userData.role === 'superAdmin' && 
             <>
               <a href="/competitions">Competitions</a>
             <a href="/users">Users</a>
-            <span>
-            <Link to="/account"><FontAwesomeIcon className="menuIcon" icon={faUser} /><span className="current-account">{userEmail}</span></Link>
+            </>
+            }
+            {token &&
+            <>
+            <span className="current-account">
+            <Link to="/account"><FontAwesomeIcon className="menuIcon" icon={faUser} /> <span>{userData.firstName} {userData.lastName}</span></Link>
             <Button type="submit" variant="danger" onClick={() => logout()}>
               Logout
             </Button> 
@@ -149,7 +176,7 @@ function App() {
       </Routes>
      
     </Container>
-    </UserProvider>
+    {/* </UserProvider> */}
     </>
   );
 }

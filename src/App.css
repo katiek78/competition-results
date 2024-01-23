@@ -66,6 +66,26 @@
   border-radius: 10px;
 }
 
+.highlightText {
+  margin: 10px auto;
+  width: 30%;
+  border: 2px solid green; /* Border color */
+  border-radius: 10px;
+  text-align: center;
+  padding: 20px; /* Increased padding */
+  font-size: 1.5em;
+  background-color: lightgreen; /* Background color */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Box shadow for a subtle lift */
+  color: #2c3e50; /* Text color */
+  transition: background-color 0.3s, box-shadow 0.3s; /* Smooth transition effect */
+}
+
+.highlightText a {
+  color: black;
+  text-decoration: none;
+  font-weight: bold;
+}
+
 .niceForm > * {
   padding: 2px;
   margin: 5px;
@@ -99,4 +119,8 @@
     background-color: #4CAF50; /* Change to a different color for selected */
     color: #FFF; /* Change text color for selected */
   }
+}
+
+.current-account {
+  padding-left: 20px;
 }
