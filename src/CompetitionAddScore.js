@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useUser } from "./UserProvider";
 import axios from "axios";
 import Cookies from "universal-cookie";
@@ -18,6 +18,9 @@ const CompetitionAddScore = () => {
     const [competitionData, setCompetitionData] = useState({});
     const [userData, setUserData] = useState({});
     const [code, setCode] = useState('');
+    const [showMessage, setShowMessage] = useState('');
+    const [score, setScore] = useState(0);
+    const [disciplineName, setDisciplineName] = useState('');
 
     const RECENT_MINUTES = 20;
 
@@ -34,25 +37,30 @@ const CompetitionAddScore = () => {
         return decryptedMessage;
       }
 
-    function findMatchingDiscipline(disciplineName) {
+    function findMatchingDiscipline(d) {
     // Find the discipline in the array based on label
-    return disciplines.find(discipline => discipline.label === disciplineName);
+    return disciplines.find(discipline => discipline.label === d);
     }
 
     function isDuplicateResult(compResults, compUser, discipline) {
         return compResults.some(result => result.compUser === compUser && result.discipline === discipline);
       }
 
-    const saveScore = (score, disciplineName) => {
+    // const showScore = (score, disciplineName) => {
+    //     setMessage(`Thank you! You've submitted a score of ${score} for ${disciplineName}. If you believe this score is incorrect, please keep your result on screen and see a competition official.`)
+    // }
+
+
+    const saveScore = (decryptedScore, decryptedDisciplineName) => {
       
-        const disciplineRef = getDisciplineRefFromName(disciplineName);
+        const disciplineRef = getDisciplineRefFromName(decryptedDisciplineName);
     
         if (disciplineRef === 'Unknown Discipline') {
             alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added");
             return;
         }
         
-        const newResult = {compUser: user.userId, discipline: getDisciplineRefFromName(disciplineName), rawScore: score };
+        const newResult = {compUser: user.userId, discipline: getDisciplineRefFromName(decryptedDisciplineName), rawScore: decryptedScore };
 
         //check for duplicate result and alert user if they already submitted one for this discipline
         if (isDuplicateResult(competitionData.compResults, newResult.compUser, newResult.discipline)) {
@@ -77,10 +85,12 @@ const CompetitionAddScore = () => {
                 },
                 data: updatedCompetition
             };
-            const response = axios(configuration);
-            console.log('Score added:', response.data);
+            
+            axios(configuration);
+            setScore(decryptedScore);
+            setDisciplineName(decryptedDisciplineName);
             setCompetitionData({ ...competitionData, compResults: updatedCompetition.compResults, });
-            alert("Score added")
+            setShowMessage(true);
            
         } catch (error) {
             console.error('Error adding result:', error);
@@ -99,15 +109,27 @@ const CompetitionAddScore = () => {
         alert(decryptedText)
 
          //parse the decrypted text
-         const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+) \/\/ Timestamp: (.+)/;
+//         const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+) \/\/ Timestamp: (.+)/;
+     //   const pattern = /Discipline: ([^/]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/(?: Time:([\s\S]+))? \/\/ Timestamp: (.+)/;
+     const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+
+
+//"Discipline: 10-Minute Cards // Score: 6
+ // Time:0.00 // Timestamp: Tue, 23 Jan 2024 12:46:28 GMT"
+
          const match = decryptedText.match(pattern);
 
         if (match) {
-            const disciplineName = match[1];
-            const score = parseInt(match[2], 10); // Parse score as an integer
-            const timestamp = new Date(match[3]);
+            const decryptedDisciplineName = match[1];
+            const decryptedScore = parseInt(match[2], 10); // Parse score as an integer
+            const timestamp = new Date(match[4]);
+       
+            // Check if the timestamp is recent and alert user if not
+            // const now = Date.now();
+            // const timeDifference = now - timestamp.getTime();
+            // const isRecent = timeDifference <= RECENT_MINUTES * 60 * 1000;
+
         
-            // Check if the timestamp is within the last 20 minutes and alert user if not
             const isRecent = (Date.now() - timestamp.getTime()) <= RECENT_MINUTES * 60 * 1000;
         
             if (!isRecent) {
@@ -116,8 +138,8 @@ const CompetitionAddScore = () => {
             } 
 
             // Check if disciplineName can be matched to a discipline and if not, alert user
-            if (findMatchingDiscipline(disciplineName)) {
-                saveScore(score, disciplineName);
+            if (findMatchingDiscipline(decryptedDisciplineName)) {
+                saveScore(decryptedScore, decryptedDisciplineName);
             } else {
                 alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added.")
             }
@@ -181,6 +203,8 @@ const CompetitionAddScore = () => {
         <>
         <div>
             <h1 className="text-center">{competitionData.name}</h1>
+            {!showMessage &&
+            <>
             <h2 className="text-center">Adding score for {userData.firstName} {userData.lastName}</h2>
 
 <form className="maintext niceForm">
@@ -188,6 +212,23 @@ const CompetitionAddScore = () => {
     <input size={50} type="text" value={code} onChange={(e) => setCode(e.target.value)}></input>
     <Button onClick={handleSubmitScore}>Submit score</Button>
 </form>
+</>
+}
+
+{showMessage !== '' && (
+    <>
+  <div className="maintext">
+    Thank you! You've submitted a score of <strong>{score}</strong> for{' '}
+    <strong>{disciplineName}</strong>. If you believe this score is incorrect,
+    please keep your result on screen and see a competition official.
+    <p className="highlightText">
+                    <Link to={`/competition_results/${id}`}>Back to results page >>></Link>
+                </p>
+    
+  </div>
+
+  </>
+)}
             </div>
                 
                
