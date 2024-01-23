@@ -99,16 +99,26 @@ const Competitions = () => {
   <CompetitionForm onSubmitCompetition={handleAddCompetition} editing={false} />
 )}
 
-    {competitions
+        <table className="niceTable competitionTable">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Dates</th>    
+    </tr>
+  </thead>
+  <tbody>
+  {competitions
         .sort((a, b) => new Date(b.dateStart) - new Date(a.dateStart))
         .map((competition) => (
-          <div key={competition._id}>
-            <Link to={`/competition/${competition._id}`}>{competition.name}</Link>
-            {/* - starts {formatDate(new Date(competition.dateStart))} */}
-          </div>
-        ))}
+          <tr key={competition._id}>          
+            <td><Link to={`/competition/${competition._id}`}>{competition.name}</Link></td>
+            <td>{`${formatDate(new Date(competition.dateStart))} - ${formatDate(new Date(competition.dateEnd))}`}</td>
+          </tr>
+        ))
+        }
+        </tbody>
+        </table>
 
-        
     </div>
 
     

@@ -3,6 +3,7 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData } from "./utils";
+import { Button } from "react-bootstrap";
 
 const cookies = new Cookies();
 
@@ -12,6 +13,39 @@ const Users = () => {
     const { user } = useUser();
     const [users, setUsers] = useState([]);
     const [userData, setUserData] = useState({});
+
+    function addTestUser() {
+        const newUser = {
+            'firstName': 'Diogo',
+            'lastName': 'Jota'
+        }
+       saveUser(newUser);
+    }
+
+    const saveUser = async (newUser) => {
+        try {
+            // set configurations
+            const configuration = {
+                method: "post",
+                url: `https://competition-results.onrender.com/user/${user.userId}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: newUser
+            };
+            const response = await axios(configuration);
+            console.log('User added:', response.data);
+            setUsers([
+                ...users,
+                newUser
+            ]);
+
+        } catch (error) {
+            console.error('Error adding test user:', error);
+        }
+
+    }
+
 
     useEffect(() => {
         if (!user) return;
@@ -60,6 +94,7 @@ const Users = () => {
   return (
     <div>
       <h1 className="text-center">Users</h1>
+      <Button onClick={addTestUser()}>Add test user</Button> 
       <table className="niceTable usersTable">
   <thead>
     <tr>
