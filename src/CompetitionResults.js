@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from 'react-router-dom';
+import { useUser } from "./UserProvider";
 import axios from "axios";
 import Cookies from "universal-cookie";
 import { getDisciplineNameFromRef } from "./constants";
@@ -10,6 +11,7 @@ const token = cookies.get("TOKEN");
 
 const CompetitionResults = () => {
     const { id } = useParams();
+    const { user } = useUser();
     const [competitionData, setCompetitionData] = useState({});
     const [users, setUsers] = useState([]);
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
@@ -58,7 +60,7 @@ const CompetitionResults = () => {
         // make the API call
         axios(configuration)
         .then((result) => {
-            console.log(result);
+        
             setUsers(result.data.users);
 
             //get logged-in user details
@@ -78,10 +80,18 @@ const CompetitionResults = () => {
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
             <div>
+                {competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1 &&
             <p class="highlightText">
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
                 </p>
-                
+                }
+
+                {competitionData.compUsers && competitionData.compUsers.indexOf(user.userId) > -1 &&
+            <p class="highlightText">
+                <Link to={`/competition_add_score/${competitionData._id}`}>Add my score >>></Link>
+                </p>
+                }
+
                 <h2> {selectedDiscipline === '' ? "Overall standings" : getDisciplineNameFromRef(selectedDiscipline)}</h2>
                 <span className='disciplineHeading' onClick={() => setSelectedDiscipline('')}>Overall</span>
                 {competitionData.disciplines?.map((discipline) => 
@@ -91,13 +101,14 @@ const CompetitionResults = () => {
                         onClick={() => setSelectedDiscipline(discipline)}>{getDisciplineNameFromRef(discipline)}
                     </span>
                 )}
+
                 {competitionData.compUsers?.map((userId) => {
                 // Find the user with the matching ID in the users array
                 const user = users.find((user) => user._id === userId);
                 
                 // Display the user's email
                 return (
-                    <p key={userId}>{user?.email}</p>
+                    <p key={userId}>{user?.firstName} {user?.lastName}</p>
                 );
                 })}
                                 

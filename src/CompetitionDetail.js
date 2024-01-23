@@ -21,6 +21,7 @@ const CompetitionDetail = () => {
     const [users, setUsers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [showParticipantForm, setShowParticipantForm] = useState(false);
+    const [showAdminForm, setShowAdminForm] = useState(false);
 
     // Helper function to format date as 'YYYY-MM-DD'
     const formatDate = (date) => {
@@ -86,7 +87,7 @@ const CompetitionDetail = () => {
             const response = await axios(configuration);
             console.log('Admin added:', response.data);
             setCompetitionData({ ...competitionData, compAdmins: updatedCompetition.compAdmins, });
-            setShowParticipantForm(false);
+            setShowAdminForm(false);
         } catch (error) {
             console.error('Error adding admin:', error);
         }
@@ -144,7 +145,7 @@ const CompetitionDetail = () => {
                             setCompetitionData(result.data);
                        
                             //only allow users who are in compAdmins, or superAdmins                          
-                            if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin") {
+                            if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
                                 // redirect user to the home page
                                 window.location.href = "/";
                             }
@@ -162,34 +163,6 @@ const CompetitionDetail = () => {
         fetchData();
     }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
 
-
-    // useEffect(() => {
-
-    //     // set configurations        
-    //     const configuration = {
-    //         method: "get",
-    //         url: `https://competition-results.onrender.com/competition/${id}`,
-    //         headers: {
-    //             Authorization: `Bearer ${token}`,
-    //         },
-    //     };
-    //     // make the API call
-    //     axios(configuration)
-    //         .then((result) => {
-
-    //             setCompetitionData(result.data);
-    //             //only allow users in compAdmins, or superAdmins
-    //             alert(userData.role); //undefined
-    //             if (result.data.compAdmins?.indexOf(user._id) === -1 && userData.role !== "superAdmin") {                
-    //                 // redirect user to the home page
-    //                 window.location.href = "/";
-    //             }               
-    //         })
-    //         .catch((error) => {
-    //             console.error('Error fetching competition data:', error);
-    //         });
-    // }, [userData])
-
     useEffect(() => {
         // set configurations
         const configuration = {
@@ -202,7 +175,7 @@ const CompetitionDetail = () => {
         // make the API call
         axios(configuration)
             .then((result) => {
-                console.log(result);
+                
                 setUsers(result.data.users);
 
                 //get logged-in user details
@@ -237,10 +210,10 @@ const CompetitionDetail = () => {
                     <Row>
                         <Col>
                             <h2>Competition admins: ({competitionData.compAdmins?.length || 0})</h2>
-                            <Button onClick={() => setShowParticipantForm(true)}>New admin</Button>
+                            <Button onClick={() => setShowAdminForm(true)}>New admin</Button>
 
-                            {showParticipantForm && (
-                                <ParticipantsForm onSubmitParticipant={saveAdmin} />
+                            {showAdminForm && (
+                                <ParticipantsForm onSubmitParticipant={saveAdmin} admin={true} />
                             )}
                             {competitionData.compAdmins?.map((userId) => {
                                 // Find the user with the matching ID in the users array

@@ -10,7 +10,7 @@ const cookies = new Cookies();
 const token = cookies.get("TOKEN");
 
 
-const ParticipantsForm = ({ onSubmitParticipant }) => {
+const ParticipantsForm = ({ onSubmitParticipant, admin }) => {
 
     const [users, setUsers] = useState([]);
     const [id, setId] = useState('');
@@ -60,7 +60,7 @@ const handleSubmit = (e) => {
         </select>
    
      
-      <Button type="submit">Add participant</Button>
+      <Button type="submit">{admin ? "Add admin" : "Add participant"}</Button>
     </form>
   );
 };

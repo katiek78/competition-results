@@ -10,6 +10,8 @@ import Register from "./Register";
 import Competitions from "./Competitions";
 import CompetitionDetail from "./CompetitionDetail";
 import CompetitionResults from "./CompetitionResults";
+import MyCompetitions from "./MyCompetitions";
+import CompetitionAddScore from "./CompetitionAddScore";
 import Home from "./Home";
 import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
@@ -94,9 +96,9 @@ function App() {
           <section id="navigation">
             <a href="/">Home</a>
               
-            <a href="/">My competitions</a>
+            <a href="/my-competitions">My competitions</a>
             
-            {token && userData.role && userData.role === 'superAdmin' && 
+            {token && userData.role && (userData.role === 'superAdmin' || userData.role === 'admin') && 
             <>
               <a href="/competitions">Competitions</a>
             <a href="/users">Users</a>
@@ -134,6 +136,14 @@ function App() {
             }
           /> */}
           <Route
+          path="/my-competitions"
+          element={
+            <RequireAuth>
+              <MyCompetitions />
+            </RequireAuth>
+            }
+          />
+          <Route
           path="/competitions"
           element={
             <RequireAuth>
@@ -162,6 +172,14 @@ function App() {
           element={
             <RequireAuth>
               <CompetitionResults />
+            </RequireAuth>
+            }
+          />
+          <Route
+          path="/competition_add_score/:id"
+          element={
+            <RequireAuth>
+              <CompetitionAddScore />
             </RequireAuth>
             }
           />

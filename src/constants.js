@@ -97,3 +97,11 @@ export function getDisciplineNameFromRef(disciplineRef) {
   
     return matchingDiscipline ? matchingDiscipline.label : "Unknown Discipline";
   }
+
+  export function getDisciplineRefFromName(disciplineName) {
+    const matchingDiscipline = disciplines.find(
+      (discipline) => discipline.label === disciplineName
+    );
+  
+    return matchingDiscipline ? matchingDiscipline.ref : "Unknown Discipline";
+  }
