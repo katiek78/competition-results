@@ -82,12 +82,11 @@ function App() {
         }
     };
     fetchData();
-}, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+}, [user, token]);
 
   
   return (
     <>
-    {/* <UserProvider> */}
     <Container>
     <Row>
         <Col className="text-center">

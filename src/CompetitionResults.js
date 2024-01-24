@@ -81,13 +81,13 @@ const CompetitionResults = () => {
 
             <div>
                 {competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1 &&
-            <p class="highlightText">
+            <p className="highlightText">
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
                 </p>
                 }
 
                 {competitionData.compUsers && competitionData.compUsers.indexOf(user.userId) > -1 &&
-            <p class="highlightText">
+            <p className="highlightText">
                 <Link to={`/competition_add_score/${competitionData._id}`}>Add my score >>></Link>
                 </p>
                 }

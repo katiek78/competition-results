@@ -96,9 +96,6 @@ export default function Account() {
                         </div>
                     </Row>
 
-                    <Row>
-                        <h1>My competitions</h1>
-                    </Row>
                 </Container>
             ) : (
                 <Container>

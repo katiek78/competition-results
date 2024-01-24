@@ -14,12 +14,19 @@ const Users = () => {
     const [users, setUsers] = useState([]);
     const [userData, setUserData] = useState({});
 
-    function addTestUser() {
-        const newUser = {
-            'firstName': 'Diogo',
-            'lastName': 'Jota'
+    async function addTestUser() {
+        try {
+            const result = await axios.get("https://random-data-api.com/api/v2/users");
+            const newUser = {
+                firstName: result.data.first_name,
+                lastName: result.data.last_name,
+                email: result.data.email,
+                password: result.data.password
+            }
+            saveUser(newUser);
+        } catch (err) {
+            console.log("error: ", err);
         }
-       saveUser(newUser);
     }
 
     const saveUser = async (newUser) => {
@@ -27,7 +34,7 @@ const Users = () => {
             // set configurations
             const configuration = {
                 method: "post",
-                url: `https://competition-results.onrender.com/user/${user.userId}`,
+                url: `https://competition-results.onrender.com/users`,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -35,10 +42,13 @@ const Users = () => {
             };
             const response = await axios(configuration);
             console.log('User added:', response.data);
-            setUsers([
-                ...users,
-                newUser
-            ]);
+          
+            // setUsers(prevUsers => [...prevUsers, newUser]);
+          
+            setUsers(prevUsers => {
+                const newUsers = [...prevUsers, newUser];                
+                return newUsers;
+            });
 
         } catch (error) {
             console.error('Error adding test user:', error);
@@ -63,7 +73,7 @@ const Users = () => {
                     // Do something with the userData
                     setUserData(fetchedData);
 
-                         // set configurations
+                    // set configurations
                     const configuration = {
                         method: "get",
                         url: "https://competition-results.onrender.com/users",
@@ -73,14 +83,14 @@ const Users = () => {
                     };
                     // make the API call
                     axios(configuration)
-                    .then((result) => {
-                        console.log(result);
-                        setUsers(result.data.users);                
-                    })
-                    .catch((error) => {
-                    error = new Error();
-                    console.log(error);
-                    });
+                        .then((result) => {
+                            console.log(result);
+                            setUsers(result.data.users);
+                        })
+                        .catch((error) => {
+                            error = new Error();
+                            console.log(error);
+                        });
                 } else {
                     console.log('Failed to fetch user data');
                 }
@@ -91,31 +101,28 @@ const Users = () => {
         fetchData();
     }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
 
-  return (
-    <div>
-      <h1 className="text-center">Users</h1>
-      <Button onClick={addTestUser}>Add test user</Button> 
-      <table className="niceTable usersTable">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Email</th>    
-    </tr>
-  </thead>
-  <tbody>
-        {users.map((usr) => {
-            const thisUser = users.find((u) => u._id === usr._id);         
-            return (
-          <tr key={usr._id}>          
-            <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
-            <td>{thisUser.email}</td>
-          </tr>
-        );
-        })}
-        </tbody>
-        </table>
-    </div>
-  );
+    return (
+        <div>
+            <h1 className="text-center">Users</h1>
+            <Button onClick={addTestUser}>Add test user</Button>
+            <table className="niceTable usersTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {users.map((usr) => 
+                        <tr key={usr._id}>
+                            <td>{`${usr.firstName} ${usr.lastName}`}</td>
+                            <td>{usr.email}</td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 export default Users;
