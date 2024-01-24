@@ -7,6 +7,7 @@ import { getDisciplineNameFromRef } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import ScoreForm from "./ScoreForm";
+import { fetchCurrentUserData } from "./utils";
 
 const cookies = new Cookies();
 
@@ -17,6 +18,7 @@ const CompetitionResults = () => {
     const { user } = useUser();
     const [competitionData, setCompetitionData] = useState({});
     const [users, setUsers] = useState([]);
+    const [userData, setUserData] = useState({});
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
     const [showScoreForm, setShowScoreForm] = useState(false);
     const [showEditScoreForm, setShowEditScoreForm] = useState(false);
@@ -38,7 +40,7 @@ const CompetitionResults = () => {
 
     const showCompUsersNotSubmitted = () => {
         const notSubmittedList = competitionData.compUsers
-          .filter(cuId => !competitionData.compResults.find(r => r.discipline === selectedDiscipline && r.user === cuId))
+          .filter(cuId => !competitionData.compResults.find(r => r.discipline === selectedDiscipline && r.compUser === cuId))
           .map(cuId => {
             const user = users.find(u => u._id === cuId);
             return `${user.firstName} ${user.lastName}`;
@@ -60,7 +62,7 @@ const CompetitionResults = () => {
     };
 
     const handleSubmitScore = (result, newScore) => {
-        if (!result) {
+        if (!result) {          
             if (newScore) {
                 setShowScoreForm(false);
             } else setShowEditScoreForm(false);
@@ -82,6 +84,8 @@ const CompetitionResults = () => {
             setShowScoreForm(false);
         } else setShowEditScoreForm(false);
     }
+
+    const isAdmin = () => ((competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1) || userData.role === 'superAdmin');
 
     const saveScore = (rawScore, time = 0, user, discipline, newScore) => {
                   
@@ -138,6 +142,47 @@ const CompetitionResults = () => {
         }        
     }
 
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const fetchedData = await fetchCurrentUserData(user.userId);
+
+                if (fetchedData) {
+                    // Do something with the userData
+                    setUserData(fetchedData);
+
+                    //Then get competition data
+                    // set configurations        
+                    const configuration = {
+                        method: "get",
+                        url: `https://competition-results.onrender.com/competition/${id}`,
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    };
+                    // make the API call
+                    axios(configuration)
+                        .then((result) => {
+                            setCompetitionData(result.data);
+                       
+                            //only allow users who are in compAdmins, or superAdmins                          
+                            if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
+                                // redirect user to the home page
+                                window.location.href = "/";
+                            }
+                        })
+                        .catch((error) => {
+                            console.error('Error fetching competition data:', error);
+                        });
+                } else {
+                    console.log('Failed to fetch user data');
+                }
+            } catch (error) {
+                console.error('Error in useEffect:', error);
+            }
+        };
+        fetchData();
+    }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
 
     useEffect(() => {
         // set configurations        
@@ -191,23 +236,23 @@ const CompetitionResults = () => {
 
     return (
         <div>
-            <h1 className="text-center">Competition results: {competitionData.name}</h1>
+            <h1 className="text-center">Competition results: {competitionData.name} {user.lastName}</h1>
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
             <div>
-                {competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1 &&
+                {isAdmin() &&
             <p className="highlightText">
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
                 </p>
                 }
 
-                {competitionData.compUsers && competitionData.compUsers.indexOf(user.userId) > -1 &&
+                {isAdmin() &&
             <p className="highlightText">
                 <Link to={`/competition_add_score/${competitionData._id}`}>Add my score >>></Link>
                 </p>
                 }
 
-                {competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1 &&
+                {isAdmin() &&
                 <>
             <p className="highlightText">
                 {/* <Link to={`/competition_add_user_score/${competitionData._id}/`}>Add score for a user >>></Link> */}
@@ -215,7 +260,7 @@ const CompetitionResults = () => {
                 </p>
 
                 {showScoreForm &&
-                <ScoreForm onSubmitScore={handleSubmitScore} />}
+                <ScoreForm onSubmitScore={handleSubmitScore} competitionId={competitionData._id} />}
 
                 {showEditScoreForm && editFormValues &&
                 <ScoreForm onSubmitScore={handleSubmitScore} editing={true} form={editFormValues} />}
@@ -235,7 +280,7 @@ const CompetitionResults = () => {
                 {selectedDiscipline &&
                 <>
                 <h3>Results received: {competitionData.compResults && getNumberOfResultsForSelectedDiscipline()}/{competitionData.compUsers && competitionData.compUsers.length}</h3>
-                <h4 onClick={showCompUsersNotSubmitted}>Who hasn't submitted a result?</h4>
+                <h4 className="asLink" onClick={showCompUsersNotSubmitted}>Who hasn't submitted a result?</h4>
                 </>
                 }
 
@@ -262,7 +307,7 @@ const CompetitionResults = () => {
         const thisUser = users.find((u) => u._id === result.compUser);
 
         return (
-          <tr key={result.compUser}>
+          <tr key={i}>
             <td>{i + 1}</td>
             <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
             <td>{result.rawScore}</td>

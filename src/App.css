@@ -88,6 +88,10 @@
   font-weight: bold;
 }
 
+.asLink {
+  color: blue;
+}
+
 .niceForm > * {
   padding: 2px;
   margin: 5px;
