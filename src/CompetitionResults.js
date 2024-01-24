@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useUser } from "./UserProvider";
 import axios from "axios";
 import Cookies from "universal-cookie";
-import { getDisciplineNameFromRef } from "./constants";
+import { getDisciplineNameFromRef, getDisciplineStandardFromRef } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import ScoreForm from "./ScoreForm";
@@ -20,9 +20,11 @@ const CompetitionResults = () => {
     const [users, setUsers] = useState([]);
     const [userData, setUserData] = useState({});
     const [selectedDiscipline, setSelectedDiscipline] = useState('');
+    const [standard, setStandard] = useState(1);
     const [showScoreForm, setShowScoreForm] = useState(false);
     const [showEditScoreForm, setShowEditScoreForm] = useState(false);
     const [editFormValues, setEditFormValues] = useState('');
+    const [compUserTotals, setCompUserTotals] = useState([]);
     
     // Helper function to format date as 'YYYY-MM-DD'
     const formatDate = (date) => {
@@ -87,6 +89,62 @@ const CompetitionResults = () => {
 
     const isAdmin = () => ((competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1) || userData.role === 'superAdmin');
 
+    const updateCompetitorTotals = () => {
+        if (!competitionData.compUsers) return;
+        const updatedCompUserTotals = competitionData.compUsers.map((competitor) => {
+          // Calculate the total points for this competitor
+          const totalPoints = competitionData.compResults
+            .filter((result) => result.compUser === competitor)
+            .reduce((total, result) => {
+              // Assuming getChampPoints is a function that calculates championship points
+              const points = getChampPoints(result.discipline, result.rawScore, result.time);              
+              return total + parseFloat(points);
+            }, 0);
+      
+          console.log(`User ID: ${competitor}, Total Points: ${totalPoints}`); // Log total points for each competitor
+      
+          return {
+            userId: competitor,
+            total: Math.ceil(totalPoints),
+          };
+        });
+      
+        // You might want to set the updated compUserTotals using the appropriate state updater function
+        setCompUserTotals(updatedCompUserTotals);
+      
+        // Optionally, log the updated data
+        console.log('Updated Competitor Totals:', updatedCompUserTotals);
+      };
+
+    //   const getChampPoints = (discipline, score, time = 0) => {
+    //     if (!standard) return;
+    //     if (discipline === "SC") {
+    //       return score === 52
+    //         ? (standard.part1 / Math.pow(time, standard.part2)).toFixed(2)
+    //         : ((score / 52) * standard.part3).toFixed(2);
+    //     } else if (discipline.includes("K")) {
+    //       return (Math.sqrt(score) * standard).toFixed(2);
+    //     } else {
+    //       return (score / standard * 1000).toFixed(2);
+    //     }
+    //   };
+
+    const getChampPoints = (discipline, score, time = 0) => {
+        const thisStandard = getDisciplineStandardFromRef(discipline);
+        if (!thisStandard) return 0; // Default to 0 if standard is not defined
+        if (discipline === "SC") {
+          const calculatedPoints =
+            score === 52
+              ? thisStandard.part1 / Math.pow(time, thisStandard.part2)
+              : (score / 52) * thisStandard.part3;
+          return parseFloat(calculatedPoints.toFixed(2)); // Round to 2 decimal places
+        } else if (discipline.includes("K")) {
+          return parseFloat((Math.sqrt(score) * thisStandard).toFixed(2)); // Round to 2 decimal places
+        } else {
+          return parseFloat((score / thisStandard) * 1000).toFixed(2); // Round to 2 decimal places
+        }
+      };
+
     const saveScore = (rawScore, time = 0, user, discipline, newScore) => {
                   
         const newResult = {compUser: user, discipline, rawScore, time };
@@ -143,8 +201,15 @@ const CompetitionResults = () => {
     }
 
     useEffect(() => {
+       if (selectedDiscipline) setStandard(getDisciplineStandardFromRef(selectedDiscipline));
+       updateCompetitorTotals();
+    }, [selectedDiscipline, competitionData.compUsers]);
+
+
+    useEffect(() => {
         const fetchData = async () => {
             try {
+                if (!user) return;
                 const fetchedData = await fetchCurrentUserData(user.userId);
 
                 if (fetchedData) {
@@ -236,7 +301,7 @@ const CompetitionResults = () => {
 
     return (
         <div>
-            <h1 className="text-center">Competition results: {competitionData.name} {user.lastName}</h1>
+            <h1 className="text-center">Competition results: {competitionData.name}</h1>
             <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
 
             <div>
@@ -277,17 +342,23 @@ const CompetitionResults = () => {
                 )}
 
                 <h2> {selectedDiscipline === '' ? "Overall standings" : getDisciplineNameFromRef(selectedDiscipline)}</h2>
-                {selectedDiscipline &&
+                {selectedDiscipline && (getNumberOfResultsForSelectedDiscipline() < competitionData?.compUsers.length) && 
                 <>
                 <h3>Results received: {competitionData.compResults && getNumberOfResultsForSelectedDiscipline()}/{competitionData.compUsers && competitionData.compUsers.length}</h3>
                 <h4 className="asLink" onClick={showCompUsersNotSubmitted}>Who hasn't submitted a result?</h4>
                 </>
                 }
 
+                {selectedDiscipline && (getNumberOfResultsForSelectedDiscipline() === competitionData?.compUsers.length) && 
+                <>
+                <h3 className="disciplineComplete">All results received - discipline complete</h3>
+                </>
+                }
+
                 {selectedDiscipline !== '' &&
                 <>
              
-                <table className="niceTable">
+                <table className="niceTable resultsTable">
   <thead>
     <tr>
       <th>Rank</th>
@@ -295,6 +366,7 @@ const CompetitionResults = () => {
       <th>Score</th>
       {selectedDiscipline === 'SC' &&
       <th>Time</th>}
+      <th>Championship Pts</th>
       <th></th>
     </tr>
   </thead>
@@ -313,6 +385,21 @@ const CompetitionResults = () => {
             <td>{result.rawScore}</td>
             {selectedDiscipline === 'SC' &&
       <td>{result.time}</td>}
+
+      {selectedDiscipline !== 'SC' && !selectedDiscipline.includes("K") &&
+      <td className="champ-points">{(result.rawScore / standard * 1000).toFixed(2)}</td>
+      }
+
+      {selectedDiscipline === 'SC' &&
+      <td className="champ-points">{result.rawScore === 52 ? 
+        (standard.part1 / Math.pow(result.time, standard.part2)).toFixed(2) 
+        : (result.rawScore / 52 * standard.part3).toFixed(2)
+        }</td>
+      }
+
+      {selectedDiscipline.includes("K") &&
+      <td className="champ-points">{(Math.sqrt(result.rawScore) * standard).toFixed(2)}</td>
+      }
             <td><FontAwesomeIcon className="menuIcon" icon={faEdit} onClick={() => handleEditScore(result._id)} /></td>
           </tr>
         );
@@ -324,14 +411,35 @@ const CompetitionResults = () => {
 
                 {selectedDiscipline === '' &&
                 <>
-                {competitionData.compUsers?.map((userId) => {
-                // Find the user with the matching ID in the users array
-                const thisUser = users.find((user) => user._id === userId);
-                
-                return (
-                    <p key={userId}>{thisUser?.firstName} {thisUser?.lastName}</p>
-                );
-                })}
+                 
+                <table className="niceTable resultsTable overallTable">
+  <thead>
+    <tr>
+      <th>Rank</th>
+      <th>Competitor</th>     
+      <th>Championship Pts</th>      
+    </tr>
+  </thead>
+  <tbody>
+  {compUserTotals && compUserTotals
+    .sort((a, b) => b.total - a.total)
+    .map((competitor, i) => {
+      // Find the user with the matching ID in the users array
+      const thisUser = users.find((u) => u._id === competitor.userId);
+console.log(competitor);
+      return (
+        <tr key={i}>
+          <td>{i + 1}</td>
+          <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+          <td className="champ-points">{competitor.total}</td>
+        </tr>
+      );
+     
+    })}
+</tbody>
+</table>
+
+
                 </>
                }
                                 

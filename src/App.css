@@ -98,6 +98,15 @@
   border-radius: 10px;
 }
 
+.disciplineComplete {
+  background-color: #61dafb;
+}
+
+.champ-points {
+  font-weight: bold;
+  background-color: lightgoldenrodyellow;
+}
+
 .menuIcon {
   font-size: 1.5em;
   color: black;
@@ -174,4 +183,15 @@
   background-color: #068d8d;
   color: #ffffff;
   text-align: left;
+}
+
+.resultsTable {
+  border: 1px solid;
+}
+
+.overallTable thead tr {
+  background-color: #F8D102;
+  color: black;
+  text-align: left;
+  border: 1px solid;
 }

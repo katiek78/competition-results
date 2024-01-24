@@ -40,7 +40,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
     useEffect(() => {
         if (editing) return;
 
-        // set configurations        
+        // set configurations
         const configuration = {
             method: "get",
             url: `https://competition-results.onrender.com/competition/${competitionId}`,
@@ -53,7 +53,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             .then((result) => {
 
                 setCompetitionData(result.data);
-              
+
                 //get logged-in user details
                 // console.log(result.data.userId);
                 // console.log(result.data.userEmail);
@@ -97,14 +97,14 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
 
     return (
         <form className="maintext" onSubmit={handleSubmit}>
-            {competitionData.compUsers && !editing &&
+            {competitionData?.compUsers && !editing &&
                 <>
                     <label>
                         User:
                     </label>
                     <select value={user} onChange={(e) => setUser(e.target.value)}>
                         <option value="" disabled>Select a competitor</option>
-                        {users?.filter((usr) => competitionData.compUsers.indexOf(usr._id) > -1).map((usr) => <option key={usr._id} value={usr._id}>{usr.firstName} {usr.lastName}</option>)}
+                        {competitionData && users?.filter((usr) => competitionData.compUsers.indexOf(usr._id) > -1).map((usr) => <option key={usr._id} value={usr._id}>{usr.firstName} {usr.lastName}</option>)}
 
                     </select>
                 </>
@@ -123,7 +123,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             <label>
                 Discipline:
             </label><select value={discipline} onChange={(e) => setDiscipline(e.target.value)}>
-                {disciplines.map((d) => <option key={d.ref} value={d.ref}>{d.label}</option>)}
+                {competitionData.disciplines && disciplines.filter((d) => competitionData.disciplines.includes(d.ref)).map((d) => <option key={d.ref} value={d.ref}>{d.label}</option>)}
             </select>
             </>
             }

@@ -124,6 +124,7 @@ const CompetitionDetail = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                if (!user) return;                
                 const fetchedData = await fetchCurrentUserData(user.userId);
 
                 if (fetchedData) {
