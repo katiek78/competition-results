@@ -59,7 +59,7 @@ const CompetitionAddScore = () => {
             alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added");
             return;
         }
-        
+                
         const newResult = {compUser: user.userId, discipline: getDisciplineRefFromName(decryptedDisciplineName), rawScore: decryptedScore };
 
         //check for duplicate result and alert user if they already submitted one for this discipline

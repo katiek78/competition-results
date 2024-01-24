@@ -72,8 +72,7 @@ function App() {
             const fetchedData = await fetchCurrentUserData(user.userId);
 
             if (fetchedData) {              
-                setUserData(fetchedData);
-                console.log(fetchedData)
+                setUserData(fetchedData);               
             } else {
                 console.log('Failed to fetch user data');
             }
@@ -182,6 +181,14 @@ function App() {
             </RequireAuth>
             }
           />
+          {/* <Route
+          path="/competition_add__user_score/:id"
+          element={
+            <RequireAuth>
+              <CompetitionAddUserScore />
+            </RequireAuth>
+            }
+          /> */}
           <Route
           path="/users"
           element={
