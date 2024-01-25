@@ -8,6 +8,8 @@ import Cookies from "universal-cookie";
 import CompetitionForm from './CompetitionForm';
 import ParticipantsForm from "./ParticipantsForm";
 import { formatNames, nationalEvents, internationalEvents, worldEvents, getDisciplineNameFromRef } from "./constants"
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const cookies = new Cookies();
 
@@ -121,6 +123,60 @@ const CompetitionDetail = () => {
         }
     };
 
+    const deleteAdmin = async (id) => {       
+        try {
+            const updatedCompAdmins = competitionData.compAdmins.filter(adminId => adminId !== id)
+            const response = await axios.put(
+                `https://competition-results.onrender.com/competition/${competitionData._id}`,
+                {
+                    compAdmins: updatedCompAdmins,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            console.log('Competition saved:', response.data);
+            setCompetitionData({...competitionData, compAdmins: updatedCompAdmins})
+        } catch (error) {
+            console.error('Error saving competition:', error);
+        }
+    };
+
+    const deleteParticipant = async (id) => {       
+        try {
+            console.log(competitionData.compUsers)
+              // Convert id to string for comparison
+       // const stringId = id.toString();
+
+        const updatedCompUsers = competitionData.compUsers.filter((userId) => userId !== id);
+        console.log(updatedCompUsers)
+            const updatedCompResults = competitionData.compResults.filter(r => r.compUser !== id)
+            const response = await axios.put(
+                `https://competition-results.onrender.com/competition/${competitionData._id}`,
+                {
+                    compUsers: updatedCompUsers,
+                    compResults: updatedCompResults
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            console.log('Competition saved:', response.data);
+            setCompetitionData((prevData) => ({
+                ...prevData,
+                compUsers: updatedCompUsers,
+                compResults: updatedCompResults,
+            }));
+            // setCompetitionData({...competitionData, compUsers: updatedCompUsers, compResults: updatedCompResults})
+        } catch (error) {
+            console.error('Error saving competition:', error);
+        }
+    };
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -189,12 +245,21 @@ const CompetitionDetail = () => {
             });
     }, [])
 
+    const handleDeleteAdmin = (id) => {
+        if (window.confirm("Are you sure you wish to delete this admin?")) deleteAdmin(id);
+    }
+
+    const handleDeleteParticipant = (id) => {
+        if (window.confirm("Are you sure you wish to delete this participant? All their scores will be deleted.")) deleteParticipant(id);
+    }
 
     return (
+        <>
+        {competitionData &&
         <div>
-            <h1 className="text-center">Competition setup: {competitionData.name}</h1>
-            <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
-            <h2 className="text-center">Format: {formatNames[competitionData.format] || 'not specified'}</h2>
+            <h1 className="text-center">Competition setup: {competitionData?.name}</h1>
+            <h2 className="text-center">{competitionData.dateStart && formatDate(new Date(competitionData.dateStart))} - {competitionData.dateEnd && formatDate(new Date(competitionData.dateEnd))}</h2>
+            <h2 className="text-center">Format: {formatNames[competitionData.format]}</h2>
 
             <Button onClick={() => setShowForm(true)}>Edit competition details</Button>
 
@@ -214,9 +279,9 @@ const CompetitionDetail = () => {
                             <Button onClick={() => setShowAdminForm(true)}>New admin</Button>
 
                             {showAdminForm && (
-                                <ParticipantsForm onSubmitParticipant={saveAdmin} admin={true} />
+                                <ParticipantsForm onSubmitParticipant={saveAdmin} admin={true} group={competitionData.compAdmins} />
                             )}
-                            {competitionData.compAdmins?.map((userId) => {
+                            {/* {competitionData.compAdmins?.map((userId) => {
                                 // Find the user with the matching ID in the users array
                                 const user = users.find((user) => user._id === userId);
 
@@ -224,35 +289,105 @@ const CompetitionDetail = () => {
                                 return (
                                     <p key={userId}>{user?.firstName} {user?.lastName}</p>
                                 );
-                            })}
+                            })} */}
 
+                            <table className="setupTable adminTable niceTable">
+            <thead>
+                <tr>
+                    <th>Admin</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {competitionData.compAdmins?.map((userId) => {
+                    // Find the user with the matching ID in the users array
+                    const user = users.find((user) => user._id === userId);
+
+                    // Display the user names and actions
+                    return (
+                        <tr key={userId}>
+                            <td>{user?.firstName} {user?.lastName}</td>
+                            <td onClick={() => handleDeleteAdmin(userId)}>
+                                <FontAwesomeIcon className="menuIcon" icon={faTrash} />
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
 
                             <h2>Registered participants: ({competitionData.compUsers?.length || 0})</h2>
                             <Button onClick={() => setShowParticipantForm(true)}>New participant</Button>
 
                             {showParticipantForm && (
-                                <ParticipantsForm onSubmitParticipant={saveParticipant} />
+                                <ParticipantsForm onSubmitParticipant={saveParticipant} group={competitionData.compUsers} />
                             )}
-                            {competitionData.compUsers?.map((userId) => {
+                            {/* {competitionData.compUsers?.map((userId) => {
                                 // Find the user with the matching ID in the users array
                                 const user = users.find((user) => user._id === userId);
 
                                 // Display the user names
                                 return (
-                                    <p key={userId}>{user?.firstName} {user?.lastName}</p>
+                                    <p key={userId}>{user?.firstName} {user?.lastName} <FontAwesomeIcon className="menuIcon" icon={faTrash} /></p>
                                 );
-                            })}
+                            })} */}
+                            <table className="setupTable usersTable niceTable">
+            <thead>
+                <tr>
+                    <th>Competitor</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {competitionData.compUsers?.map((userId) => {
+                    // Find the user with the matching ID in the users array
+                    const user = users.find((user) => user._id === userId);
+
+                    // Display the user names and actions
+                    return (
+                        <tr key={userId}>
+                            <td>{user?.firstName} {user?.lastName}</td>
+                            <td onClick={() => handleDeleteParticipant(userId)}>
+                                <FontAwesomeIcon className="menuIcon" icon={faTrash} />
+                            </td>
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+
                         </Col>
 
                         <Col>
                             <h2>Disciplines:</h2>
-                            {competitionData.disciplines?.map((discipline) => {
-
-                                // Display the user's email
+                            {/* {competitionData.disciplines?.map((discipline) => {
+                              
                                 return (
                                     <p key={discipline}>{getDisciplineNameFromRef(discipline)}</p>
                                 );
-                            })}
+                            })} */}
+
+                            <table className="setupTable disciplineTable niceTable">
+            <thead>
+                <tr>
+                    <th>Discipline</th>
+                    {/* <th></th> */}
+                </tr>
+            </thead>
+            <tbody>
+                {competitionData.disciplines?.map((discipline) => {                                   
+                    return (
+                        <tr key={discipline}>
+                            <td>{getDisciplineNameFromRef(discipline)}</td>
+                            {/* <td>
+                                <FontAwesomeIcon className="menuIcon" icon={faTrash} />
+                            </td> */}
+                        </tr>
+                    );
+                })}
+            </tbody>
+        </table>
+
                         </Col>
 
                     </Row>
@@ -260,8 +395,9 @@ const CompetitionDetail = () => {
             </div>
 
         </div>
-
-
+       
+    }
+    </>
     );
 }
 

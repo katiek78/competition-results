@@ -5,7 +5,7 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { getDisciplineNameFromRef, getDisciplineStandardFromRef } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import ScoreForm from "./ScoreForm";
 import { fetchCurrentUserData } from "./utils";
 
@@ -34,11 +34,17 @@ const CompetitionResults = () => {
         return `${year}-${month}-${day}`;
     }
 
-    const getResultFromId = (resultId) => {
-        return competitionData.compResults.find(el => el._id === resultId);
+    const getResult = (user, discipline) => {
+        return competitionData.compResults.find(el => el.compUser === user && el.discipline === discipline);
     }
 
-    const getNumberOfResultsForSelectedDiscipline = () => competitionData.compResults.filter(r => r.discipline === selectedDiscipline).length;
+    // const getNumberOfResultsForDiscipline = (d) => competitionData.compResults.filter(r => r.discipline === d).length;
+
+    const getNumberOfResultsForDiscipline = (d) => {
+        const results = competitionData.compResults.filter(r => r.discipline === d);      
+        return results.length;
+      };
+      
 
     const showCompUsersNotSubmitted = () => {
         const notSubmittedList = competitionData.compUsers
@@ -56,11 +62,19 @@ const CompetitionResults = () => {
         return compResults.some(result => result.compUser === compUser && result.discipline === discipline);
       }
     
-    const handleEditScore = (resultId) => {
-        const result = getResultFromId(resultId);
-        console.log(result)
+    const handleEditScore = (user, discipline) => {
+        const result = getResult(user, discipline);      
         setEditFormValues({score: result.rawScore, time: result.time, discipline: result.discipline, user: result.compUser})
         setShowEditScoreForm(true);
+    };
+
+    const handleDeleteScore = (user, discipline) => {
+        if (window.confirm("Are you sure you wish to delete this result?")) {   
+            const resultIndex = competitionData.compResults.findIndex(
+                (result) => result.compUser === user && result.discipline === discipline
+              );
+            deleteResult(resultIndex)
+        }
     };
 
     const handleSubmitScore = (result, newScore) => {
@@ -91,17 +105,39 @@ const CompetitionResults = () => {
 
     const updateCompetitorTotals = () => {
         if (!competitionData.compUsers) return;
+      
         const updatedCompUserTotals = competitionData.compUsers.map((competitor) => {
           // Calculate the total points for this competitor
-          const totalPoints = competitionData.compResults
-            .filter((result) => result.compUser === competitor)
-            .reduce((total, result) => {
-              // Assuming getChampPoints is a function that calculates championship points
-              const points = getChampPoints(result.discipline, result.rawScore, result.time);              
-              return total + parseFloat(points);
-            }, 0);
+          let totalPoints = 0;
       
-          console.log(`User ID: ${competitor}, Total Points: ${totalPoints}`); // Log total points for each competitor
+          // Track the highest score for disciplines "5N", "SC", or "K"
+          const highestScores = {};
+      
+          competitionData.compResults
+            .filter((result) => result.compUser === competitor)
+            .forEach((result) => {
+              const { discipline, rawScore, time } = result;
+      
+              // Update highest score for "5N", "SC", or "K"
+              if (discipline.includes("5N") || discipline.includes("SC") || discipline.includes("K")) {
+                const disciplineKey = discipline.replace(/\d+$/, ''); // Remove the digits at the end
+                if (!highestScores[disciplineKey] || rawScore > highestScores[disciplineKey].rawScore) {
+                  highestScores[disciplineKey] = { rawScore, time, discipline };
+                } else if (rawScore === highestScores[disciplineKey].rawScore && discipline.includes("SC") && time < highestScores[disciplineKey].time) {
+                  highestScores[disciplineKey] = { rawScore, time, discipline };
+                }
+              } else {
+                // Add points for other disciplines directly
+                const points = getChampPoints(discipline, rawScore, time);
+                totalPoints += parseFloat(points);
+              }
+            });
+      
+          // Add the highest scores for "5N", "SC", or "K" to the total points
+          Object.values(highestScores).forEach(({ rawScore, time, discipline }) => {
+            const points = getChampPoints(discipline, rawScore, time);
+            totalPoints += parseFloat(points);
+          });
       
           return {
             userId: competitor,
@@ -111,28 +147,31 @@ const CompetitionResults = () => {
       
         // You might want to set the updated compUserTotals using the appropriate state updater function
         setCompUserTotals(updatedCompUserTotals);
+      };
       
-        // Optionally, log the updated data
-        console.log('Updated Competitor Totals:', updatedCompUserTotals);
+    const isDisciplineComplete = (d) => competitionData?.compUsers.length > 0 && getNumberOfResultsForDiscipline(d) === competitionData?.compUsers.length;
+
+    const getNumberOfCompleteDisciplines = () => {
+        if (!competitionData?.disciplines) return;
+    
+        // Count the number of complete disciplines
+        return competitionData.disciplines.reduce((count, discipline) => {
+          // Use the provided isDisciplineComplete function to check if the discipline is complete
+          const isComplete = isDisciplineComplete(discipline);
+          return count + (isComplete ? 1 : 0);
+        }, 0);
+      };
+      
+      const isCompetitionComplete = () => {
+        if (competitionData.compUsers?.length === 0) return false;
+        // Check if the number of complete disciplines equals the total number of disciplines
+        return getNumberOfCompleteDisciplines() === competitionData?.disciplines?.length;
       };
 
-    //   const getChampPoints = (discipline, score, time = 0) => {
-    //     if (!standard) return;
-    //     if (discipline === "SC") {
-    //       return score === 52
-    //         ? (standard.part1 / Math.pow(time, standard.part2)).toFixed(2)
-    //         : ((score / 52) * standard.part3).toFixed(2);
-    //     } else if (discipline.includes("K")) {
-    //       return (Math.sqrt(score) * standard).toFixed(2);
-    //     } else {
-    //       return (score / standard * 1000).toFixed(2);
-    //     }
-    //   };
-
     const getChampPoints = (discipline, score, time = 0) => {
-        const thisStandard = getDisciplineStandardFromRef(discipline);
+        const thisStandard = getDisciplineStandardFromRef(discipline) || 0;
         if (!thisStandard) return 0; // Default to 0 if standard is not defined
-        if (discipline === "SC") {
+        if (discipline.includes("SC")) {
           const calculatedPoints =
             score === 52
               ? thisStandard.part1 / Math.pow(time, thisStandard.part2)
@@ -200,6 +239,38 @@ const CompetitionResults = () => {
         }        
     }
 
+    const deleteResult = (indexToDelete) => {
+        if (indexToDelete === 0 || indexToDelete >= competitionData.compResults.length) return;
+
+        const updatedCompResults = [...competitionData.compResults];
+        updatedCompResults.splice(indexToDelete, 1);
+          
+        try {
+            const updatedCompetition = {
+                ...competitionData,
+                compResults: updatedCompResults
+            }
+           
+            // set configurations
+            const configuration = {
+                method: "put",
+                url: `https://competition-results.onrender.com/competition/${id}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: updatedCompetition
+            };
+            
+            axios(configuration);
+          
+            setCompetitionData({ ...competitionData, compResults: updatedCompResults, });
+           
+        } catch (error) {
+            console.error('Error deleting result:', error);
+            alert("The score could not be deleted. Please try again.")
+        }        
+    }
+
     useEffect(() => {
        if (selectedDiscipline) setStandard(getDisciplineStandardFromRef(selectedDiscipline));
        updateCompetitorTotals();
@@ -264,9 +335,6 @@ const CompetitionResults = () => {
 
                 setCompetitionData(result.data);
               
-                //get logged-in user details
-                // console.log(result.data.userId);
-                // console.log(result.data.userEmail);
             })
             .catch((error) => {
                 console.error('Error fetching competition data:', error);
@@ -300,11 +368,13 @@ const CompetitionResults = () => {
 
 
     return (
+        <>
+        {competitionData &&
         <div>
             <h1 className="text-center">Competition results: {competitionData.name}</h1>
-            <h2 className="text-center">{formatDate(new Date(competitionData.dateStart))} - {formatDate(new Date(competitionData.dateEnd))}</h2>
+            <h2 className="text-center">{competitionData.dateStart && formatDate(new Date(competitionData.dateStart))} - {competitionData.dateEnd && formatDate(new Date(competitionData.dateEnd))}</h2>
 
-            <div>
+            <div className="highlightButtonsDiv">
                 {isAdmin() &&
             <p className="highlightText">
                 <Link to={`/competition/${competitionData._id}`}>View Setup >>></Link>
@@ -324,13 +394,18 @@ const CompetitionResults = () => {
                 <span onClick={() => setShowScoreForm(true)}>Add score for a user >>></span>
                 </p>
 
-                {showScoreForm &&
+                
+                </>
+                }
+            </div>
+
+            {showScoreForm &&
                 <ScoreForm onSubmitScore={handleSubmitScore} competitionId={competitionData._id} />}
 
                 {showEditScoreForm && editFormValues &&
                 <ScoreForm onSubmitScore={handleSubmitScore} editing={true} form={editFormValues} />}
-                </>
-                }
+
+            <div className="disciplinesDiv">
 
                 <span className={'disciplineHeading' + (selectedDiscipline ? '' : ' selected')} onClick={() => setSelectedDiscipline('')}>Overall</span>
                 {competitionData.disciplines?.map((discipline) => 
@@ -341,15 +416,23 @@ const CompetitionResults = () => {
                     </span>
                 )}
 
+</div>
+<div className="standingsDiv">
                 <h2> {selectedDiscipline === '' ? "Overall standings" : getDisciplineNameFromRef(selectedDiscipline)}</h2>
-                {selectedDiscipline && (getNumberOfResultsForSelectedDiscipline() < competitionData?.compUsers.length) && 
+                {selectedDiscipline === '' && (
+                isCompetitionComplete() ? <h3 className="compComplete">Competition complete!</h3>
+                : <h3>{getNumberOfCompleteDisciplines()} out of {competitionData.disciplines.length} disciplines complete</h3>)
+                }
+
+
+                {selectedDiscipline && (!isDisciplineComplete(selectedDiscipline)) && 
                 <>
-                <h3>Results received: {competitionData.compResults && getNumberOfResultsForSelectedDiscipline()}/{competitionData.compUsers && competitionData.compUsers.length}</h3>
+                <h3>Results received: {competitionData.compResults && getNumberOfResultsForDiscipline(selectedDiscipline)}/{competitionData.compUsers && competitionData.compUsers.length}</h3>
                 <h4 className="asLink" onClick={showCompUsersNotSubmitted}>Who hasn't submitted a result?</h4>
                 </>
                 }
 
-                {selectedDiscipline && (getNumberOfResultsForSelectedDiscipline() === competitionData?.compUsers.length) && 
+                {selectedDiscipline && (isDisciplineComplete(selectedDiscipline)) && 
                 <>
                 <h3 className="disciplineComplete">All results received - discipline complete</h3>
                 </>
@@ -364,7 +447,7 @@ const CompetitionResults = () => {
       <th>Rank</th>
       <th>Competitor</th>
       <th>Score</th>
-      {selectedDiscipline === 'SC' &&
+      {selectedDiscipline.includes('SC') &&
       <th>Time</th>}
       <th>Championship Pts</th>
       <th></th>
@@ -383,16 +466,16 @@ const CompetitionResults = () => {
             <td>{i + 1}</td>
             <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
             <td>{result.rawScore}</td>
-            {selectedDiscipline === 'SC' &&
+            {selectedDiscipline.includes('SC') &&
       <td>{result.time}</td>}
 
-      {selectedDiscipline !== 'SC' && !selectedDiscipline.includes("K") &&
+      {!selectedDiscipline.includes('SC') && !selectedDiscipline.includes("K") &&
       <td className="champ-points">{(result.rawScore / standard * 1000).toFixed(2)}</td>
       }
 
-      {selectedDiscipline === 'SC' &&
+      {selectedDiscipline.includes('SC') && selectedDiscipline.standard &&
       <td className="champ-points">{result.rawScore === 52 ? 
-        (standard.part1 / Math.pow(result.time, standard.part2)).toFixed(2) 
+        (standard.part1 / Math.pow(result.time, standard.part2)).toFixed(2)
         : (result.rawScore / 52 * standard.part3).toFixed(2)
         }</td>
       }
@@ -400,7 +483,7 @@ const CompetitionResults = () => {
       {selectedDiscipline.includes("K") &&
       <td className="champ-points">{(Math.sqrt(result.rawScore) * standard).toFixed(2)}</td>
       }
-            <td><FontAwesomeIcon className="menuIcon" icon={faEdit} onClick={() => handleEditScore(result._id)} /></td>
+            <td><FontAwesomeIcon className="menuIcon" icon={faEdit} onClick={() => handleEditScore(result.compUser, result.discipline)} />  <FontAwesomeIcon className="menuIcon" icon={faTrash} onClick={() => handleDeleteScore(result.compUser, result.discipline)} /></td>
           </tr>
         );
       })}
@@ -425,8 +508,11 @@ const CompetitionResults = () => {
     .sort((a, b) => b.total - a.total)
     .map((competitor, i) => {
       // Find the user with the matching ID in the users array
-      const thisUser = users.find((u) => u._id === competitor.userId);
-console.log(competitor);
+      const thisUser = users.find((u) => u._id === competitor.userId) || {
+        firstName: "Unknown",
+        lastName: "Unknown"
+      }
+
       return (
         <tr key={i}>
           <td>{i + 1}</td>
@@ -447,8 +533,8 @@ console.log(competitor);
             </div>
 
         </div>
-
-
+}
+        </>
     );
 }
 

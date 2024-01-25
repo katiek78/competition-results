@@ -1,8 +1,8 @@
-export const nationalEvents = ["5N1", "5N2", "15N", "5F", "5W", "D", "SC", "10C", "5I", "5B", "K1", "K2", "K3"];
+export const nationalEvents = ["5N1", "5N2", "15N", "5F", "5W", "D", "SC1", "SC2", "10C", "5I", "5B", "K1", "K2", "K3"];
 
-export const internationalEvents = ["5N1", "5N2", "30N", "15F", "15W", "D", "SC", "30C", "5I", "30B", "K1", "K2", "K3"];
+export const internationalEvents = ["5N1", "5N2", "30N", "15F", "15W", "D", "SC1", "SC2", "30C", "5I", "30B", "K1", "K2", "K3"];
 
-export const worldEvents = ["5N1", "5N2", "60N", "15F", "15W", "D", "SC", "SXC", "60C", "5I", "30B", "K1", "K2", "K3"];
+export const worldEvents = ["5N1", "5N2", "60N", "15F", "15W", "D", "SC1", "SC2", "60C", "5I", "30B", "K1", "K2", "K3"];
 
 export const formatNames = { 'n': 'national', 'i': 'international', 'w': 'World Championship'}
 
@@ -74,8 +74,13 @@ export const disciplines = [
         "standard": 142
     },
     {
-        "ref": "SC",
-        "label": "Speed Cards",
+        "ref": "SC1",
+        "label": "Speed Cards Trial 1",
+        "standard": {part1: 6862, part2: 0.75, part3: 95.19}
+    },
+    {
+        "ref": "SC2",
+        "label": "Speed Cards Trial 2",
         "standard": {part1: 6862, part2: 0.75, part3: 95.19}
     },
     {
@@ -122,8 +127,8 @@ export function getDisciplineNameFromRef(disciplineRef) {
     const matchingDiscipline = disciplines.find(
       (discipline) => discipline.ref === disciplineRef
     );
-
-    return matchingDiscipline.standard;
+    
+    return matchingDiscipline?.standard || null;
   }
 
 

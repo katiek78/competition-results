@@ -10,8 +10,8 @@ const token = cookies.get("TOKEN");
 
 const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
 
-    const [score, setScore] = useState(editing ? form.score : 0);
-    const [time, setTime] = useState(editing ? form.time : 0);
+    const [score, setScore] = useState(editing ? form.score : undefined);
+    const [time, setTime] = useState(editing ? form.time : undefined);
     const [discipline, setDiscipline] = useState(editing ? form.discipline : disciplines[0].ref);
     const [user, setUser] = useState(editing ? form.user : '');
     const [users, setUsers] = useState([]);
@@ -136,7 +136,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             <label>
                 Score:
             </label><input type="text" value={score} onChange={(e) => setScore(e.target.value)} /><br />
-            {discipline === 'SC' &&
+            {discipline.includes('SC') &&
                 <><label>
                     Time:
                 </label><input type="text" value={time} onChange={(e) => setTime(e.target.value)} />

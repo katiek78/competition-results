@@ -10,7 +10,7 @@ const cookies = new Cookies();
 const token = cookies.get("TOKEN");
 
 
-const ParticipantsForm = ({ onSubmitParticipant, admin }) => {
+const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
 
     const [users, setUsers] = useState([]);
     const [id, setId] = useState('');
@@ -28,7 +28,8 @@ const ParticipantsForm = ({ onSubmitParticipant, admin }) => {
         // make the API call
         axios(configuration)
         .then((result) => {
-            console.log(result);
+            console.log(result.data.users);
+            console.log(group)
             setUsers(result.data.users);
 
             //get logged-in user details
@@ -50,12 +51,14 @@ const handleSubmit = (e) => {
 
   return (
     <form className="maintext" onSubmit={handleSubmit}>
-      <label>
+      {/* <label>
         Competitor:
-        </label>
+        </label> */}
         <select value={id} onChange={(e) => setId(e.target.value)}>
-        <option value="" disabled>Select a competitor</option>
-        {users?.map((user) => <option key={user._id} value={user._id}>{user.email}</option>)}
+        <option value="" disabled>Select a user</option>
+        {group && users
+        .filter((user) => !group.includes(user._id))
+        .map((user) => <option key={user._id} value={user._id}>{user.firstName} {user.lastName}</option>)}
 
         </select>
    

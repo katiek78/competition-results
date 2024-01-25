@@ -23,9 +23,7 @@ const Competitions = () => {
       }, [user]);
 
 
-    const handleAddCompetition = (newCompetition) => {
-        // Add the new competition to the state
-        setCompetitions([...competitions, newCompetition]);
+    const handleAddCompetition = (newCompetition) => {        
         saveCompetition(newCompetition);
         setShowForm(false);
       };
@@ -52,6 +50,9 @@ const Competitions = () => {
         };
         const response = await axios(configuration);
         console.log('Competition saved:', response.data);
+        const newCompetition = response.data;
+         // Update competitions state, making sure to set the id correctly
+        setCompetitions((prevCompetitions) => [...prevCompetitions, newCompetition]);
     } catch (error) {
         console.error('Error saving competition:', error);
     }
