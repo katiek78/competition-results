@@ -56,6 +56,7 @@ export default function Register() {
             password,
             },
         };
+
          // make the API call
         axios(configuration)
         .then((result) => {
@@ -63,7 +64,7 @@ export default function Register() {
         setIsSubmitted(true);
 
         //send an email
-        sendRegistrationMail(configuration.email, configuration.firstName);
+        sendRegistrationMail(configuration.data.email, configuration.data.firstName);
 
         // redirect user to the home page
         window.location.href = "/";
