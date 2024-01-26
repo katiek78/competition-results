@@ -170,7 +170,7 @@
 .niceTable {
     border-collapse: collapse;
     margin: 14px auto;
-    width: 70%;
+    width: 75%;
     font-size: 1em;
     font-family: sans-serif;
     min-width: 400px;
@@ -180,7 +180,7 @@
 .niceTable thead tr {
   background-color: #4CAF50;
   color: #ffffff;
-  text-align: left;
+  text-align: center;
 }
 
 .niceTable th,
@@ -227,4 +227,8 @@
 .overallTable thead tr {
   background-color: #F8D102;
   color: black;
+}
+
+.corrections {
+  width:300px;
 }

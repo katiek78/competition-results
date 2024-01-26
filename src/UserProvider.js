@@ -8,10 +8,8 @@ const UserContext = createContext();
 
 const UserProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  
 
-  console.log('UserProvider - User:', user);
-
+//   console.log('UserProvider - User:', user);
 
   useEffect(() => {
     const cookies = new Cookies();
@@ -30,7 +28,6 @@ const UserProvider = ({ children }) => {
 
 
   const updateUser = (userData) => {   
-    console.log(userData.email)
     setUser(userData);
   };
 

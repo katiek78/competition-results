@@ -22,45 +22,48 @@ const CompetitionAddScore = () => {
     const [score, setScore] = useState(0);
     const [disciplineName, setDisciplineName] = useState('');
 
-    const RECENT_MINUTES = 20;
+    const RECENT_MINUTES = 20000;
 
     function decryptMessage(msg) {
         var key = "123";
-      
+
         // Decrypt the message
         var bytes = CryptoJS.AES.decrypt(msg, key);
         var decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
-      
+
         // Replace special characters if needed
         decryptedMessage = decryptedMessage.replace(/#/g, "\n").replace(/\*/g, "\t");
-      
+
         return decryptedMessage;
-      }
+    }
 
     function findMatchingDiscipline(d) {
-    // Find the discipline in the array based on label
-    return disciplines.find(discipline => discipline.label === d);
+        // Find the discipline in the array based on label
+        return disciplines.find(discipline => discipline.label === d);
     }
 
     function isDuplicateResult(compResults, compUser, discipline) {
         return compResults.some(result => result.compUser === compUser && result.discipline === discipline);
-      }
+    }
 
     // const showScore = (score, disciplineName) => {
     //     setMessage(`Thank you! You've submitted a score of ${score} for ${disciplineName}. If you believe this score is incorrect, please keep your result on screen and see a competition official.`)
     // }
 
 
-    const saveScore = (decryptedScore, decryptedDisciplineName) => {
-      
+    const saveScore = (decryptedScore, decryptedDisciplineName, time, additionalInfo) => {
+
         const disciplineRef = getDisciplineRefFromName(decryptedDisciplineName);
-    
+
         if (disciplineRef === 'Unknown Discipline') {
             alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added");
             return;
         }
-                
-        const newResult = {compUser: user.userId, discipline: getDisciplineRefFromName(decryptedDisciplineName), rawScore: decryptedScore };
+
+        const newResult = { compUser: user.userId, discipline: getDisciplineRefFromName(decryptedDisciplineName), rawScore: decryptedScore };
+        if (disciplineRef.includes("SC")) newResult.time = time;
+        if (disciplineRef.includes("W")) newResult.additionalInfo = additionalInfo;
+        
 
         //check for duplicate result and alert user if they already submitted one for this discipline
         if (isDuplicateResult(competitionData.compResults, newResult.compUser, newResult.discipline)) {
@@ -85,75 +88,157 @@ const CompetitionAddScore = () => {
                 },
                 data: updatedCompetition
             };
-            
+
             axios(configuration);
             setScore(decryptedScore);
             setDisciplineName(decryptedDisciplineName);
             setCompetitionData({ ...competitionData, compResults: updatedCompetition.compResults, });
             setShowMessage(true);
-           
+
         } catch (error) {
             console.error('Error adding result:', error);
             alert("Your score could not be added. Please try submitting again, or see a competition official.")
-        }        
+        }
     }
 
-    const handleSubmitScore = () => {        
-        //example    
-        //U2FsdGVkX1+SH9v3jyQxf+sM6zabyDhf+lmboyeTo8DCEBZ9og1+y3Yum3PoVMgbIThCOPbBP9QC2FRusHNtgVtICGu/3QbDiRhJC62W/bOdV+N9Vxfsk2OlicGD3NyDHR78BWcVWhkP0pzzX150zfpDNxUcnvquC3AGQpZ1oTA=
-        
-        //example
-        // U2FsdGVkX1+capKaSvir9g3hWyBepNV8ASaxFccx3hrx19zwWs3QccrkkgVQvU8cMdvlAG5pC7BrlwVdIpb2hdzYSmJKMOpl+Zst0uDXSKHcP09dHloT4DjvK1rVTJMvq6yDnHAssbSwEKyBmlAlMQ==
-        
+    const handleSubmitScore = () => {
+        //decrypt the message
         const decryptedText = decryptMessage(code);
         alert(decryptedText)
 
-         //parse the decrypted text
-//         const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+) \/\/ Timestamp: (.+)/;
-     //   const pattern = /Discipline: ([^/]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/(?: Time:([\s\S]+))? \/\/ Timestamp: (.+)/;
-     const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+        let decryptedScore, additionalInfo, time, timestamp;
 
+        // Parse the discipline name separately
+        const disciplinePattern = /Discipline: ([^//]+)/;
+        const disciplineMatch = decryptedText.match(disciplinePattern);
+        const decryptedDisciplineName = disciplineMatch[1].trim();
 
-//"Discipline: 10-Minute Cards // Score: 6
- // Time:0.00 // Timestamp: Tue, 23 Jan 2024 12:46:28 GMT"
+        console.log("banana")
+        //parse the text
+        if (decryptedDisciplineName.includes("Words")) {
+            console.log("tomato")
+            // Split by //
+            const parts = decryptedText.split(/\s*\/\/\s*/);
 
-         const match = decryptedText.match(pattern);
+            // Find the part with "Score:" and process it
+            const scorePart = parts.find(part => part.includes("Score:"));
+            if (scorePart) {
+                // Remove "Score:" and take everything before the first newline as the score
+                const scoreMatch = scorePart.replace("Score:", "").split(/\r?\n/);
+                decryptedScore = parseInt(scoreMatch[0], 10);
 
-        if (match) {
-            const decryptedDisciplineName = match[1];
-            const decryptedScore = parseInt(match[2], 10); // Parse score as an integer
-            const timestamp = new Date(match[4]);
-       
-            // Check if the timestamp is recent and alert user if not
-            // const now = Date.now();
-            // const timeDifference = now - timestamp.getTime();
-            // const isRecent = timeDifference <= RECENT_MINUTES * 60 * 1000;
+                // Take the rest of the part as additional info
+                additionalInfo = scoreMatch.slice(1).join('\n').trim();
 
-        
-            const isRecent = (Date.now() - timestamp.getTime()) <= RECENT_MINUTES * 60 * 1000;
-        
-            if (!isRecent) {
-                alert("This code was generated more than 20 minutes ago. Please see a competition official. Note: Your score has NOT been added.")
-                return;
-            } 
-
-            // Check if disciplineName can be matched to a discipline and if not, alert user
-            if (findMatchingDiscipline(decryptedDisciplineName)) {
-                saveScore(decryptedScore, decryptedDisciplineName);
-            } else {
-                alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added.")
+                // Extract timestamp from the last part and remove "Timestamp:"
+                timestamp = new Date(parts[parts.length - 1].replace("Timestamp:", "").trim());
             }
+
+            // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)([\s\S]+?) \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+
+            // const match = decryptedText.match(pattern);
+            // console.log('Match:', match);
+            // if (match) {
+            //     decryptedScore = parseInt(match[2], 10); // Parse score as an integer
+            //     additionalInfo = match[3].trim(); // Trim extra info
+            //     timestamp = new Date(match[4]);
+
+            //     console.log(timestamp);
+    
+            //     // Process additional info if available
+            //     if (additionalInfo) {
+            //         // Check if the additional info contains column numbers and symbols
+            //         const correctionsPattern = /(\d+[\s\S]*?\(\d+\))/g;
+            //         const correctionsMatch = additionalInfo.match(correctionsPattern);
+    
+            //         if (correctionsMatch) {
+            //             const correctionsOutput = correctionsMatch.map((correction) => {
+            //                 const [column, symbols] = correction.split(/\s+/);
+            //                 return `Col ${column}: ${symbols}`;
+            //             });
+    
+            //             additionalInfo = correctionsOutput.join(', ');
+            //         }
+            //    }
+            // }
+
+            // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)([\s\S]+?) \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+
+            // const match = decryptedText.match(pattern);
+            // console.log('Match:', match);
+            // if (match) {
+            //     decryptedScore = parseInt(match[2], 10); // Parse score as an integer
+            //     additionalInfo = match[3].trim(); // Trim extra info
+            //     timestamp = new Date(match[4]);
+    
+            //     // Process additional info if available
+            //     if (additionalInfo) {
+            //         // Check if the additional info contains column numbers and symbols
+            //         const correctionsPattern = /(\d+[\s\S]*?\(\d+\))/g;
+            //         const correctionsMatch = additionalInfo.match(correctionsPattern);
+    
+            //         if (correctionsMatch) {
+            //             const correctionsOutput = correctionsMatch.map((correction, index) => {
+            //                 const [column, symbols] = correction.split(/\s+/);
+            //                 return `${index !== 0 ? '\n' : ''}Col ${column}: ${symbols}`;
+            //             });
+    
+            //             additionalInfo = correctionsOutput.join(', ');
+            //         }
+            //     }
+            // }
         } else {
-            // If string does not match pattern, alert the user that they need to check and try again
-        alert("Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added.");
-        return;
+
+            const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+
+            const match = decryptedText.match(pattern);
+
+            if (match) {
+
+                decryptedScore = parseInt(match[2], 10); // Parse score as an integer
+                time = disciplineName.includes("SC") ? match[3] : undefined;
+                timestamp = new Date(match[4]);
+            } else {
+                // If string does not match pattern, alert the user that they need to check and try again
+                alert("Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added.");
+                return;
+            }
+        }
+        //example    
+        //U2FsdGVkX1+SH9v3jyQxf+sM6zabyDhf+lmboyeTo8DCEBZ9og1+y3Yum3PoVMgbIThCOPbBP9QC2FRusHNtgVtICGu/3QbDiRhJC62W/bOdV+N9Vxfsk2OlicGD3NyDHR78BWcVWhkP0pzzX150zfpDNxUcnvquC3AGQpZ1oTA=
+
+        //example
+        // U2FsdGVkX1+capKaSvir9g3hWyBepNV8ASaxFccx3hrx19zwWs3QccrkkgVQvU8cMdvlAG5pC7BrlwVdIpb2hdzYSmJKMOpl+Zst0uDXSKHcP09dHloT4DjvK1rVTJMvq6yDnHAssbSwEKyBmlAlMQ==
+
+
+        //parse the decrypted text
+        //         const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+) \/\/ Timestamp: (.+)/;
+        //   const pattern = /Discipline: ([^/]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/(?: Time:([\s\S]+))? \/\/ Timestamp: (.+)/;
+
+        //"Discipline: 10-Minute Cards // Score: 6
+        // Time:0.00 // Timestamp: Tue, 23 Jan 2024 12:46:28 GMT"
+
+
+        // Check if the timestamp is recent and alert user if not
+        // const now = Date.now();
+        // const timeDifference = now - timestamp.getTime();
+        // const isRecent = timeDifference <= RECENT_MINUTES * 60 * 1000;
+
+
+        const isRecent = (Date.now() - timestamp.getTime()) <= RECENT_MINUTES * 60 * 1000;
+
+        if (!isRecent) {
+            alert("This code was generated more than 20 minutes ago. Please see a competition official. Note: Your score has NOT been added.")
+            return;
         }
 
+        // Check if disciplineName can be matched to a discipline and if not, alert user
+        if (findMatchingDiscipline(decryptedDisciplineName)) {
+            saveScore(decryptedScore, decryptedDisciplineName, time, additionalInfo);
+        } else {
+            alert("There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added.")
+        }
 
-        //if the string makes sense, determine if it can be assigned to an event
-        //if it can be assigned, save it to the results
-
-        //if it cannot be assigned, save it to a list of dubiousResults for admins to deal with and assign
     }
 
     useEffect(() => {
@@ -178,7 +263,7 @@ const CompetitionAddScore = () => {
                     axios(configuration)
                         .then((result) => {
                             setCompetitionData(result.data);
-                       
+
                             //only allow users who are in compUsers                          
                             if (result.data.compUsers?.indexOf(fetchedData._id) === -1) {
                                 // redirect user to the home page
@@ -198,41 +283,41 @@ const CompetitionAddScore = () => {
         fetchData();
     }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
 
-   
+
     return (
         <>
-        <div>
-            <h1 className="text-center">{competitionData.name}</h1>
-            {!showMessage &&
-            <>
-            <h2 className="text-center">Adding score for {userData.firstName} {userData.lastName}</h2>
+            <div>
+                <h1 className="text-center">{competitionData.name}</h1>
+                {!showMessage &&
+                    <>
+                        <h2 className="text-center">Adding score for {userData.firstName} {userData.lastName}</h2>
 
-<form className="maintext niceForm">
-    <label>Paste your code here:</label>
-    <input size={50} type="text" value={code} onChange={(e) => setCode(e.target.value)}></input>
-    <Button onClick={handleSubmitScore}>Submit score</Button>
-</form>
-</>
-}
+                        <form className="maintext niceForm">
+                            <label>Paste your code here:</label>
+                            <input size={50} type="text" value={code} onChange={(e) => setCode(e.target.value)}></input>
+                            <Button onClick={handleSubmitScore}>Submit score</Button>
+                        </form>
+                    </>
+                }
 
-{showMessage !== '' && (
-    <>
-  <div className="maintext">
-    Thank you! You've submitted a score of <strong>{score}</strong> for{' '}
-    <strong>{disciplineName}</strong>. If you believe this score is incorrect,
-    please keep your result on screen and see a competition official.
-    <p className="highlightText">
-                    <Link to={`/competition_results/${id}`}>Back to results page >>></Link>
-                </p>
-    
-  </div>
+                {showMessage !== '' && (
+                    <>
+                        <div className="maintext">
+                            Thank you! You've submitted a score of <strong>{score}</strong> for{' '}
+                            <strong>{disciplineName}</strong>. If you believe this score is incorrect,
+                            please keep your result on screen and see a competition official.
+                            <p className="highlightText">
+                                <Link to={`/competition_results/${id}`}>Back to results page >>></Link>
+                            </p>
 
-  </>
-)}
+                        </div>
+
+                    </>
+                )}
             </div>
-                
-               
-            </>
+
+
+        </>
 
     );
 }
