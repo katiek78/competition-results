@@ -10,6 +10,37 @@ export default function Register() {
     const [register, setRegister] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
 
+    const sendRegistrationMail = async (eml, fn) => {
+
+        // const msg = {
+        //     to: eml, // Change to your recipient
+        //     from: 'info@iam-memory.org', // Change to your verified sender
+        //     subject: 'Welcome to the IAM Results Centre',
+        //     html: `Dear ${fn}, <br />Thanks for registering!`,            
+        //   }
+        //   sgMail
+        //     .send(msg)
+        //     .then(() => {
+        //       console.log('Email sent')
+        //     })
+        //     .catch((error) => {
+        //       console.error(error)
+        //     })
+
+            try {
+              await axios.post('https://competition-results.onrender.com/send-email', {
+                to: eml,
+                subject: 'Welcome to the IAM Results Centre',
+                html: `Dear ${fn}, <br />Thanks for registering!`,
+              });
+          
+              console.log('Email sent successfully');
+            } catch (error) {
+              console.error('Error sending email:', error);
+            }
+         
+    }
+
     const handleSubmit = (e) => {
         // prevent the form from refreshing the whole page
         e.preventDefault();
@@ -30,6 +61,9 @@ export default function Register() {
         .then((result) => {
         setRegister(true);
         setIsSubmitted(true);
+
+        //send an email
+        sendRegistrationMail(configuration.email, configuration.firstName);
 
         // redirect user to the home page
         window.location.href = "/";

@@ -62,8 +62,10 @@ const CompetitionAddScore = () => {
 
         const newResult = { compUser: user.userId, discipline: getDisciplineRefFromName(decryptedDisciplineName), rawScore: decryptedScore };
         if (disciplineRef.includes("SC")) newResult.time = time;
-        if (disciplineRef.includes("W")) newResult.additionalInfo = additionalInfo;
-        
+        if (disciplineRef.includes("W")) {
+            newResult.additionalInfo = additionalInfo;
+            newResult.provisional = true;
+        }
 
         //check for duplicate result and alert user if they already submitted one for this discipline
         if (isDuplicateResult(competitionData.compResults, newResult.compUser, newResult.discipline)) {
@@ -113,10 +115,8 @@ const CompetitionAddScore = () => {
         const disciplineMatch = decryptedText.match(disciplinePattern);
         const decryptedDisciplineName = disciplineMatch[1].trim();
 
-        console.log("banana")
         //parse the text
-        if (decryptedDisciplineName.includes("Words")) {
-            console.log("tomato")
+        if (decryptedDisciplineName.includes("Words")) {          
             // Split by //
             const parts = decryptedText.split(/\s*\/\/\s*/);
 
@@ -133,60 +133,6 @@ const CompetitionAddScore = () => {
                 // Extract timestamp from the last part and remove "Timestamp:"
                 timestamp = new Date(parts[parts.length - 1].replace("Timestamp:", "").trim());
             }
-
-            // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)([\s\S]+?) \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
-
-            // const match = decryptedText.match(pattern);
-            // console.log('Match:', match);
-            // if (match) {
-            //     decryptedScore = parseInt(match[2], 10); // Parse score as an integer
-            //     additionalInfo = match[3].trim(); // Trim extra info
-            //     timestamp = new Date(match[4]);
-
-            //     console.log(timestamp);
-    
-            //     // Process additional info if available
-            //     if (additionalInfo) {
-            //         // Check if the additional info contains column numbers and symbols
-            //         const correctionsPattern = /(\d+[\s\S]*?\(\d+\))/g;
-            //         const correctionsMatch = additionalInfo.match(correctionsPattern);
-    
-            //         if (correctionsMatch) {
-            //             const correctionsOutput = correctionsMatch.map((correction) => {
-            //                 const [column, symbols] = correction.split(/\s+/);
-            //                 return `Col ${column}: ${symbols}`;
-            //             });
-    
-            //             additionalInfo = correctionsOutput.join(', ');
-            //         }
-            //    }
-            // }
-
-            // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)([\s\S]+?) \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
-
-            // const match = decryptedText.match(pattern);
-            // console.log('Match:', match);
-            // if (match) {
-            //     decryptedScore = parseInt(match[2], 10); // Parse score as an integer
-            //     additionalInfo = match[3].trim(); // Trim extra info
-            //     timestamp = new Date(match[4]);
-    
-            //     // Process additional info if available
-            //     if (additionalInfo) {
-            //         // Check if the additional info contains column numbers and symbols
-            //         const correctionsPattern = /(\d+[\s\S]*?\(\d+\))/g;
-            //         const correctionsMatch = additionalInfo.match(correctionsPattern);
-    
-            //         if (correctionsMatch) {
-            //             const correctionsOutput = correctionsMatch.map((correction, index) => {
-            //                 const [column, symbols] = correction.split(/\s+/);
-            //                 return `${index !== 0 ? '\n' : ''}Col ${column}: ${symbols}`;
-            //             });
-    
-            //             additionalInfo = correctionsOutput.join(', ');
-            //         }
-            //     }
-            // }
         } else {
 
             const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;

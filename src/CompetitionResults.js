@@ -5,7 +5,7 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { getDisciplineNameFromRef, getDisciplineStandardFromRef } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faQuestion, faTrash, faCheckDouble, faUserCheck } from '@fortawesome/free-solid-svg-icons';
 import ScoreForm from "./ScoreForm";
 import { fetchCurrentUserData } from "./utils";
 
@@ -64,7 +64,8 @@ const CompetitionResults = () => {
 
     const handleEditScore = (user, discipline) => {
         const result = getResult(user, discipline);
-        setEditFormValues({ score: result.rawScore, time: result.time, discipline: result.discipline, user: result.compUser })
+        setEditFormValues({ ...result, score: result.rawScore, user: result.compUser });
+        //setEditFormValues({ score: result.rawScore, time: result.time, discipline: result.discipline, user: result.compUser, additionalInfo: result.additionalInfo, provisional: result.provisional })
         setShowEditScoreForm(true);
     };
 
@@ -77,6 +78,18 @@ const CompetitionResults = () => {
         }
     };
 
+    const handleMarkComplete = (usr, discipline) => {
+        const result = getResult(usr, discipline);
+        const { rawScore, time, additionalInfo } = result;
+        saveScore(rawScore, time, usr, discipline, false, false, additionalInfo); //only change is to mark provisional as false
+    }
+
+    const handleMarkProvisional = (usr, discipline) => {
+        const result = getResult(usr, discipline);
+        const { rawScore, time, additionalInfo } = result;
+        saveScore(rawScore, time, usr, discipline, false, true, additionalInfo); //only change is to mark provisional as true
+    }
+
     const handleSubmitScore = (result, newScore) => {
         if (!result) {
             if (newScore) {
@@ -84,7 +97,7 @@ const CompetitionResults = () => {
             } else setShowEditScoreForm(false);
             return;
         }
-        const { score, time, discipline, user } = result;
+        const { score, time, discipline, user, additionalInfo, provisional } = result;
         //check for duplicate result and alert
         if (newScore && isDuplicateResult(competitionData.compResults, user, discipline)) {
             alert("User already has a score for this discipline. Please find the score in the results and edit it from there.");
@@ -94,7 +107,7 @@ const CompetitionResults = () => {
         const rawScore = parseFloat(score);
         if (isNaN(rawScore)) {
             alert("The score you entered could not be processed. Score must be a number.")
-        } else saveScore(rawScore, time, user, discipline, newScore);
+        } else saveScore(rawScore, time, user, discipline, newScore, provisional, additionalInfo);
 
         if (newScore) {
             setShowScoreForm(false);
@@ -184,9 +197,9 @@ const CompetitionResults = () => {
         }
     };
 
-    const saveScore = (rawScore, time = 0, user, discipline, newScore) => {
+    const saveScore = (rawScore, time = 0, user, discipline, newScore, provisional, additionalInfo) => {
 
-        const newResult = { compUser: user, discipline, rawScore, time };
+        const newResult = { compUser: user, discipline, rawScore, time, provisional, additionalInfo };
 
         try {
             let updatedCompetition;
@@ -370,6 +383,7 @@ const CompetitionResults = () => {
     // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
 
     function formatCorrections(corrections) {
+        if (!corrections) return;
         const parts = corrections.split(/\s+/);
         let output = "";
         let currentColumn = "";
@@ -477,7 +491,11 @@ const CompetitionResults = () => {
                                             {selectedDiscipline.includes('SC') &&
                                                 <th>Time</th>}
                                             {selectedDiscipline.includes('W') &&
-                                                <th className="corrections">Corrections</th>}
+                                               
+                                                <>
+                                                <th className="corrections">Corrections</th>
+                                                <th>Status</th>
+                                                </>}
                                             <th>Championship Pts</th>
                                             <th></th>
                                         </tr>
@@ -489,16 +507,18 @@ const CompetitionResults = () => {
                                             .map((result, i) => {
                                                 // Find the user with the matching ID in the users array
                                                 const thisUser = users.find((u) => u._id === result.compUser);
-
                                                 return (
-                                                    <tr key={i}>
+                                                    <tr key={i} className={result.provisional && "provisional"}>
                                                         <td>{i + 1}</td>
                                                         <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
                                                         <td>{result.rawScore}</td>
                                                         {selectedDiscipline.includes('SC') &&
                                                             <td>{result.time}</td>}
                                                         {selectedDiscipline.includes('W') &&
+                                                        <>
                                                         <td dangerouslySetInnerHTML={{__html: formatCorrections(result.additionalInfo)}}></td>
+                                                        <td>{result.provisional ? <FontAwesomeIcon title="Provisional" className="menuIcon" icon={faQuestion} /> : <FontAwesomeIcon title="Complete" className="menuIcon" icon={faUserCheck} />}</td>
+                                                        </>
                                                         }
 
                                                         {!selectedDiscipline.includes('SC') && !selectedDiscipline.includes("K") &&
@@ -515,7 +535,11 @@ const CompetitionResults = () => {
                                                         {selectedDiscipline.includes("K") &&
                                                             <td className="champ-points">{(Math.sqrt(result.rawScore) * standard).toFixed(2)}</td>
                                                         }
-                                                        <td><FontAwesomeIcon className="menuIcon" icon={faEdit} onClick={() => handleEditScore(result.compUser, result.discipline)} />  <FontAwesomeIcon className="menuIcon" icon={faTrash} onClick={() => handleDeleteScore(result.compUser, result.discipline)} /></td>
+                                                        <td><FontAwesomeIcon title="Edit Score" className="actionIcon" icon={faEdit} onClick={() => handleEditScore(result.compUser, result.discipline)} />  
+                                                            <FontAwesomeIcon title="Delete Score" className="actionIcon" icon={faTrash} onClick={() => handleDeleteScore(result.compUser, result.discipline)} />
+                                                            {result.provisional ? <FontAwesomeIcon title="Mark as Complete" className="actionIcon" icon={faCheckDouble} onClick={() => handleMarkComplete(result.compUser, result.discipline)} />
+                                                            : <FontAwesomeIcon title="Mark as Provisional" className="actionIcon" icon={faQuestion} onClick={() => handleMarkProvisional(result.compUser, result.discipline)} />}
+                                                            </td>
                                                     </tr>
                                                 );
                                             })}

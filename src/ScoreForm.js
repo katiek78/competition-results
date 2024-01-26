@@ -13,6 +13,8 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
     const [score, setScore] = useState(editing ? form.score : undefined);
     const [time, setTime] = useState(editing ? form.time : undefined);
     const [discipline, setDiscipline] = useState(editing ? form.discipline : disciplines[0].ref);
+    const [provisional, setProvisional] = useState(editing ? form.provisional : undefined)
+    const [additionalInfo, setAdditionalInfo] = useState(editing ? form.additionalInfo : undefined);
     const [user, setUser] = useState(editing ? form.user : '');
     const [users, setUsers] = useState([]);
     const [competitionData, setCompetitionData] = useState({});
@@ -82,8 +84,12 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             score,
             time,
             discipline,
-            user
+            user,
+            provisional: editing ? provisional : discipline.includes("W"),
+            additionalInfo
         };
+
+        console.log(result);
 
         // Call the callback to add the result
         onSubmitScore(result, !editing);

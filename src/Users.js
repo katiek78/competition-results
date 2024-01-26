@@ -4,6 +4,8 @@ import Cookies from "universal-cookie";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData } from "./utils";
 import { Button } from "react-bootstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const cookies = new Cookies();
 
@@ -27,6 +29,34 @@ const Users = () => {
         } catch (err) {
             console.log("error: ", err);
         }
+    }
+
+    const handleDeleteUser = async (userId) => {
+        try {
+            // set configurations
+            const configuration = {
+                method: "delete",
+                url: `https://competition-results.onrender.com/users/${userId}`,
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },               
+            };
+            const response = await axios(configuration);
+            console.log('User deleted:', response.data);
+          
+            // setUsers(prevUsers => [...prevUsers, newUser]);
+          
+            setUsers(prevUsers => {
+                // Use filter to exclude the user with the specified userId
+                const newUsers = prevUsers.filter(user => user._id !== userId);
+            
+                return newUsers;
+            });
+
+        } catch (error) {
+            console.error('Error deleting user:', error);
+        }
+
     }
 
     const saveUser = async (newUser) => {
@@ -110,6 +140,7 @@ const Users = () => {
                     <tr>
                         <th>Name</th>
                         <th>Email</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,6 +148,7 @@ const Users = () => {
                         <tr key={usr._id}>
                             <td>{`${usr.firstName} ${usr.lastName}`}</td>
                             <td>{usr.email}</td>
+                            <td> {usr.role !== 'superAdmin' && <FontAwesomeIcon title="Delete User" className="actionIcon" icon={faTrash} onClick={() => handleDeleteUser(usr._id)} />}</td>
                         </tr>
                     )}
                 </tbody>

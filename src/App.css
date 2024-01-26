@@ -140,6 +140,12 @@
   padding: 0px 3px;
 }
 
+.actionIcon {
+  font-size: 1.5em;
+  color: black;
+  padding: 10px;
+}
+
 .disciplineHeading {
   display: inline-block;
   font-size: 1em;
@@ -170,7 +176,7 @@
 .niceTable {
     border-collapse: collapse;
     margin: 14px auto;
-    width: 75%;
+    width: 100%;
     font-size: 1em;
     font-family: sans-serif;
     min-width: 400px;
@@ -180,7 +186,6 @@
 .niceTable thead tr {
   background-color: #4CAF50;
   color: #ffffff;
-  text-align: center;
 }
 
 .niceTable th,
@@ -224,11 +229,19 @@
   border: 1px solid;
 }
 
+.resultsTable thead tr {
+  text-align: center;
+}
+
 .overallTable thead tr {
   background-color: #F8D102;
   color: black;
 }
 
 .corrections {
-  width:300px;
+  width:400px;
+}
+
+.provisional {
+  color: #888;
 }
