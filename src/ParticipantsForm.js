@@ -33,8 +33,8 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
             setUsers(result.data.users);
 
             //get logged-in user details
-            console.log(result.data.userId);
-            console.log(result.data.userEmail);
+            // console.log(result.data.userId);
+            // console.log(result.data.userEmail);
         })
         .catch((error) => {
         error = new Error();

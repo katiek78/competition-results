@@ -32,6 +32,7 @@ const Users = () => {
     }
 
     const handleDeleteUser = async (userId) => {
+        if (!window.confirm("Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.")) return;
         try {
             // set configurations
             const configuration = {
@@ -93,7 +94,7 @@ const Users = () => {
             try {
                 const fetchedData = await fetchCurrentUserData(user.userId);
 
-                //only allow users who are in compAdmins, or superAdmins                          
+                //only allow users who are admins or superAdmins                          
                 if (fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
                     // redirect user to the home page
                     window.location.href = "/";

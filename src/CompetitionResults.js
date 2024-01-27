@@ -115,6 +115,7 @@ const CompetitionResults = () => {
     }
 
     const isAdmin = () => ((competitionData.compAdmins && competitionData.compAdmins.indexOf(user.userId) > -1) || userData.role === 'superAdmin');
+    const isParticipant = () => (competitionData.compUsers && competitionData.compUsers.indexOf(user.userId) > -1);
 
     const updateCompetitorTotals = () => {
         if (!competitionData.compUsers) return;
@@ -314,11 +315,11 @@ const CompetitionResults = () => {
                         .then((result) => {
                             setCompetitionData(result.data);
 
-                            //only allow users who are in compAdmins, or superAdmins                          
-                            if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
-                                // redirect user to the home page
-                                window.location.href = "/";
-                            }
+                            // //only allow users who are in compAdmins, or superAdmins                          
+                            // if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
+                            //     // redirect user to the home page
+                            //     window.location.href = "/";
+                            // }
                         })
                         .catch((error) => {
                             console.error('Error fetching competition data:', error);
@@ -422,13 +423,13 @@ const CompetitionResults = () => {
                             </p>
                         }
 
-                        {isAdmin() &&
+                        {isParticipant() &&
                             <p className="highlightText">
                                 <Link to={`/competition_add_score/${competitionData._id}`}>Add my score >>></Link>
                             </p>
                         }
 
-                        {isAdmin() &&
+                        {isAdmin() && !isParticipant() &&
                             <>
                                 <p className="highlightText">
                                     {/* <Link to={`/competition_add_user_score/${competitionData._id}/`}>Add score for a user >>></Link> */}
@@ -493,11 +494,11 @@ const CompetitionResults = () => {
                                             {selectedDiscipline.includes('W') &&
                                                
                                                 <>
-                                                <th className="corrections">Corrections</th>
+                                                {isAdmin() && <th className="corrections">Corrections</th> }
                                                 <th>Status</th>
                                                 </>}
                                             <th>Championship Pts</th>
-                                            <th></th>
+                                            {isAdmin() && <th></th>}
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -508,7 +509,7 @@ const CompetitionResults = () => {
                                                 // Find the user with the matching ID in the users array
                                                 const thisUser = users.find((u) => u._id === result.compUser);
                                                 return (
-                                                    <tr key={i} className={result.provisional && "provisional"}>
+                                                    <tr key={i} className={result.provisional ? "provisional" : ''}>
                                                         <td>{i + 1}</td>
                                                         <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
                                                         <td>{result.rawScore}</td>
@@ -516,7 +517,7 @@ const CompetitionResults = () => {
                                                             <td>{result.time}</td>}
                                                         {selectedDiscipline.includes('W') &&
                                                         <>
-                                                        <td dangerouslySetInnerHTML={{__html: formatCorrections(result.additionalInfo)}}></td>
+                                                        {isAdmin() && <td dangerouslySetInnerHTML={{__html: formatCorrections(result.additionalInfo)}}></td>}
                                                         <td>{result.provisional ? <FontAwesomeIcon title="Provisional" className="menuIcon" icon={faQuestion} /> : <FontAwesomeIcon title="Complete" className="menuIcon" icon={faUserCheck} />}</td>
                                                         </>
                                                         }
@@ -535,11 +536,11 @@ const CompetitionResults = () => {
                                                         {selectedDiscipline.includes("K") &&
                                                             <td className="champ-points">{(Math.sqrt(result.rawScore) * standard).toFixed(2)}</td>
                                                         }
-                                                        <td><FontAwesomeIcon title="Edit Score" className="actionIcon" icon={faEdit} onClick={() => handleEditScore(result.compUser, result.discipline)} />  
+                                                        {isAdmin() && !isParticipant() && <td><FontAwesomeIcon title="Edit Score" className="actionIcon" icon={faEdit} onClick={() => handleEditScore(result.compUser, result.discipline)} />  
                                                             <FontAwesomeIcon title="Delete Score" className="actionIcon" icon={faTrash} onClick={() => handleDeleteScore(result.compUser, result.discipline)} />
                                                             {result.provisional ? <FontAwesomeIcon title="Mark as Complete" className="actionIcon" icon={faCheckDouble} onClick={() => handleMarkComplete(result.compUser, result.discipline)} />
                                                             : <FontAwesomeIcon title="Mark as Provisional" className="actionIcon" icon={faQuestion} onClick={() => handleMarkProvisional(result.compUser, result.discipline)} />}
-                                                            </td>
+                                                            </td>}
                                                     </tr>
                                                 );
                                             })}
