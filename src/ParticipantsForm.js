@@ -58,6 +58,13 @@ const handleSubmit = (e) => {
         <option value="" disabled>Select a user</option>
         {group && users
         .filter((user) => !group.includes(user._id))
+        .sort((a, b) => {
+            // Compare first names
+            const firstNameComparison = a.firstName.localeCompare(b.firstName);
+
+            // If first names are equal, compare last names
+            return firstNameComparison !== 0 ? firstNameComparison : a.lastName.localeCompare(b.lastName);
+        })
         .map((user) => <option key={user._id} value={user._id}>{user.firstName} {user.lastName}</option>)}
 
         </select>
