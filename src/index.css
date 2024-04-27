@@ -24,3 +24,16 @@ code {
 #navigation a:last-child{
   margin-right: 0;
 }
+
+/* Override primary color */
+.btn-primary {
+  background-color: #33CCEE;
+  border-color: #33CCEE;
+}
+
+/* Override primary hover and focus styles */
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #11AACC;
+  border-color: #11AACC;
+}

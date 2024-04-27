@@ -24,6 +24,7 @@ export default function Account() {
     const token = cookies.get("TOKEN");
 
     useEffect(() => {
+        if (!user) return;
         const fetchData = async () => {
             try {       
                 const fetchedData = await fetchCurrentUserData(user.userId);                
@@ -46,51 +47,45 @@ export default function Account() {
         saveUser({ firstName, lastName });
     }
 
-    const handleSubmitEmail = (email) => {
-        setShowEmailInput(false);
-        saveUser({ email });
-    }
+    // const handleSubmitEmail = (email) => {
+    //     setShowEmailInput(false);
+    //     saveUser({ email });
+    // }
+
+    const handleSubmitEmail = async (newEmail) => {
+        try {
+            // Send a request to the backend to initiate email change
+            const configuration = {
+                method: 'post',
+                url: 'https://competition-results.onrender.com/initiate-email-change',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                data: {
+                    newEmail,
+                },
+            };
+    
+            const response = await axios(configuration);
+    
+            // Handle the response (e.g., show a message to the user)
+            console.log('Initiate Email Change Response:', response.data);
+        } catch (error) {
+            console.error('Error initiating email change:', error);
+            // Handle error (e.g., show an error message to the user)
+        }
+    };
+    
+
+
 
     const handleSubmitPassword = async (oldPassword, newPassword) => {
         setErrorMessage('');
-        // Make a request to your backend for password change
-        // try {
-        //   const configuration = {
-        //     // method: 'post',
-        //     // url: 'https://competition-results.onrender.com/change-password', 
-        //     method: 'get',
-        //     url: 'https://competition-results.onrender.com/users', 
-        //     headers: {
-        //         Authorization: `Bearer ${token}`,
-        //     },
-        //     withCredentials: true,
-        //     data: {
-        //       oldPassword,
-        //       newPassword,
-        //     },
-        //   };
-    
-        //   const response = await axios(configuration);
-        //   console.log('Password changed:', response.data);
-        //     // Password change successful
-        //     setConfirmMessage('Password changed successfully');
-        //     // You might want to redirect the user or perform additional actions
-        // //   } else {
-        // //     // Handle error responses
-        // //     const errorData = await response.json();
-        // //     setConfirmMessage(errorData.message);
-    
-        // } catch (error) {
-        //   console.error('Error changing password:', error);
-        //   setConfirmMessage('An error occurred while changing the password');
-        // }
-//const changes = {firstName: 'Testing', lastName: 'Testerson'}
+
         try {
                const configuration = {
             method: 'post',
             url: 'https://competition-results.onrender.com/change-password', 
-            // method: 'get',
-            // url: 'https://competition-results.onrender.com/users', 
             headers: {
                 Authorization: `Bearer ${token}`,
             },          
@@ -167,7 +162,7 @@ export default function Account() {
                             {showEmailInput && <><EmailForm onSubmitEmail={handleSubmitEmail} form={{ 'email': userData.email }} /></>}
 
                             <br />
-                            <Button onClick={handleShowPasswordForm}>Change password</Button>
+                            <Button className="IAMbutton" onClick={handleShowPasswordForm}>Change password</Button>
 
                             {showPasswordForm && 
                           <>

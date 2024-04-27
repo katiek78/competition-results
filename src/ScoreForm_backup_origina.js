@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from 'react-bootstrap';
 import { disciplines, getDisciplineNameFromRef } from './constants';
 import axios from 'axios';
@@ -12,36 +12,22 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
 
     const [score, setScore] = useState(editing ? form.score : undefined);
     const [time, setTime] = useState(editing ? form.time : undefined);
-    const [discipline, setDiscipline] = useState(editing ? form.discipline : '');
+    const [discipline, setDiscipline] = useState(editing ? form.discipline : disciplines[0].ref);
     const [provisional, setProvisional] = useState(editing ? form.provisional : undefined)
     const [additionalInfo, setAdditionalInfo] = useState(editing ? form.additionalInfo : undefined);
     const [users, setUsers] = useState([]);
     const [user, setUser] = useState(editing ? form.user : '');
     const [competitionData, setCompetitionData] = useState({});
 
-    const userHasNotAddedScoreForThisDiscipline = useCallback((d) => {
-        return !competitionData.compResults.some(result => result.compUser === user && result.discipline === d.ref);
-    }, [competitionData, user]);
-
     useEffect(() => {
         // Set the initial user to the first user available in the select box
         if (competitionData && users?.length > 0) {
-            const firstUserInDropdown = users.find(user => competitionData?.compUsers?.includes(user._id));
+            const firstUserInDropdown = users.find(user => competitionData.compUsers.includes(user._id));
             if (firstUserInDropdown) {
                 setUser(firstUserInDropdown._id);
             }
         }
     }, [competitionData, users]);
-
-    useEffect(() => {
-        // Set the initial discipline to the first discipline available in the select box
-        if (competitionData && competitionData.disciplines?.length > 0) {
-            const firstDisciplineInDropdown = disciplines.find(d => competitionData.disciplines.includes(d.ref) && userHasNotAddedScoreForThisDiscipline(d));
-            if (firstDisciplineInDropdown) {
-                setDiscipline(firstDisciplineInDropdown.ref);
-            }
-        }
-    }, [competitionData, userHasNotAddedScoreForThisDiscipline]);
 
     useEffect(() => {
         // set configurations
@@ -89,7 +75,9 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             });
     }, [])
 
-
+    const userHasNotAddedScoreForThisDiscipline = (d) => {
+        return !competitionData.compResults.some(result => result.compUser === user && result.discipline === d.ref);
+    }
 
     const closeForm = () => {
         onSubmitScore(null, !editing);
@@ -97,6 +85,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        console.log(score, user, discipline)
         // Validate form data (add more validation as needed)
         if (!score || !user || !discipline) {
             alert('Please fill in all fields.');
@@ -109,9 +98,11 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             time,
             discipline,
             user,
-            provisional: editing ? provisional : discipline?.includes("W"),
+            provisional: editing ? provisional : discipline.includes("W"),
             additionalInfo
         };
+
+        console.log(result);
 
         // Call the callback to add the result
         onSubmitScore(result, !editing);
@@ -151,7 +142,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
             <label>
                 Discipline:
             </label><select value={discipline} onChange={(e) => setDiscipline(e.target.value)}>
-                {competitionData.disciplines && disciplines.filter((d) => competitionData.disciplines.includes(d.ref) && userHasNotAddedScoreForThisDiscipline(d)).map((d) => <option key={d.ref} value={d.ref}>{d.label}</option>)}                
+                {competitionData.disciplines && disciplines.filter((d) => competitionData.disciplines.includes(d.ref) && userHasNotAddedScoreForThisDiscipline(d)).map((d) => <option key={d.ref} value={d.ref}>{d.label}</option>)}
             </select>
             </>
             }
