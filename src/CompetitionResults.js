@@ -654,7 +654,7 @@ const CompetitionResults = () => {
                       {selectedDiscipline.includes("SC") && <th>Time</th>}
                       {selectedDiscipline.includes("W") && (
                         <>
-                          {isAdmin() && (
+                          {isAdmin() && !isParticipant() && (
                             <th className="corrections">Corrections</th>
                           )}
                           <th>Status</th>
@@ -688,7 +688,7 @@ const CompetitionResults = () => {
                             )}
                             {selectedDiscipline.includes("W") && (
                               <>
-                                {isAdmin() && (
+                                {isAdmin() && !isParticipant() && (
                                   <td
                                     dangerouslySetInnerHTML={{
                                       __html: formatCorrections(
