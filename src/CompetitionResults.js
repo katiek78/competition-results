@@ -224,9 +224,34 @@ const CompetitionResults = () => {
     setCompUserTotals(updatedCompUserTotals);
   };
 
-  const isDisciplineComplete = (d) =>
-    competitionData?.compUsers.length > 0 &&
-    getNumberOfResultsForDiscipline(d) === competitionData?.compUsers.length;
+  const areAllResultsComplete = (d) => {
+    // Filter out the results with the specified discipline
+    const filteredResults = competitionData.compResults.filter(
+      (result) => result.discipline === d
+    );
+
+    // Check if all filtered results are complete (i.e., not provisional)
+    const allComplete = filteredResults.every(
+      (result) => result.provisional === false
+    );
+
+    return allComplete;
+  };
+
+  const isDisciplineComplete = (d) => {
+    if (d.includes("W")) {
+      return (
+        competitionData?.compUsers.length > 0 &&
+        getNumberOfResultsForDiscipline(d) ===
+          competitionData?.compUsers.length &&
+        areAllResultsComplete(d)
+      );
+    } else
+      return (
+        competitionData?.compUsers.length > 0 &&
+        getNumberOfResultsForDiscipline(d) === competitionData?.compUsers.length
+      );
+  };
 
   const getNumberOfCompleteDisciplines = () => {
     if (!competitionData?.disciplines) return;
