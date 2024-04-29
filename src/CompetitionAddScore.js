@@ -22,7 +22,7 @@ const CompetitionAddScore = () => {
     const [score, setScore] = useState(0);
     const [disciplineName, setDisciplineName] = useState('');
 
-    const RECENT_MINUTES = 20000;
+    const RECENT_MINUTES = 60;
 
     function decryptMessage(msg) {
         var key = "123";
@@ -38,6 +38,7 @@ const CompetitionAddScore = () => {
     }
 
     function findMatchingDiscipline(d) {
+        console.log(disciplines)
         // Find the discipline in the array based on label
         return disciplines.find(discipline => discipline.label === d);
     }
@@ -103,6 +104,9 @@ const CompetitionAddScore = () => {
         }
     }
 
+    
+    //could not be processed
+
     const handleSubmitScore = () => {
         //decrypt the message
         const decryptedText = decryptMessage(code);
@@ -135,14 +139,16 @@ const CompetitionAddScore = () => {
             }
         } else {
 
-            const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+            //const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
+           // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?: \/\/ Time:([\d.]+))?(?: \/\/ Timestamp: (.+))?/;
+           const pattern = /Discipline:\s*([^//]+)\s*\/\/\s*Score:\s*(\d+)(?:\s*\/\/\s*Time:\s*([\d.]+))?(?:\s*\/\/\s*Timestamp:\s*(.+))?/;
 
             const match = decryptedText.match(pattern);
 
             if (match) {
 
                 decryptedScore = parseInt(match[2], 10); // Parse score as an integer
-                time = disciplineName.includes("SC") ? match[3] : undefined;
+                time = decryptedDisciplineName.includes("SC") ? match[3] : undefined;
                 timestamp = new Date(match[4]);
             } else {
                 // If string does not match pattern, alert the user that they need to check and try again
@@ -154,30 +160,19 @@ const CompetitionAddScore = () => {
         //U2FsdGVkX1+SH9v3jyQxf+sM6zabyDhf+lmboyeTo8DCEBZ9og1+y3Yum3PoVMgbIThCOPbBP9QC2FRusHNtgVtICGu/3QbDiRhJC62W/bOdV+N9Vxfsk2OlicGD3NyDHR78BWcVWhkP0pzzX150zfpDNxUcnvquC3AGQpZ1oTA=
 
         //example
-        // U2FsdGVkX1+capKaSvir9g3hWyBepNV8ASaxFccx3hrx19zwWs3QccrkkgVQvU8cMdvlAG5pC7BrlwVdIpb2hdzYSmJKMOpl+Zst0uDXSKHcP09dHloT4DjvK1rVTJMvq6yDnHAssbSwEKyBmlAlMQ==
+       // U2FsdGVkX1+capKaSvir9g3hWyBepNV8ASaxFccx3hrx19zwWs3QccrkkgVQvU8cMdvlAG5pC7BrlwVdIpb2hdzYSmJKMOpl+Zst0uDXSKHcP09dHloT4DjvK1rVTJMvq6yDnHAssbSwEKyBmlAlMQ==
 
-
-        //parse the decrypted text
-        //         const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+) \/\/ Timestamp: (.+)/;
-        //   const pattern = /Discipline: ([^/]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/(?: Time:([\s\S]+))? \/\/ Timestamp: (.+)/;
-
-        //"Discipline: 10-Minute Cards // Score: 6
-        // Time:0.00 // Timestamp: Tue, 23 Jan 2024 12:46:28 GMT"
-
-
-        // Check if the timestamp is recent and alert user if not
-        // const now = Date.now();
-        // const timeDifference = now - timestamp.getTime();
-        // const isRecent = timeDifference <= RECENT_MINUTES * 60 * 1000;
-
+//example 5 min Numbers 2
+//U2FsdGVkX182DuzMqJQOoleEZ0MDvCYKCxuT5ch8UER/kn74JkI0ahqqryGFrsphNYu4fZTu1ndD+8q4BwVAmzc2uigJySOJ2lbK7XzCj11/37bgPAHtzzg7g7egas/yKHeqgcWbuOhw/Y+9HTuZqA==
+    
 
         const isRecent = (Date.now() - timestamp.getTime()) <= RECENT_MINUTES * 60 * 1000;
 
         if (!isRecent) {
-            alert("This code was generated more than 20 minutes ago. Please see a competition official. Note: Your score has NOT been added.")
+            alert(`This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added.`)
             return;
         }
-
+console.log(decryptedDisciplineName)
         // Check if disciplineName can be matched to a discipline and if not, alert user
         if (findMatchingDiscipline(decryptedDisciplineName)) {
             saveScore(decryptedScore, decryptedDisciplineName, time, additionalInfo);
@@ -227,7 +222,7 @@ const CompetitionAddScore = () => {
             }
         };
         fetchData();
-    }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+    }, [user, id]); // The empty dependency array ensures the effect runs only once on mount
 
 
     return (
