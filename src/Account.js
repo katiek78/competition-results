@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
 import { Container, Col, Row, Button } from "react-bootstrap";
-import CryptoJS from "crypto-js";
 import Register from "./Register";
 import Login from "./Login";
 import axios from "axios";
@@ -19,6 +18,7 @@ export default function Account() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmMessage, setConfirmMessage] = useState("");
+  const [confirmEmailRequestSent, setConfirmEmailRequestSent] = useState("");
   const { user } = useUser();
   const [userData, setUserData] = useState({});
   const token = cookies.get("TOKEN");
@@ -54,15 +54,20 @@ export default function Account() {
 
   const handleSubmitEmail = async (newEmail) => {
     try {
-      //uncomment this when tested email change
-      //   if (newEmail === userData.email) {
-      //     alert("Email has not changed.");
-      //     return;
-      //   }
+      setConfirmEmailRequestSent("");
+      // Do not take action if new email is same as existing
+      if (newEmail === userData.email) {
+        alert("Email has not changed.");
+        return;
+      }
 
       // Generate a token to be sent
       const confirmationToken = generateToken();
-      const confirmationURL = `http://localhost:3000/email-change?token=${confirmationToken}`;
+      const confirmationURL = `http://localhost:3000/email-change?token=${confirmationToken}&userId=${user.userId}`;
+
+      // Determine when the token expires
+      const createdAt = new Date();
+      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
 
       // Send a request to the backend to initiate email change
       const configuration = {
@@ -73,7 +78,11 @@ export default function Account() {
         },
         data: {
           to: newEmail,
+          createdAt,
+          expiresAt,
           dynamic_link: confirmationURL,
+          token: confirmationToken,
+          userId: user.userId,
         },
       };
 
@@ -81,6 +90,10 @@ export default function Account() {
 
       // Handle the response (e.g., show a message to the user)
       console.log("Initiate Email Change Response:", response.data);
+      setConfirmEmailRequestSent(
+        "An email has been sent to the address you just entered. Click on the link in the email to confirm this change."
+      );
+      setShowEmailInput(false);
     } catch (error) {
       console.error("Error initiating email change:", error);
       // Handle error (e.g., show an error message to the user)
@@ -150,6 +163,10 @@ export default function Account() {
     setShowPasswordForm(true);
   };
 
+  const handleCancelEmailEdit = () => {
+    setShowEmailInput(false);
+  };
+
   return (
     <>
       {token ? (
@@ -185,11 +202,14 @@ export default function Account() {
               {showEmailInput && (
                 <>
                   <EmailForm
+                    handleCancel={handleCancelEmailEdit}
                     onSubmitEmail={handleSubmitEmail}
                     form={{ email: userData.email }}
                   />
                 </>
               )}
+              <br />
+              <span>{confirmEmailRequestSent}</span>
 
               <br />
               <Button className="IAMbutton" onClick={handleShowPasswordForm}>
