@@ -3,6 +3,8 @@ import { useUser } from "./UserProvider";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
+import { generateToken } from "./utils";
+import EmailForm from "./EmailForm";
 
 const cookies = new Cookies();
 
@@ -12,6 +14,9 @@ export default function Login() {
   const [login, setLogin] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isResolved, setIsResolved] = useState(false);
+  const [showEmailInput, setShowEmailInput] = useState(false);
+  const [confirmPasswordRequestSent, setConfirmPasswordRequestSent] =
+    useState(false);
   const { updateUser } = useUser();
 
   const handleSubmit = (e) => {
@@ -44,9 +49,6 @@ export default function Login() {
         // Update the user in the context provider
         updateUser({ userId: result.data.id });
 
-        // console.log(result.data.email);
-        // console.log(result.data.id);
-
         // redirect user to the home page
         window.location.href = "/";
       })
@@ -55,6 +57,57 @@ export default function Login() {
         console.log(error);
         setIsResolved(true);
       });
+  };
+
+  const handleForgottenPassword = () => {
+    setConfirmPasswordRequestSent("");
+    setShowEmailInput(true);
+  };
+
+  const handleCancelEmailEdit = () => {
+    setShowEmailInput(false);
+  };
+
+  const handlePasswordReset = async (email) => {
+    try {
+      // Generate a token to be sent
+      const confirmationToken = generateToken();
+      const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}&email=${encodeURIComponent(
+        email
+      )}`;
+
+      // Determine when the token expires
+      const createdAt = new Date();
+      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
+
+      // Send a request to the backend to initiate password change
+      const configuration = {
+        method: "post",
+        url: "https://competition-results.onrender.com/initiate-password-change",
+        headers: {
+          // Authorization: `Bearer ${token}`,
+        },
+        data: {
+          createdAt,
+          expiresAt,
+          dynamic_link: confirmationURL,
+          token: confirmationToken,
+          email,
+        },
+      };
+
+      const response = await axios(configuration);
+
+      // Handle the response (e.g., show a message to the user)
+      console.log("Initiate Password Change Response:", response.data);
+      setConfirmPasswordRequestSent(
+        "An email has been sent to the address you just entered. Click on the link in the email to reset your password."
+      );
+      setShowEmailInput(false);
+    } catch (error) {
+      console.error("Error initiating password reset:", error);
+      // Handle error (e.g., show an error message to the user)
+    }
   };
 
   return (
@@ -93,9 +146,30 @@ export default function Login() {
         >
           Login
         </Button>
-
-        {!login && isResolved && <p className="text-danger">Login failed</p>}
       </Form>
+      {!login && isResolved && (
+        <>
+          <p className="text-danger">Login failed</p>
+          <p className="link" onClick={handleForgottenPassword}>
+            Forgotten password?
+          </p>
+          {showEmailInput && (
+            <>
+              <p>
+                Enter your email address here and we'll send you an email. Click
+                on the link in the email to reset your password.
+              </p>
+              <EmailForm
+                handleCancel={handleCancelEmailEdit}
+                onSubmitEmail={handlePasswordReset}
+                form={{ email: "" }}
+              />
+            </>
+          )}
+          <p>{confirmPasswordRequestSent}</p>
+        </>
+      )}
+
       {!login && isSubmitted && !isResolved && (
         <div className="login-container">
           <div className="login-message">

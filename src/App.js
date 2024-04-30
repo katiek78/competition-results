@@ -13,6 +13,7 @@ import CompetitionResults from "./CompetitionResults";
 import MyCompetitions from "./MyCompetitions";
 import CompetitionAddScore from "./CompetitionAddScore";
 import EmailChange from "./EmailChange";
+import PasswordReset from "./PasswordReset";
 import Home from "./Home";
 import Users from "./Users";
 // import ProtectedRoutes from "./ProtectedRoutes";
@@ -92,9 +93,13 @@ function App() {
             <h1>IAM competition results centre</h1>
 
             <section id="navigation">
-              <a href="/">Home</a>
+              {token && (
+                <>
+                  <a href="/">Home</a>
 
-              <a href="/my-competitions">My competitions</a>
+                  <a href="/my-competitions">My competitions</a>
+                </>
+              )}
 
               {token &&
                 userData.role &&
@@ -208,7 +213,8 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route path="/email-change" element={<EmailChange />} />
+          <Route path="/email-change/" element={<EmailChange />} />
+          <Route path="/password-reset/" element={<PasswordReset />} />
         </Routes>
       </Container>
       {/* </UserProvider> */}
