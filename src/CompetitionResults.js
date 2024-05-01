@@ -725,20 +725,19 @@ const CompetitionResults = () => {
                                 </td>
                               )}
 
-                            {selectedDiscipline.includes("SC") &&
-                              selectedDiscipline.standard && (
-                                <td className="champ-points">
-                                  {result.rawScore === 52
-                                    ? (
-                                        standard.part1 /
-                                        Math.pow(result.time, standard.part2)
-                                      ).toFixed(2)
-                                    : (
-                                        (result.rawScore / 52) *
-                                        standard.part3
-                                      ).toFixed(2)}
-                                </td>
-                              )}
+                            {selectedDiscipline.includes("SC") && (
+                              <td className="champ-points">
+                                {result.rawScore === 52
+                                  ? (
+                                      standard.part1 /
+                                      Math.pow(result.time, standard.part2)
+                                    ).toFixed(2)
+                                  : (
+                                      (result.rawScore / 52) *
+                                      standard.part3
+                                    ).toFixed(2)}
+                              </td>
+                            )}
 
                             {selectedDiscipline.includes("K") && (
                               <td className="champ-points">

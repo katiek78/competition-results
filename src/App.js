@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route, Link, Navigate } from "react-router-dom";
 import { Container, Col, Row, Button } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
@@ -215,6 +215,8 @@ function App() {
           />
           <Route path="/email-change/" element={<EmailChange />} />
           <Route path="/password-reset/" element={<PasswordReset />} />
+          {/* Route to handle unmatched routes */}
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Container>
       {/* </UserProvider> */}

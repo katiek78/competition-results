@@ -363,6 +363,7 @@ const CompetitionDetail = () => {
                         return (
                           <tr key={userId}>
                             <td>
+                              {!user && "<Deleted User>"}
                               {user?.firstName} {user?.lastName}
                             </td>
                             <td onClick={() => handleDeleteAdmin(userId)}>
@@ -408,6 +409,7 @@ const CompetitionDetail = () => {
                         return (
                           <tr key={userId}>
                             <td>
+                              {!user && "<Deleted User>"}
                               {user?.firstName} {user?.lastName}
                             </td>
                             <td onClick={() => handleDeleteParticipant(userId)}>
