@@ -16,10 +16,10 @@ export const fetchCurrentUserData = async (userId) => {
 
     // Use the user ID to fetch additional user data
     const result = await axios(configuration);
-
     return result.data;
   } catch (error) {
     console.error("Error fetching user data:", error);
+
     return null;
   }
 };

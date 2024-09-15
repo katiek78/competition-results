@@ -229,6 +229,7 @@ const CompetitionDetail = () => {
             })
             .catch((error) => {
               console.error("Error fetching competition data:", error);
+              window.location.href = "/competitions";
             });
         } else {
           console.log("Failed to fetch user data");

@@ -68,13 +68,14 @@ export default function Login() {
     setShowEmailInput(false);
   };
 
-  const handlePasswordReset = async (email) => {
+  const handlePasswordReset = async () => {
     try {
       // Generate a token to be sent
       const confirmationToken = generateToken();
-      const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}&email=${encodeURIComponent(
-        email
-      )}`;
+      //  const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}&email=${encodeURIComponent(
+      //   email
+      const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}`;
+      // )};
 
       // Determine when the token expires
       const createdAt = new Date();

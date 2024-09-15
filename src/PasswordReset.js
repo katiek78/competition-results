@@ -7,7 +7,6 @@ const PasswordReset = () => {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const token = urlParams.get("token");
-  const email = urlParams.get("email");
   const [password, setPassword] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -22,9 +21,9 @@ const PasswordReset = () => {
         method: "put",
         url: `https://competition-results.onrender.com/password-reset/`,
         headers: {
-          // Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
-        data: { token, password, email },
+        data: { password },
       };
 
       const response = await axios(configuration);

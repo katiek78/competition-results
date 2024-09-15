@@ -677,7 +677,7 @@ const CompetitionResults = () => {
                         );
                         return (
                           <tr
-                            key={i}
+                            key={thisUser._id}
                             className={result.provisional ? "provisional" : ""}
                           >
                             <td>{i + 1}</td>
