@@ -223,38 +223,44 @@ const Users = () => {
             </tr>
           </thead>
           <tbody>
-            {users.map((usr) => (
-              <tr key={usr._id}>
-                <td>{`${usr.firstName} ${usr.lastName}`}</td>
-                <td>{usr.email}</td>
-                <td>{getRoleIcon(usr.role)}</td>
-                <td>
-                  {" "}
-                  {usr.role !== "superAdmin" && usr.role !== "admin" && (
-                    <>
-                      <FontAwesomeIcon
-                        title="Delete User"
-                        className="actionIcon"
-                        icon={faTrash}
-                        onClick={() => handleDeleteUser(usr._id)}
-                      />
-                      <FontAwesomeIcon
-                        title="Make User Site Admin"
-                        className="actionIcon"
-                        icon={faUserPlus}
-                        onClick={() => handleMakeUserSiteAdmin(usr._id)}
-                      />
-                      {/* <span
+            {users
+              .sort((a, b) =>
+                a.lastName.localeCompare(
+                  b.lastName || a.firstName.localeCompare(b.firstName)
+                )
+              )
+              .map((usr) => (
+                <tr key={usr._id}>
+                  <td>{`${usr.firstName} ${usr.lastName}`}</td>
+                  <td>{usr.email}</td>
+                  <td>{getRoleIcon(usr.role)}</td>
+                  <td>
+                    {" "}
+                    {usr.role !== "superAdmin" && usr.role !== "admin" && (
+                      <>
+                        <FontAwesomeIcon
+                          title="Delete User"
+                          className="actionIcon"
+                          icon={faTrash}
+                          onClick={() => handleDeleteUser(usr._id)}
+                        />
+                        <FontAwesomeIcon
+                          title="Make User Site Admin"
+                          className="actionIcon"
+                          icon={faUserPlus}
+                          onClick={() => handleMakeUserSiteAdmin(usr._id)}
+                        />
+                        {/* <span
                         className="actionTableItem"
                         onClick={() => handleMakeUserSiteAdmin(usr._id)}
                       >
                         Make Admin
                       </span> */}
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
