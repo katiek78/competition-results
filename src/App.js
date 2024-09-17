@@ -23,7 +23,7 @@ import "./App.css";
 import Cookies from "universal-cookie";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 
 function App() {
   // const [ userId, setUserId ] = useState('');
@@ -31,11 +31,12 @@ function App() {
   const [userData, setUserData] = useState({});
   const { user, clearUser } = useUser();
 
-  const cookies = new Cookies();
-  const token = cookies.get("TOKEN");
+  // const token = cookies.get("TOKEN");
+  const token = getToken();
 
   // logout
   const logout = () => {
+    const cookies = new Cookies();
     cookies.remove("TOKEN", { path: "/" });
     clearUser();
     window.location.href = "/";

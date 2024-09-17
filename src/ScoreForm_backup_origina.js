@@ -2,11 +2,9 @@ import React, { useState, useEffect } from "react";
 import { Button } from "react-bootstrap";
 import { backendUrl, disciplines, getDisciplineNameFromRef } from "./constants";
 import axios from "axios";
-import Cookies from "universal-cookie";
+import { getToken } from "./utils";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
   const [score, setScore] = useState(editing ? form.score : undefined);

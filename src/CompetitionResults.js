@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import {
   getDisciplineNameFromRef,
   getDisciplineStandardFromRef,
@@ -16,12 +15,10 @@ import {
   faUserCheck,
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const CompetitionResults = () => {
   const { id } = useParams();

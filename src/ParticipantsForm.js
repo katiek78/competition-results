@@ -3,12 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import axios from "axios";
-import Cookies from "universal-cookie";
+import { getToken } from "./utils";
 import { backendUrl } from "./constants";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
   const [users, setUsers] = useState([]);

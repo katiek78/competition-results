@@ -2,12 +2,10 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import { backendUrl } from "./constants";
+import { getToken } from "./utils";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const MyCompetitions = () => {
   const { user } = useUser();

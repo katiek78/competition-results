@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import { useUser } from "./UserProvider";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -13,9 +12,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const Users = () => {
   const { user } = useUser();

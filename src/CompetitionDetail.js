@@ -2,9 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { useUser } from "./UserProvider";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import CompetitionForm from "./CompetitionForm";
 import ParticipantsForm from "./ParticipantsForm";
 import {
@@ -18,9 +17,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const CompetitionDetail = () => {
   const { user } = useUser();

@@ -2,15 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import { backendUrl, disciplines, getDisciplineRefFromName } from "./constants";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 import { Button } from "react-bootstrap";
 import CryptoJS from "crypto-js";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const CompetitionAddScore = () => {
   const { id } = useParams();
@@ -23,7 +20,7 @@ const CompetitionAddScore = () => {
   const [time, setTime] = useState(0);
   const [disciplineName, setDisciplineName] = useState("");
 
-  const RECENT_MINUTES = 60;
+  const RECENT_MINUTES = 20;
 
   function decryptMessage(msg) {
     var key = "123";

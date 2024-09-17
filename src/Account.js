@@ -4,14 +4,11 @@ import { Container, Col, Row, Button } from "react-bootstrap";
 import Register from "./Register";
 import Login from "./Login";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
-import { fetchCurrentUserData, generateToken } from "./utils";
+import { fetchCurrentUserData, generateToken, getToken } from "./utils";
 import { backendUrl, frontendUrl } from "./constants";
-
-const cookies = new Cookies();
 
 export default function Account() {
   const [showNameInputs, setShowNameInputs] = useState(false);
@@ -22,7 +19,7 @@ export default function Account() {
   const [confirmEmailRequestSent, setConfirmEmailRequestSent] = useState("");
   const { user } = useUser();
   const [userData, setUserData] = useState({});
-  const token = cookies.get("TOKEN");
+  const token = getToken();
 
   useEffect(() => {
     if (!user) return;

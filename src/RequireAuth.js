@@ -1,11 +1,10 @@
 import React from "react";
 import { Navigate } from "react-router-dom";
-import Cookies from "universal-cookie";
-const cookies = new Cookies();
+import { getToken } from "./utils";
 
 export default function RequireAuth({ children }) {
   // get cookie from browser if logged in
-  const token = cookies.get("TOKEN");
+  const token = getToken();
 
   // returns route if there is a valid token set in the cookie
   if (token) {

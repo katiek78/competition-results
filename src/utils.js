@@ -2,10 +2,14 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { backendUrl } from "./constants";
 
+export const getToken = () => {
+  const cookies = new Cookies();
+  return cookies.get("TOKEN");
+};
+
 export const fetchCurrentUserData = async (userId) => {
   try {
-    const cookies = new Cookies();
-    const token = cookies.get("TOKEN");
+    const token = getToken();
 
     const configuration = {
       method: "get",

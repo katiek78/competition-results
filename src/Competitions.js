@@ -3,17 +3,14 @@ import { Link } from "react-router-dom";
 import { Button } from "react-bootstrap";
 import { useUser } from "./UserProvider";
 import axios from "axios";
-import Cookies from "universal-cookie";
 import CompetitionForm from "./CompetitionForm";
 import { nationalEvents, internationalEvents, worldEvents } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
-import { fetchCurrentUserData } from "./utils";
+import { fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
-const cookies = new Cookies();
-
-const token = cookies.get("TOKEN");
+const token = getToken();
 
 const Competitions = () => {
   const { user } = useUser();
