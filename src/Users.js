@@ -5,7 +5,12 @@ import { useUser } from "./UserProvider";
 import { fetchCurrentUserData } from "./utils";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faStar, faTrash, faUserTie } from "@fortawesome/free-solid-svg-icons";
+import {
+  faStar,
+  faTrash,
+  faUserPlus,
+  faUserTie,
+} from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
@@ -137,9 +142,22 @@ const Users = () => {
   const getRoleIcon = (role) => {
     switch (role) {
       case "admin":
-        return <FontAwesomeIcon icon={faUserTie} />;
+        // return a faUserTie icon with tooltip "Site admin"
+        return (
+          <FontAwesomeIcon
+            className="displayIcon adminIcon"
+            icon={faUserTie}
+            title="Site admin"
+          />
+        );
       case "superAdmin":
-        return <FontAwesomeIcon icon={faStar} />;
+        return (
+          <FontAwesomeIcon
+            className="displayIcon superAdminIcon"
+            icon={faStar}
+            title="Superadmin"
+          />
+        );
       default:
         return null;
     }
@@ -201,7 +219,7 @@ const Users = () => {
               <th>Name</th>
               <th>Email</th>
               <th>Role</th>
-              <th></th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -223,9 +241,15 @@ const Users = () => {
                       <FontAwesomeIcon
                         title="Make User Site Admin"
                         className="actionIcon"
-                        icon={faUserTie}
+                        icon={faUserPlus}
                         onClick={() => handleMakeUserSiteAdmin(usr._id)}
                       />
+                      {/* <span
+                        className="actionTableItem"
+                        onClick={() => handleMakeUserSiteAdmin(usr._id)}
+                      >
+                        Make Admin
+                      </span> */}
                     </>
                   )}
                 </td>

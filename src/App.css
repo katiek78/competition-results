@@ -190,9 +190,23 @@ input {
 }
 
 .actionIcon {
-  font-size: 1.5em;
+  font-size: 1.4em;
   color: black;
   padding: 10px;
+}
+
+.displayIcon {
+  font-size: 1.7em;
+  color: black;
+  padding: 10px;
+}
+
+.adminIcon {
+  color: green;
+}
+
+.superAdminIcon {
+  color: turquoise;
 }
 
 .disciplineHeading {
