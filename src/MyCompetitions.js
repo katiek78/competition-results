@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
 import Cookies from "universal-cookie";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -16,11 +17,10 @@ const MyCompetitions = () => {
 
   useEffect(() => {
     if (!user) return;
-
     // set configurations
     const configuration = {
       method: "get",
-      url: `https://competition-results.onrender.com/user/${user.userId}/competitions/`,
+      url: `${backendUrl}/user/${user.userId}/competitions/`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -42,7 +42,7 @@ const MyCompetitions = () => {
     // set configurations
     const adminConfiguration = {
       method: "get",
-      url: `https://competition-results.onrender.com/user/${user.userId}/adminCompetitions/`,
+      url: `${backendUrl}/user/${user.userId}/adminCompetitions/`,
       headers: {
         Authorization: `Bearer ${token}`,
       },

@@ -1,5 +1,6 @@
 import axios from "axios";
 import Cookies from "universal-cookie";
+import { backendUrl } from "./constants";
 
 export const fetchCurrentUserData = async (userId) => {
   try {
@@ -8,7 +9,7 @@ export const fetchCurrentUserData = async (userId) => {
 
     const configuration = {
       method: "get",
-      url: `https://competition-results.onrender.com/user/${userId}`,
+      url: `${backendUrl}/user/${userId}`,
       headers: {
         Authorization: `Bearer ${token}`,
       },

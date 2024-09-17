@@ -9,6 +9,7 @@ import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
 import { fetchCurrentUserData, generateToken } from "./utils";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -72,7 +73,7 @@ export default function Account() {
       // Send a request to the backend to initiate email change
       const configuration = {
         method: "post",
-        url: "https://competition-results.onrender.com/initiate-email-change",
+        url: `${backendUrl}/initiate-email-change`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -106,7 +107,7 @@ export default function Account() {
     try {
       const configuration = {
         method: "post",
-        url: "https://competition-results.onrender.com/change-password",
+        url: `${backendUrl}/change-password`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -142,7 +143,7 @@ export default function Account() {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/user/${user.userId}`,
+        url: `${backendUrl}/user/${user.userId}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },

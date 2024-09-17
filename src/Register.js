@@ -1,85 +1,72 @@
-import React, { useState } from 'react'
+import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
+import { backendUrl } from "./constants";
 
 export default function Register() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
-    const [register, setRegister] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [register, setRegister] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
-    const sendRegistrationMail = async (eml, fn) => {
+  const sendRegistrationMail = async (eml, fn) => {
+    try {
+      await axios.post(`${backendUrl}/send-email`, {
+        to: eml,
+        subject: "Welcome to the IAM Results Centre",
+        html: `Dear ${fn}, <br />Thanks for registering!`,
+      });
 
-        // const msg = {
-        //     to: eml, // Change to your recipient
-        //     from: 'info@iam-memory.org', // Change to your verified sender
-        //     subject: 'Welcome to the IAM Results Centre',
-        //     html: `Dear ${fn}, <br />Thanks for registering!`,            
-        //   }
-        //   sgMail
-        //     .send(msg)
-        //     .then(() => {
-        //       console.log('Email sent')
-        //     })
-        //     .catch((error) => {
-        //       console.error(error)
-        //     })
-
-            try {
-              await axios.post('https://competition-results.onrender.com/send-email', {
-                to: eml,
-                subject: 'Welcome to the IAM Results Centre',
-                html: `Dear ${fn}, <br />Thanks for registering!`,
-              });
-          
-              console.log('Email sent successfully');
-            } catch (error) {
-              console.error('Error sending email:', error);
-            }
-         
+      console.log("Email sent successfully");
+    } catch (error) {
+      console.error("Error sending email:", error);
     }
+  };
 
-    const handleSubmit = (e) => {
-        // prevent the form from refreshing the whole page
-        e.preventDefault();
+  const handleSubmit = (e) => {
+    // prevent the form from refreshing the whole page
+    e.preventDefault();
 
-        // set configurations
-        const configuration = {
-            method: "post",
-            url: "https://competition-results.onrender.com/register",
-            data: {
-            email,
-            firstName,
-            lastName,
-            password,
-            },
-        };
+    // set configurations
+    const configuration = {
+      method: "post",
+      url: `${backendUrl}/register`,
+      data: {
+        email,
+        firstName,
+        lastName,
+        password,
+      },
+    };
 
-         // make the API call
-        axios(configuration)
-        .then((result) => {
+    // make the API call
+    axios(configuration)
+      .then((result) => {
         setRegister(true);
         setIsSubmitted(true);
 
         //send an email
-        sendRegistrationMail(configuration.data.email, configuration.data.firstName);
+        sendRegistrationMail(
+          configuration.data.email,
+          configuration.data.firstName
+        );
 
         // redirect user to the home page
         window.location.href = "/";
-        })
-        .catch((error) => {
+      })
+      .catch((error) => {
         error = new Error();
-        console.log(error)
+        console.log(error);
         setIsSubmitted(true);
-        }); 
-        }
+      });
+  };
 
-    return (
-        <>
-        <h2>Register</h2>
-      <Form onSubmit={(e)=>handleSubmit(e)}>
+  return (
+    <>
+      <h2>Register</h2>
+      <Form onSubmit={(e) => handleSubmit(e)}>
         {/* email */}
         <Form.Group controlId="formBasicEmail">
           <Form.Label>Email address</Form.Label>
@@ -144,6 +131,6 @@ export default function Register() {
           <p className="text-danger">Registration failed</p>
         )}
       </Form>
-        </>
-    )
+    </>
+  );
 }

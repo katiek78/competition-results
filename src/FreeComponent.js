@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { backendUrl } from "./constants";
 
 export default function FreeComponent() {
-    const [message, setMessage] = useState("");
-    
+  const [message, setMessage] = useState("");
+
   useEffect(() => {
     const configuration = {
-        method: "get",
-        url: "https://competition-results.onrender.com/free-endpoint",
-      };
+      method: "get",
+      url: `${backendUrl}/free-endpoint`,
+    };
 
-      axios(configuration)
+    axios(configuration)
       .then((result) => {
         // assign the message in our result to the message we initialized above
         setMessage(result.data.message);
@@ -18,7 +19,7 @@ export default function FreeComponent() {
       .catch((error) => {
         error = new Error();
       });
-  }, [])
+  }, []);
 
   return (
     <div>

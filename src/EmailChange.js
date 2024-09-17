@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { backendUrl } from "./constants";
 
 const EmailChange = () => {
   const queryString = window.location.search;
@@ -9,38 +10,10 @@ const EmailChange = () => {
   const [successMessage, setSuccessMessage] = useState("");
 
   const updateEmail = async (userId, token) => {
-    //     try {
-    //       // Send a request to your backend API to update the user's email
-    //       const response = await fetch(
-    //         `https://competition-results.onrender.com/email-update/${userId}`,
-    //         {
-    //           method: "PUT",
-    //           headers: {
-    //             "Content-Type": "application/json",
-    //           },
-    //           body: JSON.stringify({ token }),
-    //         }
-    //       );
-
-    //       if (response.ok) {
-    //         // Email address updated successfully
-    //         // You can handle success actions here, such as displaying a success message
-    //         console.log("Email address updated successfully");
-    //       } else {
-    //         // Handle errors if the request fails
-    //         // For example, you can display an error message to the user
-    //         console.error("Failed to update email address:", response.statusText);
-    //       }
-    //     } catch (error) {
-    //       // Handle network errors or other exceptions
-    //       console.error("An error occurred:", error.message);
-    //     }
-    //   };
-
     try {
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/email-update/${userId}`,
+        url: `${backendUrl}/email-update/${userId}`,
         headers: {
           // Authorization: `Bearer ${token}`,
         },
@@ -60,33 +33,6 @@ const EmailChange = () => {
           error.response.data.message
       );
     }
-
-    //   const saveUser = async (changes) => {
-    //     try {
-    //       const updatedUser = {
-    //         ...userData,
-    //         ...changes,
-    //       };
-
-    //       // set configurations
-    //       const configuration = {
-    //         method: "put",
-    //         url: `https://competition-results.onrender.com/user/${user.userId}`,
-    //         headers: {
-    //           Authorization: `Bearer ${token}`,
-    //         },
-    //         data: updatedUser,
-    //       };
-    //       const response = await axios(configuration);
-    //       console.log("User updated:", response.data);
-    //       setUserData({
-    //         ...userData,
-    //         ...changes,
-    //       });
-    //     } catch (error) {
-    //       console.error("Error updating user:", error);
-    //     }
-    //   };
   };
   useEffect(() => {
     //check token validity

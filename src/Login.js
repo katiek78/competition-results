@@ -5,6 +5,7 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { generateToken } from "./utils";
 import EmailForm from "./EmailForm";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -28,7 +29,7 @@ export default function Login() {
     // set configurations
     const configuration = {
       method: "post",
-      url: "https://competition-results.onrender.com/login",
+      url: `${backendUrl}/login`,
       data: {
         email,
         password,
@@ -84,7 +85,7 @@ export default function Login() {
       // Send a request to the backend to initiate password change
       const configuration = {
         method: "post",
-        url: "https://competition-results.onrender.com/initiate-password-change",
+        url: `${backendUrl}/initiate-password-change`,
         headers: {
           // Authorization: `Bearer ${token}`,
         },

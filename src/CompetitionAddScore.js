@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
 import Cookies from "universal-cookie";
-import { disciplines, getDisciplineRefFromName } from "./constants";
+import { backendUrl, disciplines, getDisciplineRefFromName } from "./constants";
 import { fetchCurrentUserData } from "./utils";
 import { Button } from "react-bootstrap";
 import CryptoJS from "crypto-js";
@@ -108,7 +108,7 @@ const CompetitionAddScore = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -231,7 +231,7 @@ const CompetitionAddScore = () => {
           // set configurations
           const configuration = {
             method: "get",
-            url: `https://competition-results.onrender.com/competition/${id}`,
+            url: `${backendUrl}/competition/${id}`,
             headers: {
               Authorization: `Bearer ${token}`,
             },

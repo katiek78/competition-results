@@ -9,6 +9,7 @@ import { nationalEvents, internationalEvents, worldEvents } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { fetchCurrentUserData } from "./utils";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -31,7 +32,7 @@ const Competitions = () => {
       // set configurations
       const configuration = {
         method: "delete",
-        url: `https://competition-results.onrender.com/competitions/${compId}`,
+        url: `${backendUrl}/competitions/${compId}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -71,7 +72,7 @@ const Competitions = () => {
       // set configurations
       const configuration = {
         method: "post",
-        url: "https://competition-results.onrender.com/competitions",
+        url: `${backendUrl}/competitions`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -107,7 +108,7 @@ const Competitions = () => {
           // set configurations
           const configuration = {
             method: "get",
-            url: "https://competition-results.onrender.com/competitions",
+            url: `${backendUrl}/competitions`,
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -129,30 +130,6 @@ const Competitions = () => {
     };
     fetchData();
   }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
-
-  // useEffect(() => {
-  //     // set configurations
-  //     const configuration = {
-  //         method: "get",
-  //         url: "https://competition-results.onrender.com/competitions",
-  //         headers: {
-  //             Authorization: `Bearer ${token}`,
-  //         },
-  //     };
-  //     // make the API call
-  //     axios(configuration)
-  //         .then((result) => {
-  //             setCompetitions(result.data.competitions);
-
-  //             //get logged-in user details
-  //             // console.log(result.data.userId);
-  //             // console.log(result.data.userEmail);
-  //         })
-  //         .catch((error) => {
-  //             error = new Error();
-  //             console.log(error);
-  //         });
-  // }, [])
 
   const formatDate = (date) => {
     const year = date.getFullYear();

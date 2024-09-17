@@ -6,6 +6,7 @@ import { fetchCurrentUserData } from "./utils";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -44,7 +45,7 @@ const Users = () => {
       // set configurations
       const configuration = {
         method: "delete",
-        url: `https://competition-results.onrender.com/users/${userId}`,
+        url: `${backendUrl}/users/${userId}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -70,7 +71,7 @@ const Users = () => {
       // set configurations
       const configuration = {
         method: "post",
-        url: `https://competition-results.onrender.com/users`,
+        url: `${backendUrl}/users`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -109,7 +110,7 @@ const Users = () => {
           // set configurations
           const configuration = {
             method: "get",
-            url: "https://competition-results.onrender.com/users",
+            url: `${backendUrl}/users`,
             headers: {
               Authorization: `Bearer ${token}`,
             },

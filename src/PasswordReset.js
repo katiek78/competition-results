@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
+import { backendUrl } from "./constants";
 
 const PasswordReset = () => {
   const queryString = window.location.search;
@@ -19,7 +20,7 @@ const PasswordReset = () => {
     try {
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/password-reset/`,
+        url: `${backendUrl}/password-reset/`,
         headers: {
           Authorization: `Bearer ${token}`,
         },

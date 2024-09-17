@@ -1,3 +1,5 @@
+export const backendUrl = process.env.REACT_APP_BACKEND_URL;
+
 export const nationalEvents = [
   "5N1",
   "5N2",

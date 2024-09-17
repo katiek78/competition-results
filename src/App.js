@@ -41,32 +41,6 @@ function App() {
     window.location.href = "/";
   };
 
-  //   useEffect(() => {
-  //     if (!token) return;
-
-  //     // set configurations
-  //     const configuration = {
-  //         method: "get",
-  //         url: "https://competition-results.onrender.com/",
-  //         headers: {
-  //             Authorization: `Bearer ${token}`,
-  //           },
-  //     };
-  //     // make the API call
-  //     axios(configuration)
-  //     .then((result) => {
-
-  //         //get logged-in user details
-  //         setUserId(result.data.userId);
-  //         setUserEmail(result.data.userEmail);
-  //     })
-  //     .catch((error) => {
-  //     error = new Error();
-  //     console.log(error);
-  //     });
-
-  // }, [token])
-
   useEffect(() => {
     const fetchData = async () => {
       try {

@@ -8,6 +8,7 @@ import Cookies from "universal-cookie";
 import CompetitionForm from "./CompetitionForm";
 import ParticipantsForm from "./ParticipantsForm";
 import {
+  backendUrl,
   formatNames,
   nationalEvents,
   internationalEvents,
@@ -58,7 +59,7 @@ const CompetitionDetail = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -88,7 +89,7 @@ const CompetitionDetail = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -120,7 +121,7 @@ const CompetitionDetail = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -139,7 +140,7 @@ const CompetitionDetail = () => {
         (adminId) => adminId !== id
       );
       const response = await axios.put(
-        `https://competition-results.onrender.com/competition/${competitionData._id}`,
+        `${backendUrl}/competition/${competitionData._id}`,
         {
           compAdmins: updatedCompAdmins,
         },
@@ -170,7 +171,7 @@ const CompetitionDetail = () => {
         (r) => r.compUser !== id
       );
       const response = await axios.put(
-        `https://competition-results.onrender.com/competition/${competitionData._id}`,
+        `${backendUrl}/competition/${competitionData._id}`,
         {
           compUsers: updatedCompUsers,
           compResults: updatedCompResults,
@@ -207,7 +208,7 @@ const CompetitionDetail = () => {
           // set configurations
           const configuration = {
             method: "get",
-            url: `https://competition-results.onrender.com/competition/${id}`,
+            url: `${backendUrl}/competition/${id}`,
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -245,7 +246,7 @@ const CompetitionDetail = () => {
     // set configurations
     const configuration = {
       method: "get",
-      url: "https://competition-results.onrender.com/users",
+      url: `${backendUrl}/users`,
       headers: {
         Authorization: `Bearer ${token}`,
       },

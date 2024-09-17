@@ -17,6 +17,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
 import { fetchCurrentUserData } from "./utils";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -340,7 +341,7 @@ const CompetitionResults = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -383,7 +384,7 @@ const CompetitionResults = () => {
       // set configurations
       const configuration = {
         method: "put",
-        url: `https://competition-results.onrender.com/competition/${id}`,
+        url: `${backendUrl}/competition/${id}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -422,7 +423,7 @@ const CompetitionResults = () => {
           // set configurations
           const configuration = {
             method: "get",
-            url: `https://competition-results.onrender.com/competition/${id}`,
+            url: `${backendUrl}/competition/${id}`,
             headers: {
               Authorization: `Bearer ${token}`,
             },
@@ -455,7 +456,7 @@ const CompetitionResults = () => {
     // set configurations
     const configuration = {
       method: "get",
-      url: `https://competition-results.onrender.com/competition/${id}`,
+      url: `${backendUrl}/competition/${id}`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -474,7 +475,7 @@ const CompetitionResults = () => {
     // set configurations
     const configuration = {
       method: "get",
-      url: "https://competition-results.onrender.com/users",
+      url: `${backendUrl}/users`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
