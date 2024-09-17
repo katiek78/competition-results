@@ -5,7 +5,7 @@ import { useUser } from "./UserProvider";
 import { fetchCurrentUserData } from "./utils";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faStar, faTrash, faUserTie } from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
@@ -66,6 +66,49 @@ const Users = () => {
     }
   };
 
+  const handleMakeUserSiteAdmin = async (userId) => {
+    const user = fetchCurrentUserData(userId);
+
+    if (!user) return;
+
+    const updatedUser = {
+      ...user,
+      role: "admin",
+    };
+
+    try {
+      // set configurations for editing a user
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/user/${userId}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: updatedUser,
+      };
+      const response = await axios(configuration);
+      console.log("User is now site admin:", response.data);
+
+      // setUsers(prevUsers => [...prevUsers, newUser]);
+
+      setUsers((prevUsers) => {
+        //update users
+        const newUsers = prevUsers.map((user) => {
+          if (user._id === userId) {
+            return {
+              ...user,
+              role: "admin",
+            };
+          }
+          return user;
+        });
+        return newUsers;
+      });
+    } catch (error) {
+      console.error("Error making user siteAdmin:", error);
+    }
+  };
+
   const saveUser = async (newUser) => {
     try {
       // set configurations
@@ -88,6 +131,17 @@ const Users = () => {
       });
     } catch (error) {
       console.error("Error adding test user:", error);
+    }
+  };
+
+  const getRoleIcon = (role) => {
+    switch (role) {
+      case "admin":
+        return <FontAwesomeIcon icon={faUserTie} />;
+      case "superAdmin":
+        return <FontAwesomeIcon icon={faStar} />;
+      default:
+        return null;
     }
   };
 
@@ -146,6 +200,7 @@ const Users = () => {
             <tr>
               <th>Name</th>
               <th>Email</th>
+              <th>Role</th>
               <th></th>
             </tr>
           </thead>
@@ -154,15 +209,24 @@ const Users = () => {
               <tr key={usr._id}>
                 <td>{`${usr.firstName} ${usr.lastName}`}</td>
                 <td>{usr.email}</td>
+                <td>{getRoleIcon(usr.role)}</td>
                 <td>
                   {" "}
-                  {usr.role !== "superAdmin" && (
-                    <FontAwesomeIcon
-                      title="Delete User"
-                      className="actionIcon"
-                      icon={faTrash}
-                      onClick={() => handleDeleteUser(usr._id)}
-                    />
+                  {usr.role !== "superAdmin" && usr.role !== "admin" && (
+                    <>
+                      <FontAwesomeIcon
+                        title="Delete User"
+                        className="actionIcon"
+                        icon={faTrash}
+                        onClick={() => handleDeleteUser(usr._id)}
+                      />
+                      <FontAwesomeIcon
+                        title="Make User Site Admin"
+                        className="actionIcon"
+                        icon={faUserTie}
+                        onClick={() => handleMakeUserSiteAdmin(usr._id)}
+                      />
+                    </>
                   )}
                 </td>
               </tr>
