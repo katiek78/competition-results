@@ -9,7 +9,7 @@ import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
 import { fetchCurrentUserData, generateToken } from "./utils";
-import { backendUrl } from "./constants";
+import { backendUrl, frontendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -64,7 +64,7 @@ export default function Account() {
 
       // Generate a token to be sent
       const confirmationToken = generateToken();
-      const confirmationURL = `http://localhost:3000/email-change?token=${confirmationToken}&userId=${user.userId}`;
+      const confirmationURL = `${frontendUrl}/email-change?token=${confirmationToken}&userId=${user.userId}`;
 
       // Determine when the token expires
       const createdAt = new Date();

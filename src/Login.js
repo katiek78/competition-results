@@ -5,7 +5,7 @@ import axios from "axios";
 import Cookies from "universal-cookie";
 import { generateToken } from "./utils";
 import EmailForm from "./EmailForm";
-import { backendUrl } from "./constants";
+import { backendUrl, frontendUrl } from "./constants";
 
 const cookies = new Cookies();
 
@@ -73,9 +73,7 @@ export default function Login() {
     try {
       // Generate a token to be sent
       const confirmationToken = generateToken();
-      //  const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}&email=${encodeURIComponent(
-      //   email
-      const confirmationURL = `http://localhost:3000/password-reset?token=${confirmationToken}`;
+      const confirmationURL = `${frontendUrl}/password-reset?token=${confirmationToken}`;
       // )};
 
       // Determine when the token expires
