@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
@@ -19,7 +19,7 @@ import { fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
 const CompetitionResults = () => {
-  const token = getToken();
+  const token = useMemo(() => getToken(), []);
   const { id } = useParams();
   const { user } = useUser();
   const [competitionData, setCompetitionData] = useState({});
@@ -33,6 +33,7 @@ const CompetitionResults = () => {
   const [compUserTotals, setCompUserTotals] = useState([]);
   const [showDisciplineMenu, setShowDisciplineMenu] = useState(false);
   const isMobile = window.innerWidth < 769;
+  //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
   const handleDisciplineToggle = () => {
     console.log(isMobile, showDisciplineMenu);
@@ -354,7 +355,7 @@ const CompetitionResults = () => {
       };
 
       axios(configuration);
-      console.log(updatedCompetition);
+
       setCompetitionData({
         ...competitionData,
         compResults: updatedCompetition.compResults,
@@ -408,6 +409,15 @@ const CompetitionResults = () => {
     }
   };
 
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     const isMobileNow = window.innerWidth < 768;
+  //     setShowDisciplineMenu(!isMobileNow);
+  //   };
+  //   window.addEventListener("resize", handleResize);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
+
   useEffect(() => {
     if (selectedDiscipline)
       setStandard(getDisciplineStandardFromRef(selectedDiscipline));
@@ -449,7 +459,7 @@ const CompetitionResults = () => {
       }
     };
     fetchData();
-  }, [user, token, id]);
+  }, [user, id, token]);
 
   useEffect(() => {
     // set configurations
@@ -468,7 +478,7 @@ const CompetitionResults = () => {
       .catch((error) => {
         console.error("Error fetching competition data:", error);
       });
-  }, []);
+  }, [id, token]);
 
   useEffect(() => {
     // set configurations
@@ -492,7 +502,7 @@ const CompetitionResults = () => {
         error = new Error();
         console.log(error);
       });
-  }, []);
+  }, [token]);
 
   // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
 
@@ -647,9 +657,14 @@ const CompetitionResults = () => {
                       {competitionData.compUsers &&
                         competitionData.compUsers.length}
                     </h3>
-                    <h4 className="asLink" onClick={showCompUsersNotSubmitted}>
-                      Who hasn't submitted a result?
-                    </h4>
+                    {isAdmin() && (
+                      <h4
+                        className="asLink"
+                        onClick={showCompUsersNotSubmitted}
+                      >
+                        Who hasn't submitted a result?
+                      </h4>
+                    )}
                   </>
                 )}
 
@@ -664,6 +679,7 @@ const CompetitionResults = () => {
 
               {selectedDiscipline !== "" && (
                 <>
+                  {" "}
                   <table className="niceTable resultsTable">
                     <thead>
                       <tr>
