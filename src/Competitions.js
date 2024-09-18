@@ -16,6 +16,7 @@ const Competitions = () => {
   const [competitions, setCompetitions] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [userData, setUserData] = useState({});
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     console.log("User in Account:", user);
@@ -90,21 +91,7 @@ const Competitions = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // if (!user) return;
-        let fetchedData;
-
-        if (user) {
-          fetchedData = await fetchCurrentUserData(user.userId);
-          setUserData(fetchedData);
-        }
-
-        // const isAdmin = () =>
-        //   fetchedData.role === "superAdmin" || fetchedData.role === "admin";
-        // if (!isAdmin()) window.location.href = "/";
-
-        // Do something with the userData
-
-        //Then get competition data
+        //Get competition data
         // set configurations
         const configuration = {
           method: "get",
@@ -114,15 +101,37 @@ const Competitions = () => {
           },
         };
         // make the API call
-        axios(configuration)
-          .then((result) => {
-            setCompetitions(result.data.competitions);
-          })
-          .catch((error) => {
-            console.error("Error fetching competition data:", error);
-          });
+        const response = await axios(configuration);
+        setCompetitions(response.data.competitions);
+        setError(null);
+
+        // .then((result) => {
+        // setCompetitions(result.data.competitions);
+        //  })
+        //.catch((error) => {
+        //  console.error("Error fetching competition data:", error);
+        // });
+
+        let fetchedData;
+
+        if (user) {
+          fetchedData = await fetchCurrentUserData(user.userId);
+
+          setUserData(fetchedData);
+        }
       } catch (error) {
         console.error("Error in useEffect:", error);
+        if (!error.response) {
+          setError("Network error");
+        } else if (error.response.status === 503) {
+          // Example: 503 Service Unavailable
+          setError(
+            "The server is currently unavailable. Please try refreshing the page."
+          );
+        } else {
+          // Other errors
+          setError("An unexpected error occurred. Please try again later.");
+        }
       }
     };
     fetchData();

@@ -23,7 +23,7 @@ const CompetitionResults = () => {
   const token = useMemo(() => getToken(), []);
   const { id } = useParams();
   const { user } = useUser();
-  const [competitionData, setCompetitionData] = useState({});
+  const [competitionData, setCompetitionData] = useState(null);
   const [users, setUsers] = useState([]);
   const [userData, setUserData] = useState({});
   const [selectedDiscipline, setSelectedDiscipline] = useState("");
@@ -364,6 +364,7 @@ const CompetitionResults = () => {
   // }, []);
 
   useEffect(() => {
+    if (!competitionData) return;
     if (selectedDiscipline)
       setStandard(getDisciplineStandardFromRef(selectedDiscipline));
     const updateCompetitorTotals = () => {
@@ -427,11 +428,7 @@ const CompetitionResults = () => {
       setCompUserTotals(updatedCompUserTotals);
     };
     updateCompetitorTotals();
-  }, [
-    competitionData.compUsers,
-    competitionData.compResults,
-    selectedDiscipline,
-  ]);
+  }, [competitionData, selectedDiscipline]);
 
   useEffect(() => {
     const fetchData = async () => {
