@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Button } from "react-bootstrap";
 import { useUser } from "./UserProvider";
@@ -17,9 +17,8 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
-const token = getToken();
-
 const CompetitionDetail = () => {
+  const token = useMemo(() => getToken(), []);
   const { user } = useUser();
   const [userData, setUserData] = useState({});
   const { id } = useParams();
@@ -238,7 +237,7 @@ const CompetitionDetail = () => {
       }
     };
     fetchData();
-  }, [user, token]);
+  }, [user, token, id]);
 
   useEffect(() => {
     // set configurations
@@ -262,7 +261,7 @@ const CompetitionDetail = () => {
         error = new Error();
         console.log(error);
       });
-  }, []);
+  }, [token]);
 
   const handleDeleteAdmin = (id) => {
     if (window.confirm("Are you sure you wish to delete this admin?"))
@@ -345,11 +344,13 @@ const CompetitionDetail = () => {
           )}
 
           <div>
-            <p className="highlightText">
-              <Link to={`/competition_results/${competitionData._id}`}>
-                View Results >>>
-              </Link>
-            </p>
+            {competitionData && userData && (
+              <p className="highlightText">
+                <Link to={`/competition_results/${competitionData._id}`}>
+                  View Results >>>
+                </Link>
+              </p>
+            )}
 
             <Container>
               <Row>

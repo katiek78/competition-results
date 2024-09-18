@@ -168,7 +168,7 @@ const Competitions = () => {
             .map((competition) => (
               <tr key={competition._id}>
                 <td>
-                  <Link to={`/competition/${competition._id}`}>
+                  <Link to={`/competition_results/${competition._id}`}>
                     {competition.name}
                   </Link>
                 </td>

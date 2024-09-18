@@ -27,7 +27,7 @@ const PasswordReset = () => {
         data: { password },
       };
 
-      const response = await axios(configuration);
+      await axios(configuration);
       setSuccessMessage("Your password has been reset successfully.");
     } catch (error) {
       console.error("Error resetting password:", error);

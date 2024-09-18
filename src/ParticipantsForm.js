@@ -24,8 +24,6 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
     // make the API call
     axios(configuration)
       .then((result) => {
-        console.log(result.data.users);
-        console.log(group);
         setUsers(result.data.users);
 
         //get logged-in user details
@@ -36,7 +34,7 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
         error = new Error();
         console.log(error);
       });
-  }, []);
+  }, [group]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

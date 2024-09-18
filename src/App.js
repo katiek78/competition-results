@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
 import { Routes, Route, Link, Navigate } from "react-router-dom";
-import { Container, Col, Row, Button, Navbar, Nav } from "react-bootstrap";
+import { Container, Button, Navbar, Nav } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
 import Register from "./Register";

@@ -10,12 +10,14 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
   const [score, setScore] = useState(editing ? form.score : undefined);
   const [time, setTime] = useState(editing ? form.time : undefined);
   const [discipline, setDiscipline] = useState(editing ? form.discipline : "");
-  const [provisional, setProvisional] = useState(
-    editing ? form.provisional : undefined
-  );
-  const [additionalInfo, setAdditionalInfo] = useState(
-    editing ? form.additionalInfo : undefined
-  );
+  // const [provisional, setProvisional] = useState(
+  //   editing ? form.provisional : undefined
+  // );
+  const provisional = editing ? form.provisional : undefined;
+  // const [additionalInfo, setAdditionalInfo] = useState(
+  //   editing ? form.additionalInfo : undefined
+  // );
+  const additionalInfo = editing ? form.additionalInfo : undefined;
   const [users, setUsers] = useState([]);
   const [user, setUser] = useState(editing ? form.user : "");
   const [competitionData, setCompetitionData] = useState({});
@@ -98,7 +100,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
       .catch((error) => {
         console.error("Error fetching competition data:", error);
       });
-  }, []);
+  }, [competitionId, editing]);
 
   const closeForm = () => {
     onSubmitScore(null, !editing);

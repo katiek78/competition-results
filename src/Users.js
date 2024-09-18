@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData, getToken } from "./utils";
@@ -12,9 +12,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
 
-const token = getToken();
-
 const Users = () => {
+  const token = useMemo(() => getToken(), []);
   const { user } = useUser();
   const [users, setUsers] = useState([]);
   const [userData, setUserData] = useState({});

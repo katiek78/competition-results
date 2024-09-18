@@ -13,6 +13,7 @@ import {
   faTrash,
   faCheckDouble,
   faUserCheck,
+  faCalculator,
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
 import { fetchCurrentUserData, getToken } from "./utils";
@@ -32,6 +33,7 @@ const CompetitionResults = () => {
   const [editFormValues, setEditFormValues] = useState("");
   const [compUserTotals, setCompUserTotals] = useState([]);
   const [showDisciplineMenu, setShowDisciplineMenu] = useState(false);
+  const [roundingOn, setRoundingOn] = useState(false);
   const isMobile = window.innerWidth < 769;
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
@@ -40,6 +42,10 @@ const CompetitionResults = () => {
     if (isMobile) {
       setShowDisciplineMenu(!showDisciplineMenu);
     }
+  };
+
+  const handleToggleRounding = () => {
+    setRoundingOn(!roundingOn);
   };
 
   // Helper function to format date as 'YYYY-MM-DD'
@@ -169,67 +175,6 @@ const CompetitionResults = () => {
   const isParticipant = () =>
     competitionData.compUsers &&
     competitionData.compUsers.indexOf(user.userId) > -1;
-
-  const updateCompetitorTotals = () => {
-    if (!competitionData.compUsers) return;
-
-    const updatedCompUserTotals = competitionData.compUsers.map(
-      (competitor) => {
-        // Calculate the total points for this competitor
-        let totalPoints = 0;
-
-        // Track the highest score for disciplines "5N", "SC", or "K"
-        const highestScores = {};
-
-        competitionData.compResults
-          .filter((result) => result.compUser === competitor)
-          .forEach((result) => {
-            const { discipline, rawScore, time } = result;
-
-            // Update highest score for "5N", "SC", or "K"
-            if (
-              discipline.includes("5N") ||
-              discipline.includes("SC") ||
-              discipline.includes("K")
-            ) {
-              const disciplineKey = discipline.replace(/\d+$/, ""); // Remove the digits at the end
-              if (
-                !highestScores[disciplineKey] ||
-                rawScore > highestScores[disciplineKey].rawScore
-              ) {
-                highestScores[disciplineKey] = { rawScore, time, discipline };
-              } else if (
-                rawScore === highestScores[disciplineKey].rawScore &&
-                discipline.includes("SC") &&
-                time < highestScores[disciplineKey].time
-              ) {
-                highestScores[disciplineKey] = { rawScore, time, discipline };
-              }
-            } else {
-              // Add points for other disciplines directly
-              const points = getChampPoints(discipline, rawScore, time);
-              totalPoints += parseFloat(points);
-            }
-          });
-
-        // Add the highest scores for "5N", "SC", or "K" to the total points
-        Object.values(highestScores).forEach(
-          ({ rawScore, time, discipline }) => {
-            const points = getChampPoints(discipline, rawScore, time);
-            totalPoints += parseFloat(points);
-          }
-        );
-
-        return {
-          userId: competitor,
-          total: Math.ceil(totalPoints), // TODO: can this be rounded up or down? Or just up?
-        };
-      }
-    );
-
-    // You might want to set the updated compUserTotals using the appropriate state updater function
-    setCompUserTotals(updatedCompUserTotals);
-  };
 
   const areAllResultsComplete = (d) => {
     // Filter out the results with the specified discipline
@@ -421,8 +366,72 @@ const CompetitionResults = () => {
   useEffect(() => {
     if (selectedDiscipline)
       setStandard(getDisciplineStandardFromRef(selectedDiscipline));
+    const updateCompetitorTotals = () => {
+      if (!competitionData.compUsers) return;
+
+      const updatedCompUserTotals = competitionData.compUsers.map(
+        (competitor) => {
+          // Calculate the total points for this competitor
+          let totalPoints = 0;
+
+          // Track the highest score for disciplines "5N", "SC", or "K"
+          const highestScores = {};
+
+          competitionData.compResults
+            .filter((result) => result.compUser === competitor)
+            .forEach((result) => {
+              const { discipline, rawScore, time } = result;
+
+              // Update highest score for "5N", "SC", or "K"
+              if (
+                discipline.includes("5N") ||
+                discipline.includes("SC") ||
+                discipline.includes("K")
+              ) {
+                const disciplineKey = discipline.replace(/\d+$/, ""); // Remove the digits at the end
+                if (
+                  !highestScores[disciplineKey] ||
+                  rawScore > highestScores[disciplineKey].rawScore
+                ) {
+                  highestScores[disciplineKey] = { rawScore, time, discipline };
+                } else if (
+                  rawScore === highestScores[disciplineKey].rawScore &&
+                  discipline.includes("SC") &&
+                  time < highestScores[disciplineKey].time
+                ) {
+                  highestScores[disciplineKey] = { rawScore, time, discipline };
+                }
+              } else {
+                // Add points for other disciplines directly
+                const points = getChampPoints(discipline, rawScore, time);
+                totalPoints += parseFloat(points);
+              }
+            });
+
+          // Add the highest scores for "5N", "SC", or "K" to the total points
+          Object.values(highestScores).forEach(
+            ({ rawScore, time, discipline }) => {
+              const points = getChampPoints(discipline, rawScore, time);
+              totalPoints += parseFloat(points);
+            }
+          );
+
+          return {
+            userId: competitor,
+            total: Math.ceil(totalPoints), // TODO: can this be rounded up or down? Or just up?
+            unroundedTotal: totalPoints,
+          };
+        }
+      );
+
+      setCompUserTotals(updatedCompUserTotals);
+    };
     updateCompetitorTotals();
-  }, [selectedDiscipline, competitionData.compUsers, updateCompetitorTotals]);
+  }, [
+    competitionData.compUsers,
+    competitionData.compResults,
+    selectedDiscipline,
+  ]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -853,13 +862,22 @@ const CompetitionResults = () => {
                       <tr>
                         <th>Rank</th>
                         <th>Competitor</th>
-                        <th>Championship Pts</th>
+                        <th>
+                          Champ. Pts{" "}
+                          {isAdmin() && (
+                            <FontAwesomeIcon
+                              onClick={handleToggleRounding}
+                              icon={faCalculator}
+                              title="Rounding on/off"
+                            />
+                          )}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {compUserTotals &&
                         compUserTotals
-                          .sort((a, b) => b.total - a.total)
+                          .sort((a, b) => b.unroundedTotal - a.unroundedTotal)
                           .map((competitor, i) => {
                             // Find the user with the matching ID in the users array
                             const thisUser = users.find(
@@ -874,7 +892,9 @@ const CompetitionResults = () => {
                                 <td>{i + 1}</td>
                                 <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
                                 <td className="champ-points">
-                                  {competitor.total}
+                                  {roundingOn
+                                    ? competitor.unroundedTotal.toFixed(2)
+                                    : competitor.total}
                                 </td>
                               </tr>
                             );
