@@ -412,7 +412,7 @@ const CompetitionResults = () => {
     if (selectedDiscipline)
       setStandard(getDisciplineStandardFromRef(selectedDiscipline));
     updateCompetitorTotals();
-  }, [selectedDiscipline, competitionData.compUsers]);
+  }, [selectedDiscipline, competitionData.compUsers, updateCompetitorTotals]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -495,6 +495,11 @@ const CompetitionResults = () => {
   }, []);
 
   // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
+
+  const handleSelectDiscipline = (discipline) => {
+    setSelectedDiscipline(discipline);
+    if (isMobile) setShowDisciplineMenu(false);
+  };
 
   function formatCorrections(corrections) {
     if (!corrections) return;
@@ -594,7 +599,7 @@ const CompetitionResults = () => {
                     "disciplineHeading" +
                     (selectedDiscipline ? "" : " selected")
                   }
-                  onClick={() => setSelectedDiscipline("")}
+                  onClick={() => handleSelectDiscipline("")}
                 >
                   Overall
                 </span>
@@ -604,7 +609,7 @@ const CompetitionResults = () => {
                     className={`disciplineHeading ${
                       selectedDiscipline === discipline ? "selected" : ""
                     }`}
-                    onClick={() => setSelectedDiscipline(discipline)}
+                    onClick={() => handleSelectDiscipline(discipline)}
                   >
                     {getDisciplineNameFromRef(discipline)}
                   </span>
