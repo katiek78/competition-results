@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
-import { backendUrl } from "./constants";
+import { backendUrl, duplicateEmailMessage } from "./constants";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -10,6 +10,7 @@ export default function Register() {
   const [lastName, setLastName] = useState("");
   const [register, setRegister] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [message, setMessage] = useState("");
 
   const sendRegistrationMail = async (eml, fn) => {
     try {
@@ -57,9 +58,13 @@ export default function Register() {
         window.location.href = "/";
       })
       .catch((error) => {
-        error = new Error();
         console.log(error);
         setIsSubmitted(true);
+        if (error.response?.data.message === "Email already exists") {
+          setMessage(duplicateEmailMessage);
+        } else {
+          setMessage("Registration failed.");
+        }
       });
   };
 
@@ -127,9 +132,7 @@ export default function Register() {
         {/* {register && (
           <p className="text-success">Registered successfully</p>
         )} */}
-        {!register && isSubmitted && (
-          <p className="text-danger">Registration failed</p>
-        )}
+        {!register && isSubmitted && <p className="text-danger">{message}</p>}
       </Form>
     </>
   );

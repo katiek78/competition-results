@@ -18,9 +18,8 @@ import ScoreForm from "./ScoreForm";
 import { fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
-const token = getToken();
-
 const CompetitionResults = () => {
+  const token = getToken();
   const { id } = useParams();
   const { user } = useUser();
   const [competitionData, setCompetitionData] = useState({});
@@ -213,7 +212,7 @@ const CompetitionResults = () => {
 
         return {
           userId: competitor,
-          total: Math.ceil(totalPoints),
+          total: Math.ceil(totalPoints), // TODO: can this be rounded up or down? Or just up?
         };
       }
     );
@@ -429,12 +428,6 @@ const CompetitionResults = () => {
           axios(configuration)
             .then((result) => {
               setCompetitionData(result.data);
-
-              // //only allow users who are in compAdmins, or superAdmins
-              // if (result.data.compAdmins?.indexOf(fetchedData._id) === -1 && fetchedData.role !== "superAdmin" && fetchedData.role !== "admin") {
-              //     // redirect user to the home page
-              //     window.location.href = "/";
-              // }
             })
             .catch((error) => {
               console.error("Error fetching competition data:", error);
@@ -447,7 +440,7 @@ const CompetitionResults = () => {
       }
     };
     fetchData();
-  }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+  }, [user, token, id]);
 
   useEffect(() => {
     // set configurations

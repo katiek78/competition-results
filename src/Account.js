@@ -8,7 +8,7 @@ import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
 import { fetchCurrentUserData, generateToken, getToken } from "./utils";
-import { backendUrl, frontendUrl } from "./constants";
+import { backendUrl, frontendUrl, duplicateEmailMessage } from "./constants";
 
 export default function Account() {
   const [showNameInputs, setShowNameInputs] = useState(false);
@@ -53,6 +53,27 @@ export default function Account() {
   const handleSubmitEmail = async (newEmail) => {
     try {
       setConfirmEmailRequestSent("");
+
+      // Do not take action if new email exists in database already
+      const configurationUsers = {
+        method: "get",
+        url: `${backendUrl}/users`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const responseUsers = await axios(configurationUsers);
+      const users = responseUsers.data.users;
+      if (!users) {
+        console.log("No users found");
+        return;
+      }
+      const existingUser = users.find((u) => u.email === newEmail);
+      if (existingUser) {
+        alert(duplicateEmailMessage);
+        return;
+      }
+
       // Do not take action if new email is same as existing
       if (newEmail === userData.email) {
         alert("Email has not changed.");
@@ -140,7 +161,7 @@ export default function Account() {
       // set configurations
       const configuration = {
         method: "put",
-        url: `${backendUrl}/user/${user.userId}`,
+        url: `${backendUrl}/user-update/${user.userId}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },

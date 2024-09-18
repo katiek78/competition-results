@@ -82,7 +82,7 @@ const Users = () => {
       // set configurations for editing a user
       const configuration = {
         method: "put",
-        url: `${backendUrl}/user/${userId}`,
+        url: `${backendUrl}/user-update/${userId}`,
         headers: {
           Authorization: `Bearer ${token}`,
         },

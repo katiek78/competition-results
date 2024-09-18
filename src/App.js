@@ -26,12 +26,9 @@ import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { fetchCurrentUserData, getToken } from "./utils";
 
 function App() {
-  // const [ userId, setUserId ] = useState('');
-  // const [ userEmail, setUserEmail ] = useState('');
   const [userData, setUserData] = useState({});
   const { user, clearUser } = useUser();
 
-  // const token = cookies.get("TOKEN");
   const token = getToken();
 
   // logout

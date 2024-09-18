@@ -107,7 +107,12 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
   const handleSubmit = (e) => {
     e.preventDefault();
     // Validate form data (add more validation as needed)
-    if (!score || !user || !discipline) {
+    if (
+      !score ||
+      !user ||
+      !discipline ||
+      (discipline.includes("SC") && !time)
+    ) {
       alert("Please fill in all fields.");
       return;
     }

@@ -1,6 +1,9 @@
 export const backendUrl = process.env.REACT_APP_BACKEND_URL;
 export const frontendUrl = process.env.REACT_APP_FRONTEND_URL;
 
+export const duplicateEmailMessage =
+  "Email already exists. Please try again with a different email.";
+
 export const nationalEvents = [
   "5N1",
   "5N2",

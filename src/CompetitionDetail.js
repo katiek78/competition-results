@@ -194,9 +194,10 @@ const CompetitionDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log(user);
         if (!user) return;
         const fetchedData = await fetchCurrentUserData(user.userId);
-
+        console.log(fetchedData);
         if (fetchedData) {
           // Do something with the userData
           setUserData(fetchedData);
@@ -214,7 +215,7 @@ const CompetitionDetail = () => {
           axios(configuration)
             .then((result) => {
               setCompetitionData(result.data);
-
+              console.log(result.data);
               //only allow users who are in compAdmins, or superAdmins
               if (
                 result.data.compAdmins?.indexOf(fetchedData._id) === -1 &&
@@ -237,7 +238,7 @@ const CompetitionDetail = () => {
       }
     };
     fetchData();
-  }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+  }, [user, token]);
 
   useEffect(() => {
     // set configurations
@@ -275,6 +276,38 @@ const CompetitionDetail = () => {
       )
     )
       deleteParticipant(id);
+  };
+
+  const handleDeleteDiscipline = (discipline) => {
+    if (window.confirm("Are you sure you wish to delete this discipline?"))
+      deleteDiscipline(discipline);
+  };
+
+  const deleteDiscipline = async (discipline) => {
+    try {
+      const updatedDisciplines = competitionData.disciplines.filter(
+        (d) => d !== discipline
+      );
+
+      const response = await axios.put(
+        `${backendUrl}/competition/${competitionData._id}`,
+        {
+          disciplines: updatedDisciplines,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Competition saved:", response.data);
+      setCompetitionData((prevData) => ({
+        ...prevData,
+        disciplines: updatedDisciplines,
+      }));
+    } catch (error) {
+      console.error("Error saving competition:", error);
+    }
   };
 
   return (
@@ -437,7 +470,7 @@ const CompetitionDetail = () => {
                     <thead>
                       <tr>
                         <th>Discipline</th>
-                        {/* <th></th> */}
+                        <th></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -445,9 +478,14 @@ const CompetitionDetail = () => {
                         return (
                           <tr key={discipline}>
                             <td>{getDisciplineNameFromRef(discipline)}</td>
-                            {/* <td>
-                                <FontAwesomeIcon className="menuIcon" icon={faTrash} />
-                            </td> */}
+                            <td
+                              onClick={() => handleDeleteDiscipline(discipline)}
+                            >
+                              <FontAwesomeIcon
+                                className="menuIcon"
+                                icon={faTrash}
+                              />
+                            </td>
                           </tr>
                         );
                       })}
