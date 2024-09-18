@@ -31,6 +31,15 @@ const CompetitionResults = () => {
   const [showEditScoreForm, setShowEditScoreForm] = useState(false);
   const [editFormValues, setEditFormValues] = useState("");
   const [compUserTotals, setCompUserTotals] = useState([]);
+  const [showDisciplineMenu, setShowDisciplineMenu] = useState(false);
+  const isMobile = window.innerWidth < 769;
+
+  const handleDisciplineToggle = () => {
+    console.log(isMobile, showDisciplineMenu);
+    if (isMobile) {
+      setShowDisciplineMenu(!showDisciplineMenu);
+    }
+  };
 
   // Helper function to format date as 'YYYY-MM-DD'
   const formatDate = (date) => {
@@ -572,272 +581,289 @@ const CompetitionResults = () => {
           )}
 
           <div className="disciplinesDiv">
-            <span
-              className={
-                "disciplineHeading" + (selectedDiscipline ? "" : " selected")
-              }
-              onClick={() => setSelectedDiscipline("")}
+            <button
+              onClick={handleDisciplineToggle}
+              className="disciplinesToggle"
             >
-              Overall
-            </span>
-            {competitionData.disciplines?.map((discipline) => (
-              <span
-                key={discipline}
-                className={`disciplineHeading ${
-                  selectedDiscipline === discipline ? "selected" : ""
-                }`}
-                onClick={() => setSelectedDiscipline(discipline)}
-              >
-                {getDisciplineNameFromRef(discipline)}
-              </span>
-            ))}
-          </div>
-          <div className="standingsDiv">
-            <h2>
-              {" "}
-              {selectedDiscipline === ""
-                ? "Overall standings"
-                : getDisciplineNameFromRef(selectedDiscipline)}
-            </h2>
-            {selectedDiscipline === "" &&
-              (isCompetitionComplete() ? (
-                <h3 className="compComplete">Competition complete!</h3>
-              ) : (
-                <h3>
-                  {getNumberOfCompleteDisciplines()} out of{" "}
-                  {competitionData.disciplines.length} disciplines complete
-                </h3>
-              ))}
-
-            {selectedDiscipline &&
-              !isDisciplineComplete(selectedDiscipline) && (
-                <>
-                  <h3>
-                    Results received:{" "}
-                    {competitionData.compResults &&
-                      getNumberOfResultsForDiscipline(selectedDiscipline)}
-                    /
-                    {competitionData.compUsers &&
-                      competitionData.compUsers.length}
-                  </h3>
-                  <h4 className="asLink" onClick={showCompUsersNotSubmitted}>
-                    Who hasn't submitted a result?
-                  </h4>
-                </>
-              )}
-
-            {selectedDiscipline && isDisciplineComplete(selectedDiscipline) && (
-              <>
-                <h3 className="disciplineComplete">
-                  All results received - discipline complete
-                </h3>
-              </>
+              Select discipline
+            </button>
+            {((isMobile && showDisciplineMenu) || !isMobile) && (
+              <div className="disciplinesMenu">
+                <span
+                  className={
+                    "disciplineHeading" +
+                    (selectedDiscipline ? "" : " selected")
+                  }
+                  onClick={() => setSelectedDiscipline("")}
+                >
+                  Overall
+                </span>
+                {competitionData.disciplines?.map((discipline) => (
+                  <span
+                    key={discipline}
+                    className={`disciplineHeading ${
+                      selectedDiscipline === discipline ? "selected" : ""
+                    }`}
+                    onClick={() => setSelectedDiscipline(discipline)}
+                  >
+                    {getDisciplineNameFromRef(discipline)}
+                  </span>
+                ))}
+              </div>
             )}
+          </div>
 
-            {selectedDiscipline !== "" && (
-              <>
-                <table className="niceTable resultsTable">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Competitor</th>
-                      <th>Score</th>
-                      {selectedDiscipline.includes("SC") && <th>Time</th>}
-                      {selectedDiscipline.includes("W") && (
-                        <>
-                          {isAdmin() && !isParticipant() && (
-                            <th className="corrections">Corrections</th>
-                          )}
-                          <th>Status</th>
-                        </>
-                      )}
-                      <th>Champ. Pts</th>
-                      {isAdmin() && <th></th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {competitionData.compResults
-                      .filter(
-                        (result) => result.discipline === selectedDiscipline
-                      )
-                      .sort((a, b) => b.rawScore - a.rawScore)
-                      .map((result, i) => {
-                        // Find the user with the matching ID in the users array
-                        const thisUser = users.find(
-                          (u) => u._id === result.compUser
-                        );
-                        return (
-                          <tr
-                            key={thisUser._id}
-                            className={result.provisional ? "provisional" : ""}
-                          >
-                            <td>{i + 1}</td>
-                            <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
-                            <td>{result.rawScore}</td>
-                            {selectedDiscipline.includes("SC") && (
-                              <td>{result.time}</td>
+          {competitionData && (
+            <div className="standingsDiv">
+              <h2>
+                {" "}
+                {selectedDiscipline === ""
+                  ? "Overall standings"
+                  : getDisciplineNameFromRef(selectedDiscipline)}
+              </h2>
+              {selectedDiscipline === "" &&
+                (isCompetitionComplete() ? (
+                  <h3 className="compComplete">Competition complete!</h3>
+                ) : (
+                  <h3>
+                    {getNumberOfCompleteDisciplines()} out of{" "}
+                    {competitionData.disciplines.length} disciplines complete
+                  </h3>
+                ))}
+
+              {selectedDiscipline &&
+                !isDisciplineComplete(selectedDiscipline) && (
+                  <>
+                    <h3>
+                      Results received:{" "}
+                      {competitionData.compResults &&
+                        getNumberOfResultsForDiscipline(selectedDiscipline)}
+                      /
+                      {competitionData.compUsers &&
+                        competitionData.compUsers.length}
+                    </h3>
+                    <h4 className="asLink" onClick={showCompUsersNotSubmitted}>
+                      Who hasn't submitted a result?
+                    </h4>
+                  </>
+                )}
+
+              {selectedDiscipline &&
+                isDisciplineComplete(selectedDiscipline) && (
+                  <>
+                    <h3 className="disciplineComplete">
+                      All results received - discipline complete
+                    </h3>
+                  </>
+                )}
+
+              {selectedDiscipline !== "" && (
+                <>
+                  <table className="niceTable resultsTable">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Competitor</th>
+                        <th>Score</th>
+                        {selectedDiscipline.includes("SC") && <th>Time</th>}
+                        {selectedDiscipline.includes("W") && (
+                          <>
+                            {isAdmin() && !isParticipant() && (
+                              <th className="corrections">Corrections</th>
                             )}
-                            {selectedDiscipline.includes("W") && (
-                              <>
-                                {isAdmin() && !isParticipant() && (
-                                  <td
-                                    dangerouslySetInnerHTML={{
-                                      __html: formatCorrections(
-                                        result.additionalInfo
-                                      ),
-                                    }}
-                                  ></td>
-                                )}
-                                <td>
-                                  {result.provisional ? (
-                                    <FontAwesomeIcon
-                                      title="Provisional"
-                                      className="menuIcon"
-                                      icon={faQuestion}
-                                    />
-                                  ) : (
-                                    <FontAwesomeIcon
-                                      title="Complete"
-                                      className="menuIcon"
-                                      icon={faUserCheck}
-                                    />
+                            <th>Status</th>
+                          </>
+                        )}
+                        <th>Champ. Pts</th>
+                        {isAdmin() && <th></th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {competitionData.compResults
+                        .filter(
+                          (result) => result.discipline === selectedDiscipline
+                        )
+                        .sort((a, b) => b.rawScore - a.rawScore)
+                        .map((result, i) => {
+                          // Find the user with the matching ID in the users array
+                          const thisUser = users.find(
+                            (u) => u._id === result.compUser
+                          );
+                          return (
+                            <tr
+                              key={thisUser._id}
+                              className={
+                                result.provisional ? "provisional" : ""
+                              }
+                            >
+                              <td>{i + 1}</td>
+                              <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+                              <td>{result.rawScore}</td>
+                              {selectedDiscipline.includes("SC") && (
+                                <td>{result.time}</td>
+                              )}
+                              {selectedDiscipline.includes("W") && (
+                                <>
+                                  {isAdmin() && !isParticipant() && (
+                                    <td
+                                      dangerouslySetInnerHTML={{
+                                        __html: formatCorrections(
+                                          result.additionalInfo
+                                        ),
+                                      }}
+                                    ></td>
                                   )}
-                                </td>
-                              </>
-                            )}
+                                  <td>
+                                    {result.provisional ? (
+                                      <FontAwesomeIcon
+                                        title="Provisional"
+                                        className="menuIcon"
+                                        icon={faQuestion}
+                                      />
+                                    ) : (
+                                      <FontAwesomeIcon
+                                        title="Complete"
+                                        className="menuIcon"
+                                        icon={faUserCheck}
+                                      />
+                                    )}
+                                  </td>
+                                </>
+                              )}
 
-                            {!selectedDiscipline.includes("SC") &&
-                              !selectedDiscipline.includes("K") && (
+                              {!selectedDiscipline.includes("SC") &&
+                                !selectedDiscipline.includes("K") && (
+                                  <td className="champ-points">
+                                    {(
+                                      (result.rawScore / standard) *
+                                      1000
+                                    ).toFixed(2)}
+                                  </td>
+                                )}
+
+                              {selectedDiscipline.includes("SC") && (
                                 <td className="champ-points">
-                                  {(
-                                    (result.rawScore / standard) *
-                                    1000
-                                  ).toFixed(2)}
+                                  {result.rawScore === 52
+                                    ? (
+                                        standard.part1 /
+                                        Math.pow(result.time, standard.part2)
+                                      ).toFixed(2)
+                                    : (
+                                        (result.rawScore / 52) *
+                                        standard.part3
+                                      ).toFixed(2)}
                                 </td>
                               )}
 
-                            {selectedDiscipline.includes("SC") && (
-                              <td className="champ-points">
-                                {result.rawScore === 52
-                                  ? (
-                                      standard.part1 /
-                                      Math.pow(result.time, standard.part2)
-                                    ).toFixed(2)
-                                  : (
-                                      (result.rawScore / 52) *
-                                      standard.part3
-                                    ).toFixed(2)}
-                              </td>
-                            )}
-
-                            {selectedDiscipline.includes("K") && (
-                              <td className="champ-points">
-                                {(
-                                  Math.sqrt(result.rawScore) * standard
-                                ).toFixed(2)}
-                              </td>
-                            )}
-                            {isAdmin() && !isParticipant() && (
-                              <td>
-                                <FontAwesomeIcon
-                                  title="Edit Score"
-                                  className="actionIcon"
-                                  icon={faEdit}
-                                  onClick={() =>
-                                    handleEditScore(
-                                      result.compUser,
-                                      result.discipline
-                                    )
-                                  }
-                                />
-                                <FontAwesomeIcon
-                                  title="Delete Score"
-                                  className="actionIcon"
-                                  icon={faTrash}
-                                  onClick={() =>
-                                    handleDeleteScore(
-                                      result.compUser,
-                                      result.discipline
-                                    )
-                                  }
-                                />
-                                {/* {selectedDiscipline.includes('W') && (result.provisional ? <FontAwesomeIcon title="Mark as Complete" className="actionIcon" icon={faCheckDouble} onClick={() => handleMarkComplete(result.compUser, result.discipline)} />
+                              {selectedDiscipline.includes("K") && (
+                                <td className="champ-points">
+                                  {(
+                                    Math.sqrt(result.rawScore) * standard
+                                  ).toFixed(2)}
+                                </td>
+                              )}
+                              {isAdmin() && !isParticipant() && (
+                                <td>
+                                  <FontAwesomeIcon
+                                    title="Edit Score"
+                                    className="actionIcon"
+                                    icon={faEdit}
+                                    onClick={() =>
+                                      handleEditScore(
+                                        result.compUser,
+                                        result.discipline
+                                      )
+                                    }
+                                  />
+                                  <FontAwesomeIcon
+                                    title="Delete Score"
+                                    className="actionIcon"
+                                    icon={faTrash}
+                                    onClick={() =>
+                                      handleDeleteScore(
+                                        result.compUser,
+                                        result.discipline
+                                      )
+                                    }
+                                  />
+                                  {/* {selectedDiscipline.includes('W') && (result.provisional ? <FontAwesomeIcon title="Mark as Complete" className="actionIcon" icon={faCheckDouble} onClick={() => handleMarkComplete(result.compUser, result.discipline)} />
                                                                 : <FontAwesomeIcon title="Mark as Provisional" className="actionIcon" icon={faQuestion} onClick={() => handleMarkProvisional(result.compUser, result.discipline)} />}
                                                                      */}
-                                {selectedDiscipline.includes("W") &&
-                                  (result.provisional ? (
-                                    <FontAwesomeIcon
-                                      title="Mark as Complete"
-                                      className="actionIcon"
-                                      icon={faCheckDouble}
-                                      onClick={() =>
-                                        handleMarkComplete(
-                                          result.compUser,
-                                          result.discipline
-                                        )
-                                      }
-                                    />
-                                  ) : (
-                                    <FontAwesomeIcon
-                                      title="Mark as Provisional"
-                                      className="actionIcon"
-                                      icon={faQuestion}
-                                      onClick={() =>
-                                        handleMarkProvisional(
-                                          result.compUser,
-                                          result.discipline
-                                        )
-                                      }
-                                    />
-                                  ))}
-                              </td>
-                            )}
-                          </tr>
-                        );
-                      })}
-                  </tbody>
-                </table>
-              </>
-            )}
-
-            {selectedDiscipline === "" && (
-              <>
-                <table className="niceTable resultsTable overallTable">
-                  <thead>
-                    <tr>
-                      <th>Rank</th>
-                      <th>Competitor</th>
-                      <th>Championship Pts</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {compUserTotals &&
-                      compUserTotals
-                        .sort((a, b) => b.total - a.total)
-                        .map((competitor, i) => {
-                          // Find the user with the matching ID in the users array
-                          const thisUser = users.find(
-                            (u) => u._id === competitor.userId
-                          ) || {
-                            firstName: "Unknown",
-                            lastName: "Unknown",
-                          };
-
-                          return (
-                            <tr key={i}>
-                              <td>{i + 1}</td>
-                              <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
-                              <td className="champ-points">
-                                {competitor.total}
-                              </td>
+                                  {selectedDiscipline.includes("W") &&
+                                    (result.provisional ? (
+                                      <FontAwesomeIcon
+                                        title="Mark as Complete"
+                                        className="actionIcon"
+                                        icon={faCheckDouble}
+                                        onClick={() =>
+                                          handleMarkComplete(
+                                            result.compUser,
+                                            result.discipline
+                                          )
+                                        }
+                                      />
+                                    ) : (
+                                      <FontAwesomeIcon
+                                        title="Mark as Provisional"
+                                        className="actionIcon"
+                                        icon={faQuestion}
+                                        onClick={() =>
+                                          handleMarkProvisional(
+                                            result.compUser,
+                                            result.discipline
+                                          )
+                                        }
+                                      />
+                                    ))}
+                                </td>
+                              )}
                             </tr>
                           );
                         })}
-                  </tbody>
-                </table>
-              </>
-            )}
-          </div>
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {selectedDiscipline === "" && (
+                <>
+                  <table className="niceTable resultsTable overallTable">
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Competitor</th>
+                        <th>Championship Pts</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {compUserTotals &&
+                        compUserTotals
+                          .sort((a, b) => b.total - a.total)
+                          .map((competitor, i) => {
+                            // Find the user with the matching ID in the users array
+                            const thisUser = users.find(
+                              (u) => u._id === competitor.userId
+                            ) || {
+                              firstName: "Unknown",
+                              lastName: "Unknown",
+                            };
+
+                            return (
+                              <tr key={i}>
+                                <td>{i + 1}</td>
+                                <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+                                <td className="champ-points">
+                                  {competitor.total}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                    </tbody>
+                  </table>
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
     </>
