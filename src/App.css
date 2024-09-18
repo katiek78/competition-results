@@ -47,6 +47,43 @@
   text-decoration: none;
 }
 
+/* Hide mobile menu by default */
+.mobile-menu {
+  display: none !important;
+}
+
+/* Show desktop menu by default */
+.desktop-menu {
+  display: block;
+}
+
+/* On smaller screens (under 768px), hide the desktop menu and show the mobile menu */
+@media (max-width: 768px) {
+  .mobile-menu {
+    display: block !important;
+  }
+
+  .desktop-menu {
+    display: none;
+  }
+
+  .navbar-nav .nav-link {
+    padding: 10px 15px;
+  }
+
+  .navbar-collapse {
+    background-color: white; /* Optional: Give a background color to the collapsed menu */
+  }
+
+  .navbar-toggler {
+    border: none;
+  }
+
+  .btn-danger {
+    margin: 10px 0;
+  }
+}
+
 .maintext {
   margin:5px;
   border: 2px solid #11AACC; /* Border color */
@@ -64,6 +101,10 @@
   padding: 2px;
   margin: 5px;
   border-radius: 10px;
+}
+
+.subtext {
+  font-size: 0.7em;
 }
 
 .highlightText {
@@ -86,6 +127,12 @@
   color: black;
   text-decoration: none;
   font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .highlightText {
+    width: 80%;
+  }
 }
 
 .asLink {
@@ -146,6 +193,12 @@ input {
   display: flex;
   margin-bottom: 20px;
 }
+
+@media (max-width: 768px) {
+  .highlightButtonsDiv {
+    flex-direction: column;
+  }
+} 
 
 .disciplinesDiv {
   margin-bottom: 20px;
@@ -256,6 +309,19 @@ input {
     padding: 12px 15px;
 }
 
+/* On smaller screens (under 768px), hide the desktop menu and show the mobile menu */
+@media (max-width: 768px) {
+  .niceTable {
+    min-width: 100px;
+  }
+
+  .niceTable th,
+.niceTable td {
+    padding: 2px 3px;
+}
+
+}
+
 .setupTable {
   margin-left: 0px;
 }
@@ -290,6 +356,7 @@ input {
 
 .resultsTable {
   border: 1px solid;
+  overflow-x: auto;
 }
 
 .resultsTable thead tr {

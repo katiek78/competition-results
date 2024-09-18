@@ -12,14 +12,17 @@ export default function Home() {
         <Row>
           <p className="maintext">
             Welcome to the IAM results centre!
-            {!token && (
-              <>
-                <br />
-                <Link to={`/login/`}>Log in</Link> or{" "}
-                <Link to={`/register/`}>register</Link> to view competitions and
-                enter your results.
-              </>
-            )}
+            <span className="subtext">
+              {!token && (
+                <>
+                  <br />
+                  View competition results, and{" "}
+                  <Link to={`/login/`}>log in</Link> or{" "}
+                  <Link to={`/register/`}>sign up</Link> to administer
+                  competitions or enter your own results.
+                </>
+              )}
+            </span>
           </p>
         </Row>
       </Container>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
 import { Routes, Route, Link, Navigate } from "react-router-dom";
-import { Container, Col, Row, Button } from "react-bootstrap";
+import { Container, Col, Row, Button, Navbar, Nav } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
 import Register from "./Register";
@@ -22,13 +22,13 @@ import RequireAuth from "./RequireAuth";
 import "./App.css";
 import Cookies from "universal-cookie";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { faBars, faUser } from "@fortawesome/free-solid-svg-icons";
 import { fetchCurrentUserData, getToken } from "./utils";
 
 function App() {
   const [userData, setUserData] = useState({});
   const { user, clearUser } = useUser();
-
+  const [expanded, setExpanded] = useState(false);
   const token = getToken();
 
   // logout
@@ -60,7 +60,7 @@ function App() {
   return (
     <>
       <Container>
-        <Row>
+        {/* <Row>
           <Col className="text-center">
             <h1>IAM competition results centre</h1>
 
@@ -73,12 +73,13 @@ function App() {
                 </>
               )}
 
+              <a href="/competitions">Competitions</a>
+
               {token &&
                 userData.role &&
                 (userData.role === "superAdmin" ||
                   userData.role === "admin") && (
                   <>
-                    <a href="/competitions">Competitions</a>
                     <a href="/users">Users</a>
                   </>
                 )}
@@ -103,7 +104,84 @@ function App() {
               )}
             </section>
           </Col>
-        </Row>
+        </Row> */}
+
+        {/* Desktop Menu */}
+        <div className="desktop-menu">
+          <h1 className="text-center">IAM Competition Results Centre</h1>
+          <section id="navigation">
+            <a href="/">Home</a>
+            {token && (
+              <>
+                <a href="/my-competitions">My competitions</a>
+              </>
+            )}
+            <a href="/competitions">Competitions</a>
+            {token &&
+              userData.role &&
+              (userData.role === "superAdmin" || userData.role === "admin") && (
+                <a href="/users">Users</a>
+              )}
+            {token && (
+              <span className="current-account">
+                <Link to="/account">
+                  <FontAwesomeIcon className="menuIcon" icon={faUser} />{" "}
+                  <span>
+                    {userData.firstName} {userData.lastName}
+                  </span>
+                </Link>
+                <Button type="submit" variant="danger" onClick={() => logout()}>
+                  Logout
+                </Button>
+              </span>
+            )}
+          </section>
+        </div>
+
+        {/* Mobile Hamburger Menu */}
+        <Navbar
+          className="mobile-menu"
+          expand="lg"
+          bg="light"
+          expanded={expanded}
+        >
+          <Navbar.Brand href="/">IAM Competition Results Centre</Navbar.Brand>
+          <Navbar.Toggle
+            aria-controls="basic-navbar-nav"
+            onClick={() => setExpanded(expanded ? false : "expanded")}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </Navbar.Toggle>
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="ml-auto">
+              <Nav.Link href="/competitions">Competitions</Nav.Link>
+              {token && (
+                <>
+                  {/* <Nav.Link href="/">Home</Nav.Link> */}
+                  <Nav.Link href="/my-competitions">My Competitions</Nav.Link>
+                  {userData.role &&
+                    (userData.role === "superAdmin" ||
+                      userData.role === "admin") && (
+                      <Nav.Link href="/users">Users</Nav.Link>
+                    )}
+                  <Nav.Link href="/account">
+                    <FontAwesomeIcon icon={faUser} /> {userData.firstName}{" "}
+                    {userData.lastName}
+                  </Nav.Link>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      logout();
+                      setExpanded(false);
+                    }}
+                  >
+                    Logout
+                  </Button>
+                </>
+              )}
+            </Nav>
+          </Navbar.Collapse>
+        </Navbar>
 
         <Routes>
           <Route exact path="/" element={<Home />} />
@@ -129,14 +207,7 @@ function App() {
               </RequireAuth>
             }
           />
-          <Route
-            path="/competitions"
-            element={
-              <RequireAuth>
-                <Competitions />
-              </RequireAuth>
-            }
-          />
+          <Route path="/competitions" element={<Competitions />} />
           <Route
             path="/account"
             element={

@@ -651,7 +651,7 @@ const CompetitionResults = () => {
                           <th>Status</th>
                         </>
                       )}
-                      <th>Championship Pts</th>
+                      <th>Champ. Pts</th>
                       {isAdmin() && <th></th>}
                     </tr>
                   </thead>

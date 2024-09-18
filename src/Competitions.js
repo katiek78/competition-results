@@ -10,9 +10,8 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
-const token = getToken();
-
 const Competitions = () => {
+  const token = getToken();
   const { user } = useUser();
   const [competitions, setCompetitions] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -91,42 +90,43 @@ const Competitions = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!user) return;
-        const fetchedData = await fetchCurrentUserData(user.userId);
-        setUserData(fetchedData);
+        // if (!user) return;
+        let fetchedData;
 
-        if (fetchedData) {
-          const isAdmin = () =>
-            fetchedData.role === "superAdmin" || fetchedData.role === "admin";
-          if (!isAdmin()) window.location.href = "/";
-          // Do something with the userData
-
-          //Then get competition data
-          // set configurations
-          const configuration = {
-            method: "get",
-            url: `${backendUrl}/competitions`,
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          };
-          // make the API call
-          axios(configuration)
-            .then((result) => {
-              setCompetitions(result.data.competitions);
-            })
-            .catch((error) => {
-              console.error("Error fetching competition data:", error);
-            });
-        } else {
-          console.log("Failed to fetch user data");
+        if (user) {
+          fetchedData = await fetchCurrentUserData(user.userId);
+          setUserData(fetchedData);
         }
+
+        // const isAdmin = () =>
+        //   fetchedData.role === "superAdmin" || fetchedData.role === "admin";
+        // if (!isAdmin()) window.location.href = "/";
+
+        // Do something with the userData
+
+        //Then get competition data
+        // set configurations
+        const configuration = {
+          method: "get",
+          url: `${backendUrl}/competitions`,
+          headers: {
+            //  Authorization: `Bearer ${token}`,
+          },
+        };
+        // make the API call
+        axios(configuration)
+          .then((result) => {
+            setCompetitions(result.data.competitions);
+          })
+          .catch((error) => {
+            console.error("Error fetching competition data:", error);
+          });
       } catch (error) {
         console.error("Error in useEffect:", error);
       }
     };
     fetchData();
-  }, [user, token]); // The empty dependency array ensures the effect runs only once on mount
+  }, [user, token]);
 
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -136,55 +136,62 @@ const Competitions = () => {
   };
 
   return (
-    userData &&
-    (userData.role === "superAdmin" || userData.role === "admin") && (
-      <div>
-        <h1 className="text-center">Competitions</h1>
+    <div>
+      <h1 className="text-center">Competitions</h1>
 
-        <Button onClick={() => setShowForm(true)}>Add Competition</Button>
-
-        {showForm && (
-          <CompetitionForm
-            onSubmitCompetition={handleAddCompetition}
-            editing={false}
-          />
+      {userData &&
+        (userData.role === "superAdmin" || userData.role === "admin") && (
+          <Button onClick={() => setShowForm(true)}>Add Competition</Button>
         )}
 
-        <table className="niceTable competitionTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Dates</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {competitions
-              .sort((a, b) => new Date(b.dateStart) - new Date(a.dateStart))
-              .map((competition) => (
-                <tr key={competition._id}>
-                  <td>
-                    <Link to={`/competition/${competition._id}`}>
-                      {competition.name}
-                    </Link>
-                  </td>
-                  <td>{`${formatDate(
-                    new Date(competition.dateStart)
-                  )} - ${formatDate(new Date(competition.dateEnd))}`}</td>
-                  <td>
-                    <FontAwesomeIcon
-                      title="Delete Competition"
-                      className="actionIcon"
-                      icon={faTrash}
-                      onClick={() => handleDeleteComp(competition._id)}
-                    />
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
-    )
+      {showForm && (
+        <CompetitionForm
+          onSubmitCompetition={handleAddCompetition}
+          editing={false}
+        />
+      )}
+
+      <table className="niceTable competitionTable">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Dates</th>
+            {userData &&
+              (userData.role === "superAdmin" || userData.role === "admin") && (
+                <th></th>
+              )}
+          </tr>
+        </thead>
+        <tbody>
+          {competitions
+            .sort((a, b) => new Date(b.dateStart) - new Date(a.dateStart))
+            .map((competition) => (
+              <tr key={competition._id}>
+                <td>
+                  <Link to={`/competition/${competition._id}`}>
+                    {competition.name}
+                  </Link>
+                </td>
+                <td>{`${formatDate(
+                  new Date(competition.dateStart)
+                )} - ${formatDate(new Date(competition.dateEnd))}`}</td>
+                {userData &&
+                  (userData.role === "superAdmin" ||
+                    userData.role === "admin") && (
+                    <td>
+                      <FontAwesomeIcon
+                        title="Delete Competition"
+                        className="actionIcon"
+                        icon={faTrash}
+                        onClick={() => handleDeleteComp(competition._id)}
+                      />
+                    </td>
+                  )}
+              </tr>
+            ))}
+        </tbody>
+      </table>
+    </div>
   );
 };
 
