@@ -16,7 +16,7 @@ import {
   faCalculator,
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
-import { fetchCurrentUserData, getToken } from "./utils";
+import { exportToExcel, fetchCurrentUserData, getToken } from "./utils";
 import { backendUrl } from "./constants";
 
 const CompetitionResults = () => {
@@ -168,14 +168,21 @@ const CompetitionResults = () => {
     } else setShowEditScoreForm(false);
   };
 
-  const isAdmin = () =>
-    (competitionData.compAdmins &&
-      competitionData.compAdmins.indexOf(user.userId) > -1) ||
-    userData.role === "superAdmin";
-  const isParticipant = () =>
-    competitionData.compUsers &&
-    competitionData.compUsers.indexOf(user.userId) > -1;
-
+  const isAdmin = () => {
+    if (!user) return false;
+    return (
+      (competitionData.compAdmins &&
+        competitionData.compAdmins.indexOf(user.userId) > -1) ||
+      userData.role === "superAdmin"
+    );
+  };
+  const isParticipant = () => {
+    if (!user) return false;
+    return (
+      competitionData.compUsers &&
+      competitionData.compUsers.indexOf(user.userId) > -1
+    );
+  };
   const areAllResultsComplete = (d) => {
     // Filter out the results with the specified discipline
     const filteredResults = competitionData.compResults.filter(
@@ -539,8 +546,45 @@ const CompetitionResults = () => {
     return output;
   }
 
+  const handleExport = () => {
+    console.log(competitionData);
+    //Make an array to export, which will be an array of objects with keys 'name', 'total', 'unroundedTotal' and then each discipline with their scores.
+    const exportData = [];
+
+    competitionData.compUsers.forEach((compUser) => {
+      const thisUser = users.find((u) => u._id === compUser);
+      const compData = {
+        name: thisUser.firstName + " " + thisUser.lastName,
+        total: compUserTotals.find((u) => u.userId === compUser).total,
+        unroundedTotal: compUserTotals
+          .find((u) => u.userId === compUser)
+          .unroundedTotal.toFixed(2),
+      };
+      competitionData.disciplines.forEach((discipline) => {
+        if (discipline.includes("SC")) {
+          compData[discipline] =
+            getResult(compUser, discipline)?.rawScore || "not submitted yet";
+          compData[discipline + "Time"] =
+            getResult(compUser, discipline)?.time || "not submitted yet";
+        } else {
+          compData[discipline] =
+            getResult(compUser, discipline)?.rawScore || "not submitted yet";
+        }
+      });
+      exportData.push(compData);
+    });
+    exportToExcel(competitionData.name, exportData);
+  };
+
   // Example usage
   //const correctionsString = "1 11111111111X1111111X micrascope(12) cabbige(20)";
+
+  // const getResult = ((user, discipline) => {
+  //   return compData[discipline] = competitionData.compResults.filter(
+  //     (result) =>
+  //       result.discipline === discipline && result.compUser === compUser
+  //   )?[0];
+  // });
 
   return (
     <>
@@ -559,11 +603,18 @@ const CompetitionResults = () => {
 
           <div className="highlightButtonsDiv">
             {isAdmin() && (
-              <p className="highlightText">
-                <Link to={`/competition/${competitionData._id}`}>
-                  View Setup >>>
-                </Link>
-              </p>
+              <>
+                <p className="highlightText">
+                  <Link to={`/competition/${competitionData._id}`}>
+                    View Setup >>>
+                  </Link>
+                </p>
+                <p onClick={handleExport} className="highlightText">
+                  {/* <Link to={`/competition/${competitionData._id}`}> */}
+                  Export Results >>>
+                  {/* </Link> */}
+                </p>
+              </>
             )}
 
             {isParticipant() && (

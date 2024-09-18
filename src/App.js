@@ -226,11 +226,7 @@ function App() {
           />
           <Route
             path="/competition_results/:id"
-            element={
-              <RequireAuth>
-                <CompetitionResults />
-              </RequireAuth>
-            }
+            element={<CompetitionResults />}
           />
           <Route
             path="/competition_add_score/:id"
