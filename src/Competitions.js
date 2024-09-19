@@ -147,7 +147,7 @@ const Competitions = () => {
   return (
     <div>
       <h1 className="text-center">Competitions</h1>
-
+      <p>{error}</p>
       {userData &&
         (userData.role === "superAdmin" || userData.role === "admin") && (
           <Button onClick={() => setShowForm(true)}>Add Competition</Button>

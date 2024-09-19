@@ -16,7 +16,11 @@ import {
   faCalculator,
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
-import { exportToExcel, fetchCurrentUserData, getToken } from "./utils";
+import {
+  exportCompetitionToExcel,
+  fetchCurrentUserData,
+  getToken,
+} from "./utils";
 import { backendUrl } from "./constants";
 
 const CompetitionResults = () => {
@@ -561,30 +565,33 @@ const CompetitionResults = () => {
           .unroundedTotal.toFixed(2),
       };
       competitionData.disciplines.forEach((discipline) => {
+        const result = getResult(compUser, discipline);
+        const raw = result?.rawScore || "";
+
         if (discipline.includes("SC")) {
-          compData[discipline] =
-            getResult(compUser, discipline)?.rawScore || "not submitted yet";
-          compData[discipline + "Time"] =
-            getResult(compUser, discipline)?.time || "not submitted yet";
+          const time = result?.time || "";
+          const champ = getChampPoints(discipline, raw, time);
+          compData[discipline] = {
+            raw,
+            time,
+            champ,
+          };
         } else {
-          compData[discipline] =
-            getResult(compUser, discipline)?.rawScore || "not submitted yet";
+          const champ = getChampPoints(discipline, raw);
+          compData[discipline] = { raw, champ };
         }
       });
       exportData.push(compData);
     });
-    exportToExcel(competitionData.name, exportData);
+    exportCompetitionToExcel(
+      competitionData.name,
+      competitionData.disciplines,
+      exportData.sort((a, b) => b.total - a.total)
+    );
   };
 
   // Example usage
   //const correctionsString = "1 11111111111X1111111X micrascope(12) cabbige(20)";
-
-  // const getResult = ((user, discipline) => {
-  //   return compData[discipline] = competitionData.compResults.filter(
-  //     (result) =>
-  //       result.discipline === discipline && result.compUser === compUser
-  //   )?[0];
-  // });
 
   return (
     <>

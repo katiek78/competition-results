@@ -11,6 +11,7 @@
     "axios": "^1.6.5",
     "bootstrap": "^5.3.3",
     "crypto-js": "^4.2.0",
+    "exceljs": "^4.4.0",
     "jwt-decode": "^4.0.0",
     "react": "^18.2.0",
     "react-bootstrap": "^2.10.4",
@@ -18,8 +19,7 @@
     "react-router-dom": "^6.21.3",
     "react-scripts": "5.0.1",
     "universal-cookie": "^7.0.1",
-    "web-vitals": "^2.1.4",
-    "xlsx": "^0.18.5"
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
