@@ -154,16 +154,18 @@ function App() {
           </Navbar.Toggle>
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ml-auto">
+              {token && (
+                <Nav.Link href="/my-competitions">My Competitions</Nav.Link>
+              )}
               <Nav.Link href="/competitions">Competitions</Nav.Link>
               {token && (
                 <>
-                  {/* <Nav.Link href="/">Home</Nav.Link> */}
-                  <Nav.Link href="/my-competitions">My Competitions</Nav.Link>
                   {userData.role &&
                     (userData.role === "superAdmin" ||
                       userData.role === "admin") && (
                       <Nav.Link href="/users">Users</Nav.Link>
                     )}
+
                   <Nav.Link href="/account">
                     <FontAwesomeIcon icon={faUser} /> {userData.firstName}{" "}
                     {userData.lastName}

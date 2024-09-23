@@ -551,14 +551,16 @@ const CompetitionResults = () => {
   }
 
   const handleExport = () => {
-    console.log(competitionData);
     //Make an array to export, which will be an array of objects with keys 'name', 'total', 'unroundedTotal' and then each discipline with their scores.
     const exportData = [];
 
     competitionData.compUsers.forEach((compUser) => {
       const thisUser = users.find((u) => u._id === compUser);
       const compData = {
-        name: thisUser.firstName + " " + thisUser.lastName,
+        name:
+          (thisUser?.firstName || "Unknown") +
+          " " +
+          (thisUser?.lastName || "Unknown"),
         total: compUserTotals.find((u) => u.userId === compUser).total,
         unroundedTotal: compUserTotals
           .find((u) => u.userId === compUser)
@@ -776,13 +778,15 @@ const CompetitionResults = () => {
                           );
                           return (
                             <tr
-                              key={thisUser._id}
+                              key={thisUser?._id}
                               className={
                                 result.provisional ? "provisional" : ""
                               }
                             >
                               <td>{i + 1}</td>
-                              <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+                              <td>{`${thisUser?.firstName || "Unknown"} ${
+                                thisUser?.lastName || "Unknown"
+                              }`}</td>
                               <td>{result.rawScore}</td>
                               {selectedDiscipline.includes("SC") && (
                                 <td>{result.time}</td>

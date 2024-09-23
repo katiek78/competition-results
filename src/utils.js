@@ -62,11 +62,15 @@ export const exportCompetitionToExcel = async (
     };
     excelRow.getCell(3).font = { bold: true };
 
-    // Apply orange formatting for discipline columns, excluding "SC" and "K"
+    // Apply orange formatting for discipline columns, excluding "SC" and "K" and "5N"
     disciplines.forEach((discipline, colIndex) => {
       const cell = excelRow.getCell(colIndex + 5); // +5 because first 5 columns are fixed
-      if (!discipline.includes("SC") && !discipline.includes("K")) {
-        // Exclude SC and K columns
+      if (
+        !discipline.includes("SC") &&
+        !discipline.includes("K") &&
+        !discipline.includes("5N")
+      ) {
+        // Exclude SC and K and 5N columns
         cell.fill = {
           type: "pattern",
           pattern: "solid",
@@ -76,12 +80,14 @@ export const exportCompetitionToExcel = async (
     });
   });
 
-  // Highlight highest SC and K values per row
+  // Highlight highest SC and K and 5N values per row
   overallSheet.eachRow((row, rowIndex) => {
     let highestSC = -Infinity,
-      highestK = -Infinity;
+      highestK = -Infinity,
+      highest5N = -Infinity;
     let highestSCCell = null,
-      highestKCell = null;
+      highestKCell = null,
+      highest5NCell = null;
 
     row.eachCell({ includeEmpty: true }, (cell, colNumber) => {
       const key = overallSheet.getColumn(colNumber).key;
@@ -94,6 +100,10 @@ export const exportCompetitionToExcel = async (
       if (key.includes("K") && value > highestK) {
         highestK = value;
         highestKCell = cell;
+      }
+      if (key.includes("5N") && value > highest5N) {
+        highest5N = value;
+        highest5NCell = cell;
       }
     });
 
@@ -114,6 +124,14 @@ export const exportCompetitionToExcel = async (
         fgColor: { argb: fillColor },
       };
       highestKCell.font = { bold: true };
+    }
+    if (highest5NCell) {
+      highest5NCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: fillColor },
+      };
+      highest5NCell.font = { bold: true };
     }
   });
 

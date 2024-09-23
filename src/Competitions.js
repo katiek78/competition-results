@@ -122,7 +122,7 @@ const Competitions = () => {
       } catch (error) {
         console.error("Error in useEffect:", error);
         if (!error.response) {
-          setError("Network error");
+          setError("Network error. Please try refreshing the page.");
         } else if (error.response.status === 503) {
           // Example: 503 Service Unavailable
           setError(
