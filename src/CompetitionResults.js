@@ -770,7 +770,13 @@ const CompetitionResults = () => {
                         .filter(
                           (result) => result.discipline === selectedDiscipline
                         )
-                        .sort((a, b) => b.rawScore - a.rawScore)
+                        .sort((a, b) =>
+                          selectedDiscipline.includes("SC")
+                            ? a.rawScore === 52 && b.rawScore === 52
+                              ? a.time - b.time
+                              : b.rawScore - a.rawScore
+                            : b.rawScore - a.rawScore
+                        )
                         .map((result, i) => {
                           // Find the user with the matching ID in the users array
                           const thisUser = users.find(
