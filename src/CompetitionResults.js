@@ -795,7 +795,7 @@ const CompetitionResults = () => {
                               }`}</td>
                               <td>{result.rawScore}</td>
                               {selectedDiscipline.includes("SC") && (
-                                <td>{result.time}</td>
+                                <td>{result.time.toFixed(2)}</td>
                               )}
                               {selectedDiscipline.includes("W") && (
                                 <>
