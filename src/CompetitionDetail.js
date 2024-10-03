@@ -475,14 +475,14 @@ const CompetitionDetail = () => {
                             <td>{getDisciplineNameFromRef(discipline)}</td>
                             {userData.role === "superAdmin" && (
                               <td>
-                                <Link
+                                {/* <Link
                                   to={`/compete/${competitionData._id}/${discipline}`}
                                 >
                                   <FontAwesomeIcon
                                     className="menuIcon"
                                     icon={faPlay}
                                   />
-                                </Link>
+                                </Link> */}
                               </td>
                             )}
                             <td

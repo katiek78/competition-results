@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useUser } from "./UserProvider";
-import { io } from "socket.io-client";
+//import { io } from "socket.io-client";
 import axios from "axios";
 import { backendUrl, disciplines, getDisciplineNameFromRef } from "./constants";
 import { fetchCurrentUserData, getToken } from "./utils";
 import { Button } from "react-bootstrap";
 
 const token = getToken();
-const socket = io(`wss://${backendUrl}/socket.io`); // or const socket = io('https://your-backend-app.onrender.com');
+//const socket = io(`wss://${backendUrl}/socket.io`); // or const socket = io('https://your-backend-app.onrender.com');
 
 const Compete = () => {
   const { compId, discipline } = useParams();
@@ -19,25 +19,24 @@ const Compete = () => {
   const [userTyping, setUserTyping] = useState("");
 
   useEffect(() => {
-    // Listen for typing updates from the server
-    socket.on("updateTyping", (data) => {
-      setUserTyping(`${data.username} is typing...`);
-    });
-
-    // Cleanup on unmount
-    return () => {
-      socket.off("updateTyping");
-    };
+    // // Listen for typing updates from the server
+    // socket.on("updateTyping", (data) => {
+    //   setUserTyping(`${data.username} is typing...`);
+    // });
+    // // Cleanup on unmount
+    // return () => {
+    //   socket.off("updateTyping");
+    // };
   }, []);
 
   const handleTyping = (event) => {
     setInputValue(event.target.value);
 
     // Emit typing event to the server
-    socket.emit("typing", {
-      username: userData.firstName, // You can replace this with actual user data
-      text: event.target.value,
-    });
+    // socket.emit("typing", {
+    //   username: userData.firstName, // You can replace this with actual user data
+    //   text: event.target.value,
+    //  });
   };
 
   useEffect(() => {

@@ -5,7 +5,7 @@ import { Container, Button, Navbar, Nav } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
 import Register from "./Register";
-import Compete from "./Compete";
+//import Compete from "./Compete";
 import Competitions from "./Competitions";
 import CompetitionDetail from "./CompetitionDetail";
 import CompetitionResults from "./CompetitionResults";
@@ -215,14 +215,14 @@ function App() {
           <Route path="/password-reset/" element={<PasswordReset />} />
           {/* Route to handle unmatched routes */}
           <Route path="*" element={<Navigate to="/login" />} />
-          <Route
+          {/* <Route
             path="/compete/:compId/:discipline"
             element={
               <RequireAuth>
                 <Compete />
               </RequireAuth>
             }
-          />
+          /> */}
         </Routes>
       </Container>
       {/* </UserProvider> */}
