@@ -15,7 +15,7 @@ import {
   getDisciplineNameFromRef,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPlay, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const CompetitionDetail = () => {
   const token = useMemo(() => getToken(), []);
@@ -460,17 +460,11 @@ const CompetitionDetail = () => {
 
                 <Col>
                   <h2>Disciplines:</h2>
-                  {/* {competitionData.disciplines?.map((discipline) => {
-                              
-                                return (
-                                    <p key={discipline}>{getDisciplineNameFromRef(discipline)}</p>
-                                );
-                            })} */}
-
                   <table className="setupTable disciplineTable niceTable">
                     <thead>
                       <tr>
                         <th>Discipline</th>
+                        {userData.role === "superAdmin" && <th></th>}
                         <th></th>
                       </tr>
                     </thead>
@@ -479,6 +473,18 @@ const CompetitionDetail = () => {
                         return (
                           <tr key={discipline}>
                             <td>{getDisciplineNameFromRef(discipline)}</td>
+                            {userData.role === "superAdmin" && (
+                              <td>
+                                <Link
+                                  to={`/compete/${competitionData._id}/${discipline}`}
+                                >
+                                  <FontAwesomeIcon
+                                    className="menuIcon"
+                                    icon={faPlay}
+                                  />
+                                </Link>
+                              </td>
+                            )}
                             <td
                               onClick={() => handleDeleteDiscipline(discipline)}
                             >

@@ -68,7 +68,7 @@ export const exportCompetitionToExcel = async (
       if (
         !discipline.includes("SC") &&
         !discipline.includes("K") &&
-        !discipline.includes("5N")
+        !discipline.startsWith("5N")
       ) {
         // Exclude SC and K and 5N columns
         cell.fill = {
@@ -101,7 +101,7 @@ export const exportCompetitionToExcel = async (
         highestK = value;
         highestKCell = cell;
       }
-      if (key.includes("5N") && value > highest5N) {
+      if (key.startsWith("5N") && value > highest5N) {
         highest5N = value;
         highest5NCell = cell;
       }

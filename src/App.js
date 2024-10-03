@@ -5,8 +5,7 @@ import { Container, Button, Navbar, Nav } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
 import Register from "./Register";
-// import FreeComponent from "./FreeComponent";
-// import AuthComponent from "./AuthComponent";
+import Compete from "./Compete";
 import Competitions from "./Competitions";
 import CompetitionDetail from "./CompetitionDetail";
 import CompetitionResults from "./CompetitionResults";
@@ -16,8 +15,6 @@ import EmailChange from "./EmailChange";
 import PasswordReset from "./PasswordReset";
 import Home from "./Home";
 import Users from "./Users";
-// import ProtectedRoutes from "./ProtectedRoutes";
-// import { UserProvider, clearUser } from "./UserProvider";
 import RequireAuth from "./RequireAuth";
 import "./App.css";
 import Cookies from "universal-cookie";
@@ -60,67 +57,21 @@ function App() {
   return (
     <>
       <Container>
-        {/* <Row>
-          <Col className="text-center">
-            <h1>IAM competition results centre</h1>
-
-            <section id="navigation">
-              {token && (
-                <>
-                  <a href="/">Home</a>
-
-                  <a href="/my-competitions">My competitions</a>
-                </>
-              )}
-
-              <a href="/competitions">Competitions</a>
-
-              {token &&
-                userData.role &&
-                (userData.role === "superAdmin" ||
-                  userData.role === "admin") && (
-                  <>
-                    <a href="/users">Users</a>
-                  </>
-                )}
-              {token && (
-                <>
-                  <span className="current-account">
-                    <Link to="/account">
-                      <FontAwesomeIcon className="menuIcon" icon={faUser} />{" "}
-                      <span>
-                        {userData.firstName} {userData.lastName}
-                      </span>
-                    </Link>
-                    <Button
-                      type="submit"
-                      variant="danger"
-                      onClick={() => logout()}
-                    >
-                      Logout
-                    </Button>
-                  </span>
-                </>
-              )}
-            </section>
-          </Col>
-        </Row> */}
-
         {/* Desktop Menu */}
         <div className="desktop-menu">
           <h1 className="text-center">IAM Competition Results Centre</h1>
           <section id="navigation">
-            <a href="/">Home</a>
+            <Link to="/">Home</Link>
             {token && (
               <>
-                <a href="/my-competitions">My competitions</a>
+                <Link to="/my-competitions">My competitions</Link>
               </>
             )}
-            <a href="/competitions">Competitions</a>
+            <Link to="/competitions">Competitions</Link>
             {token &&
               userData.role &&
               (userData.role === "superAdmin" || userData.role === "admin") && (
-                <a href="/users">Users</a>
+                <Link to="/users">Users</Link>
               )}
             {token && (
               <span className="current-account">
@@ -155,18 +106,24 @@ function App() {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ml-auto">
               {token && (
-                <Nav.Link href="/my-competitions">My Competitions</Nav.Link>
+                <Nav.Link as={Link} href="/my-competitions">
+                  My Competitions
+                </Nav.Link>
               )}
-              <Nav.Link href="/competitions">Competitions</Nav.Link>
+              <Nav.Link as={Link} href="/competitions">
+                Competitions
+              </Nav.Link>
               {token && (
                 <>
                   {userData.role &&
                     (userData.role === "superAdmin" ||
                       userData.role === "admin") && (
-                      <Nav.Link href="/users">Users</Nav.Link>
+                      <Nav.Link as={Link} href="/users">
+                        Users
+                      </Nav.Link>
                     )}
 
-                  <Nav.Link href="/account">
+                  <Nav.Link as={Link} href="/account">
                     <FontAwesomeIcon icon={faUser} /> {userData.firstName}{" "}
                     {userData.lastName}
                   </Nav.Link>
@@ -187,20 +144,8 @@ function App() {
 
         <Routes>
           <Route exact path="/" element={<Home />} />
-          {/* <Route exact path="/free" element={ <FreeComponent />} /> */}
           <Route exact path="/login" element={<Login />} />
           <Route exact path="/register" element={<Register />} />
-          {/* <ProtectedRoutes path="/auth" component={AuthComponent} /> */}
-          {/* <Route exact path='/auth' element={<ProtectedRoutes/>} />
-           */}
-          {/* <Route
-          path="/auth"
-          element={
-            <RequireAuth>
-              <AuthComponent />
-            </RequireAuth>
-            }
-          /> */}
           <Route
             path="/my-competitions"
             element={
@@ -258,6 +203,14 @@ function App() {
           <Route path="/password-reset/" element={<PasswordReset />} />
           {/* Route to handle unmatched routes */}
           <Route path="*" element={<Navigate to="/login" />} />
+          <Route
+            path="/compete/:compId/:discipline"
+            element={
+              <RequireAuth>
+                <Compete />
+              </RequireAuth>
+            }
+          />
         </Routes>
       </Container>
       {/* </UserProvider> */}
