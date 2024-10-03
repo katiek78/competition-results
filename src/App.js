@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useUser } from "./UserProvider";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
 import { Container, Button, Navbar, Nav } from "react-bootstrap";
 import Account from "./Account";
 import Login from "./Login";
@@ -27,6 +27,7 @@ function App() {
   const { user, clearUser } = useUser();
   const [expanded, setExpanded] = useState(false);
   const token = getToken();
+  const location = useLocation();
 
   // logout
   const logout = () => {
@@ -57,90 +58,101 @@ function App() {
   return (
     <>
       <Container>
-        {/* Desktop Menu */}
-        <div className="desktop-menu">
-          <h1 className="text-center">IAM Competition Results Centre</h1>
-          <section id="navigation">
-            <Link to="/">Home</Link>
-            {token && (
-              <>
-                <Link to="/my-competitions">My competitions</Link>
-              </>
-            )}
-            <Link to="/competitions">Competitions</Link>
-            {token &&
-              userData.role &&
-              (userData.role === "superAdmin" || userData.role === "admin") && (
-                <Link to="/users">Users</Link>
-              )}
-            {token && (
-              <span className="current-account">
-                <Link to="/account">
-                  <FontAwesomeIcon className="menuIcon" icon={faUser} />{" "}
-                  <span>
-                    {userData.firstName} {userData.lastName}
+        {!location.pathname.startsWith("/compete") && (
+          <>
+            {/* Desktop Menu */}
+            <div className="desktop-menu">
+              <h1 className="text-center">IAM Competition Results Centre</h1>
+              <section id="navigation">
+                <Link to="/">Home</Link>
+                {token && (
+                  <>
+                    <Link to="/my-competitions">My competitions</Link>
+                  </>
+                )}
+                <Link to="/competitions">Competitions</Link>
+                {token &&
+                  userData.role &&
+                  (userData.role === "superAdmin" ||
+                    userData.role === "admin") && (
+                    <Link to="/users">Users</Link>
+                  )}
+                {token && (
+                  <span className="current-account">
+                    <Link to="/account">
+                      <FontAwesomeIcon className="menuIcon" icon={faUser} />{" "}
+                      <span>
+                        {userData.firstName} {userData.lastName}
+                      </span>
+                    </Link>
+                    <Button
+                      type="submit"
+                      variant="danger"
+                      onClick={() => logout()}
+                    >
+                      Logout
+                    </Button>
                   </span>
-                </Link>
-                <Button type="submit" variant="danger" onClick={() => logout()}>
-                  Logout
-                </Button>
-              </span>
-            )}
-          </section>
-        </div>
+                )}
+              </section>
+            </div>
 
-        {/* Mobile Hamburger Menu */}
-        <Navbar
-          className="mobile-menu"
-          expand="lg"
-          bg="light"
-          expanded={expanded}
-        >
-          <Navbar.Brand href="/">IAM Competition Results Centre</Navbar.Brand>
-          <Navbar.Toggle
-            aria-controls="basic-navbar-nav"
-            onClick={() => setExpanded(expanded ? false : "expanded")}
-          >
-            <FontAwesomeIcon icon={faBars} />
-          </Navbar.Toggle>
-          <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="ml-auto">
-              {token && (
-                <Nav.Link as={Link} href="/my-competitions">
-                  My Competitions
-                </Nav.Link>
-              )}
-              <Nav.Link as={Link} href="/competitions">
-                Competitions
-              </Nav.Link>
-              {token && (
-                <>
-                  {userData.role &&
-                    (userData.role === "superAdmin" ||
-                      userData.role === "admin") && (
-                      <Nav.Link as={Link} href="/users">
-                        Users
-                      </Nav.Link>
-                    )}
-
-                  <Nav.Link as={Link} href="/account">
-                    <FontAwesomeIcon icon={faUser} /> {userData.firstName}{" "}
-                    {userData.lastName}
+            {/* Mobile Hamburger Menu */}
+            <Navbar
+              className="mobile-menu"
+              expand="lg"
+              bg="light"
+              expanded={expanded}
+            >
+              <Navbar.Brand href="/">
+                IAM Competition Results Centre
+              </Navbar.Brand>
+              <Navbar.Toggle
+                aria-controls="basic-navbar-nav"
+                onClick={() => setExpanded(expanded ? false : "expanded")}
+              >
+                <FontAwesomeIcon icon={faBars} />
+              </Navbar.Toggle>
+              <Navbar.Collapse id="basic-navbar-nav">
+                <Nav className="ml-auto">
+                  {token && (
+                    <Nav.Link as={Link} to="/my-competitions">
+                      My Competitions
+                    </Nav.Link>
+                  )}
+                  <Nav.Link as={Link} to="/competitions">
+                    Competitions
                   </Nav.Link>
-                  <Button
-                    variant="danger"
-                    onClick={() => {
-                      logout();
-                      setExpanded(false);
-                    }}
-                  >
-                    Logout
-                  </Button>
-                </>
-              )}
-            </Nav>
-          </Navbar.Collapse>
-        </Navbar>
+                  {token && (
+                    <>
+                      {userData.role &&
+                        (userData.role === "superAdmin" ||
+                          userData.role === "admin") && (
+                          <Nav.Link as={Link} to="/users">
+                            Users
+                          </Nav.Link>
+                        )}
+
+                      <Nav.Link as={Link} to="/account">
+                        <FontAwesomeIcon icon={faUser} /> {userData.firstName}{" "}
+                        {userData.lastName}
+                      </Nav.Link>
+                      <Button
+                        variant="danger"
+                        onClick={() => {
+                          logout();
+                          setExpanded(false);
+                        }}
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  )}
+                </Nav>
+              </Navbar.Collapse>
+            </Navbar>
+          </>
+        )}
 
         <Routes>
           <Route exact path="/" element={<Home />} />
