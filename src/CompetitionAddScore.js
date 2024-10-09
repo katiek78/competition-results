@@ -176,7 +176,6 @@ const CompetitionAddScore = () => {
         time = decryptedDisciplineName.includes("Speed Cards")
           ? match[3]
           : undefined;
-        console.log(time); //undefined
         timestamp = new Date(match[4]);
       } else {
         // If string does not match pattern, alert the user that they need to check and try again
@@ -195,12 +194,28 @@ const CompetitionAddScore = () => {
     //example 5 min Numbers 2
     //U2FsdGVkX182DuzMqJQOoleEZ0MDvCYKCxuT5ch8UER/kn74JkI0ahqqryGFrsphNYu4fZTu1ndD+8q4BwVAmzc2uigJySOJ2lbK7XzCj11/37bgPAHtzzg7g7egas/yKHeqgcWbuOhw/Y+9HTuZqA==
 
+    // const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000;
+    // console.log(timezoneOffset);
+
     const isRecent =
       Date.now() - timestamp.getTime() <= RECENT_MINUTES * 60 * 1000;
 
+    //const isRecent =
+
+    // const isRecent =
+    //   Date.now() - (timestamp.getTime() - timezoneOffset) <=
+    //   RECENT_MINUTES * 60 * 1000;
+
+    console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
+    console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
+
     if (!isRecent) {
       alert(
-        `This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added.`
+        `This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added. Current date/time:  ${new Date(
+          Date.now()
+        ).toISOString()}, Timestamp: ${new Date(
+          timestamp.getTime()
+        ).toISOString()}`
       );
       return;
     }
