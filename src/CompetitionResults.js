@@ -234,9 +234,12 @@ const CompetitionResults = () => {
         getNumberOfResultsForDiscipline(d) === competitionData?.compUsers.length
       );
   };
-
   const getReadableDate = (timestamp) => {
     const date = new Date(timestamp);
+
+    if (!timestamp || isNaN(date.getTime())) {
+      return ""; // Return empty string for invalid or empty timestamps
+    }
 
     const readableDate = date.toLocaleString("en-GB", {
       day: "2-digit",
