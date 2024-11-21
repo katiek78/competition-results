@@ -235,6 +235,19 @@ const CompetitionResults = () => {
       );
   };
 
+  const getReadableDate = (timestamp) => {
+    const date = new Date(timestamp);
+
+    const readableDate = date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return readableDate;
+  };
+
   const getNumberOfCompleteDisciplines = () => {
     if (!competitionData?.disciplines) return;
 
@@ -883,7 +896,9 @@ const CompetitionResults = () => {
                                 </td>
                               )}
 
-                              {isAdmin() && <td>{result.timestamp}</td>}
+                              {isAdmin() && (
+                                <td>{getReadableDate(result.timestamp)}</td>
+                              )}
 
                               {isAdmin() && !isParticipant() && (
                                 <td>
