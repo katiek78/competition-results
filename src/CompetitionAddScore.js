@@ -200,25 +200,22 @@ const CompetitionAddScore = () => {
     const isRecent =
       Date.now() - timestamp.getTime() <= RECENT_MINUTES * 60 * 1000;
 
-    //const isRecent =
-
-    // const isRecent =
-    //   Date.now() - (timestamp.getTime() - timezoneOffset) <=
-    //   RECENT_MINUTES * 60 * 1000;
-
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
     console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
 
-    if (!isRecent) {
-      alert(
-        `This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added. Current date/time:  ${new Date(
-          Date.now()
-        ).toISOString()}, Timestamp: ${new Date(
-          timestamp.getTime()
-        ).toISOString()}`
-      );
-      return;
-    }
+    // Removed the check for recent scores temporarily
+
+    // if (!isRecent) {
+    //   alert(
+    //     `This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added. Current date/time:  ${new Date(
+    //       Date.now()
+    //     ).toISOString()}, Timestamp: ${new Date(
+    //       timestamp.getTime()
+    //     ).toISOString()}`
+    //   );
+    //   return;
+    // }
+
     console.log(decryptedDisciplineName);
     // Check if disciplineName can be matched to a discipline and if not, alert user
     if (findMatchingDiscipline(decryptedDisciplineName)) {

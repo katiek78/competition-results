@@ -551,6 +551,7 @@ const CompetitionResults = () => {
   }
 
   const handleExport = () => {
+    console.log(JSON.stringify(competitionData, null, 2));
     //Make an array to export, which will be an array of objects with keys 'name', 'total', 'unroundedTotal' and then each discipline with their scores.
     const exportData = [];
 
