@@ -121,14 +121,32 @@ const CompetitionResults = () => {
 
   const handleMarkComplete = (usr, discipline) => {
     const result = getResult(usr, discipline);
-    const { rawScore, time, additionalInfo } = result;
-    saveScore(rawScore, time, usr, discipline, false, false, additionalInfo); //only change is to mark provisional as false
+    const { rawScore, time, additionalInfo, timestamp } = result;
+    saveScore(
+      rawScore,
+      time,
+      usr,
+      discipline,
+      false,
+      false,
+      additionalInfo,
+      timestamp
+    ); //only change is to mark provisional as false
   };
 
   const handleMarkProvisional = (usr, discipline) => {
     const result = getResult(usr, discipline);
-    const { rawScore, time, additionalInfo } = result;
-    saveScore(rawScore, time, usr, discipline, false, true, additionalInfo); //only change is to mark provisional as true
+    const { rawScore, time, additionalInfo, timestamp } = result;
+    saveScore(
+      rawScore,
+      time,
+      usr,
+      discipline,
+      false,
+      true,
+      additionalInfo,
+      timestamp
+    ); //only change is to mark provisional as true
   };
 
   const handleSubmitScore = (result, newScore) => {
@@ -138,8 +156,15 @@ const CompetitionResults = () => {
       } else setShowEditScoreForm(false);
       return;
     }
-    const { score, time, discipline, user, additionalInfo, provisional } =
-      result;
+    const {
+      score,
+      time,
+      discipline,
+      user,
+      additionalInfo,
+      provisional,
+      timestamp,
+    } = result;
     //check for duplicate result and alert
     if (
       newScore &&
@@ -164,7 +189,8 @@ const CompetitionResults = () => {
         discipline,
         newScore,
         provisional,
-        additionalInfo
+        additionalInfo,
+        timestamp
       );
 
     if (newScore) {
@@ -258,7 +284,8 @@ const CompetitionResults = () => {
     discipline,
     newScore,
     provisional,
-    additionalInfo
+    additionalInfo,
+    timestamp
   ) => {
     const newResult = {
       compUser: user,
@@ -267,6 +294,7 @@ const CompetitionResults = () => {
       time,
       provisional,
       additionalInfo,
+      timestamp,
     };
 
     try {
@@ -762,7 +790,9 @@ const CompetitionResults = () => {
                             <th>Status</th>
                           </>
                         )}
+
                         <th>Champ. Pts</th>
+                        {isAdmin() && <th>Timestamp</th>}
                         {isAdmin() && <th></th>}
                       </tr>
                     </thead>
@@ -858,6 +888,9 @@ const CompetitionResults = () => {
                                   ).toFixed(2)}
                                 </td>
                               )}
+
+                              {isAdmin() && <td>{result.timestamp}</td>}
+
                               {isAdmin() && !isParticipant() && (
                                 <td>
                                   <FontAwesomeIcon

@@ -58,7 +58,8 @@ const CompetitionAddScore = () => {
     decryptedScore,
     decryptedDisciplineName,
     time,
-    additionalInfo
+    additionalInfo,
+    timestamp
   ) => {
     const disciplineRef = getDisciplineRefFromName(decryptedDisciplineName);
 
@@ -134,7 +135,7 @@ const CompetitionAddScore = () => {
   const handleSubmitScore = () => {
     //decrypt the message
     const decryptedText = decryptMessage(code);
-    alert(decryptedText);
+    //alert(decryptedText);
 
     let decryptedScore, additionalInfo, time, timestamp;
 
@@ -203,6 +204,8 @@ const CompetitionAddScore = () => {
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
     console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
 
+    //const timestampString = new Date(timestamp.getTime()).toISOString();
+
     // Removed the check for recent scores temporarily
 
     // if (!isRecent) {
@@ -219,7 +222,13 @@ const CompetitionAddScore = () => {
     console.log(decryptedDisciplineName);
     // Check if disciplineName can be matched to a discipline and if not, alert user
     if (findMatchingDiscipline(decryptedDisciplineName)) {
-      saveScore(decryptedScore, decryptedDisciplineName, time, additionalInfo);
+      saveScore(
+        decryptedScore,
+        decryptedDisciplineName,
+        time,
+        additionalInfo,
+        timestamp
+      );
     } else {
       alert(
         "There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added."
