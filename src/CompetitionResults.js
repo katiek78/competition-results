@@ -156,15 +156,8 @@ const CompetitionResults = () => {
       } else setShowEditScoreForm(false);
       return;
     }
-    const {
-      score,
-      time,
-      discipline,
-      user,
-      additionalInfo,
-      provisional,
-      timestamp,
-    } = result;
+    const { score, time, discipline, user, additionalInfo, provisional } =
+      result;
     //check for duplicate result and alert
     if (
       newScore &&
@@ -190,7 +183,7 @@ const CompetitionResults = () => {
         newScore,
         provisional,
         additionalInfo,
-        timestamp
+        ""
       );
 
     if (newScore) {
@@ -793,6 +786,7 @@ const CompetitionResults = () => {
 
                         <th>Champ. Pts</th>
                         {isAdmin() && <th>Timestamp</th>}
+
                         {isAdmin() && <th></th>}
                       </tr>
                     </thead>

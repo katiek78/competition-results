@@ -74,12 +74,15 @@ const CompetitionAddScore = () => {
       compUser: user.userId,
       discipline: getDisciplineRefFromName(decryptedDisciplineName),
       rawScore: decryptedScore,
+      timestamp,
     };
     if (disciplineRef.includes("SC")) newResult.time = time;
     if (disciplineRef.includes("W")) {
       newResult.additionalInfo = additionalInfo;
       newResult.provisional = true;
     }
+
+    console.log(newResult);
 
     //check for duplicate result and alert user if they already submitted one for this discipline
     if (
@@ -103,6 +106,7 @@ const CompetitionAddScore = () => {
           : [newResult],
       };
 
+      console.log(updatedCompetition);
       // set configurations
       const configuration = {
         method: "put",
@@ -142,6 +146,12 @@ const CompetitionAddScore = () => {
     // Parse the discipline name separately
     const disciplinePattern = /Discipline: ([^//]+)/;
     const disciplineMatch = decryptedText.match(disciplinePattern);
+    if (!disciplineMatch) {
+      alert(
+        "Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added."
+      );
+      return;
+    }
     const decryptedDisciplineName = disciplineMatch[1].trim();
 
     //parse the text
@@ -220,6 +230,7 @@ const CompetitionAddScore = () => {
     // }
 
     console.log(decryptedDisciplineName);
+    console.log(timestamp.toISOString());
     // Check if disciplineName can be matched to a discipline and if not, alert user
     if (findMatchingDiscipline(decryptedDisciplineName)) {
       saveScore(
@@ -227,7 +238,7 @@ const CompetitionAddScore = () => {
         decryptedDisciplineName,
         time,
         additionalInfo,
-        timestamp
+        timestamp.toISOString()
       );
     } else {
       alert(
