@@ -286,7 +286,85 @@ const CompetitionResults = () => {
     }
   };
 
-  const saveScore = (
+  // const saveScore = (
+  //   rawScore,
+  //   time = 0,
+  //   user,
+  //   discipline,
+  //   newScore,
+  //   provisional,
+  //   additionalInfo,
+  //   timestamp
+  // ) => {
+  //   const newResult = {
+  //     compUser: user,
+  //     discipline,
+  //     rawScore,
+  //     time,
+  //     provisional,
+  //     additionalInfo,
+  //     timestamp,
+  //   };
+
+  //   try {
+  //     let updatedCompetition;
+
+  //     if (newScore) {
+  //       updatedCompetition = {
+  //         // ...competitionData,
+  //         compResults: competitionData.compResults
+  //           ? [...competitionData.compResults, newResult]
+  //           : [newResult],
+  //       };
+  //     } else {
+  //       const indexOfResultToUpdate = competitionData.compResults.findIndex(
+  //         (result) =>
+  //           result.compUser === user && result.discipline === discipline
+  //       );
+
+  //       if (indexOfResultToUpdate !== -1) {
+  //         // Create a new array with the updated result
+  //         const updatedResults = [
+  //           ...competitionData.compResults.slice(0, indexOfResultToUpdate),
+  //           newResult, // Place the updated result here
+  //           ...competitionData.compResults.slice(indexOfResultToUpdate + 1),
+  //         ];
+
+  //         updatedCompetition = {
+  //           ...competitionData,
+  //           compResults: updatedResults,
+  //         };
+  //       } else alert("could not find this result");
+  //     }
+
+  //     // set configurations
+  //     const configuration = {
+  //       method: "put",
+  //       url: `${backendUrl}/competition/${id}`,
+  //       headers: {
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //       data: updatedCompetition,
+  //     };
+
+  //     axios(configuration);
+
+  //     setCompetitionData({
+  //       ...competitionData,
+  //       compResults: updatedCompetition.compResults,
+  //     });
+  //     setShowScoreForm(false);
+  //   } catch (error) {
+  //     console.error(`Error ${newScore ? "adding" : "editing"} result:`, error);
+  //     alert(
+  //       `The score could not be ${
+  //         newScore ? "added" : "edited"
+  //       }. Please try submitting again.`
+  //     );
+  //   }
+  // };
+
+  const saveScore = async (
     rawScore,
     time = 0,
     user,
@@ -300,66 +378,50 @@ const CompetitionResults = () => {
       compUser: user,
       discipline,
       rawScore,
-      time,
+      time: Number(time) || 0,
       provisional,
       additionalInfo,
       timestamp,
     };
 
     try {
-      let updatedCompetition;
-
-      if (newScore) {
-        updatedCompetition = {
-          // ...competitionData,
-          compResults: competitionData.compResults
-            ? [...competitionData.compResults, newResult]
-            : [newResult],
-        };
-      } else {
-        const indexOfResultToUpdate = competitionData.compResults.findIndex(
-          (result) =>
-            result.compUser === user && result.discipline === discipline
-        );
-
-        if (indexOfResultToUpdate !== -1) {
-          // Create a new array with the updated result
-          const updatedResults = [
-            ...competitionData.compResults.slice(0, indexOfResultToUpdate),
-            newResult, // Place the updated result here
-            ...competitionData.compResults.slice(indexOfResultToUpdate + 1),
-          ];
-
-          updatedCompetition = {
-            ...competitionData,
-            compResults: updatedResults,
-          };
-        } else alert("could not find this result");
-      }
-
-      // set configurations
       const configuration = {
         method: "put",
-        url: `${backendUrl}/competition/${id}`,
+        url: newScore
+          ? `${backendUrl}/competition/${id}/results` // Add new result
+          : `${backendUrl}/competition/${id}/results/${user}/${discipline}`, // Edit existing result
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        data: updatedCompetition,
+        data: newResult,
       };
 
-      axios(configuration);
+      await axios(configuration);
 
-      setCompetitionData({
-        ...competitionData,
-        compResults: updatedCompetition.compResults,
+      // Update local competitionData state
+      setCompetitionData((prevCompetitionData) => {
+        const updatedResults = newScore
+          ? [...prevCompetitionData.compResults, newResult] // Add new result
+          : prevCompetitionData.compResults.map(
+              (result) =>
+                result.compUser === user && result.discipline === discipline
+                  ? newResult // Replace with the new result
+                  : result // Keep the existing result
+            );
+
+        return {
+          ...prevCompetitionData,
+          compResults: updatedResults,
+        };
       });
-      setShowScoreForm(false);
+
+      setShowScoreForm(false); // Hide the form after successful operation
     } catch (error) {
       console.error(`Error ${newScore ? "adding" : "editing"} result:`, error);
       alert(
         `The score could not be ${
           newScore ? "added" : "edited"
-        }. Please try submitting again.`
+        }. Please try again.`
       );
     }
   };
@@ -836,7 +898,9 @@ const CompetitionResults = () => {
                               }`}</td>
                               <td>{result.rawScore}</td>
                               {selectedDiscipline.includes("SC") && (
-                                <td>{result.time.toFixed(2)}</td>
+                                <td>
+                                  {result.time?.toFixed(2) || result.time}
+                                </td>
                               )}
                               {selectedDiscipline.includes("W") && (
                                 <>
