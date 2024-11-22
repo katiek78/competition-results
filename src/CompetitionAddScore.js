@@ -99,22 +99,23 @@ const CompetitionAddScore = () => {
     }
 
     try {
-      const updatedCompetition = {
-        // ...competitionData,
-        compResults: competitionData.compResults
-          ? [...competitionData.compResults, newResult]
-          : [newResult],
-      };
+      // const updatedCompetition = {
+      //   // ...competitionData,
+      //   compResults: competitionData.compResults
+      //     ? [...competitionData.compResults, newResult]
+      //     : [newResult],
+      // };
 
-      console.log(updatedCompetition);
+      // console.log(updatedCompetition);
+
       // set configurations
       const configuration = {
         method: "put",
-        url: `${backendUrl}/competition/${id}`,
+        url: `${backendUrl}/competition/${id}/results`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        data: updatedCompetition,
+        data: newResult,
       };
 
       axios(configuration);
@@ -123,8 +124,9 @@ const CompetitionAddScore = () => {
       setDisciplineName(decryptedDisciplineName);
       setCompetitionData({
         ...competitionData,
-        compResults: updatedCompetition.compResults,
+        compResults: [...competitionData.compResults, newResult],
       });
+
       setShowMessage(true);
     } catch (error) {
       console.error("Error adding result:", error);
