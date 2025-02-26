@@ -418,8 +418,12 @@ input {
   width:400px;
 }
 
-.provisional {
-  color: #888;
+.corrected {
+  color: mediumseagreen;
+}
+
+.review {
+  color: rgb(252, 104, 6);
 }
 
 .login-container {

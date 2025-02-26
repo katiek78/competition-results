@@ -10,13 +10,9 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
   const [score, setScore] = useState(editing ? form.score : undefined);
   const [time, setTime] = useState(editing ? form.time : undefined);
   const [discipline, setDiscipline] = useState(editing ? form.discipline : "");
-  // const [provisional, setProvisional] = useState(
-  //   editing ? form.provisional : undefined
-  // );
-  const provisional = editing ? form.provisional : undefined;
-  // const [additionalInfo, setAdditionalInfo] = useState(
-  //   editing ? form.additionalInfo : undefined
-  // );
+
+  const status = editing ? form.status : undefined;
+
   const additionalInfo = editing ? form.additionalInfo : undefined;
   const [users, setUsers] = useState([]);
   const [user, setUser] = useState(editing ? form.user : "");
@@ -125,7 +121,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
       time,
       discipline,
       user,
-      provisional: editing ? provisional : discipline?.includes("W"),
+      status: editing ? status : discipline?.includes("W") ? "corrected" : "",
       additionalInfo,
     };
 

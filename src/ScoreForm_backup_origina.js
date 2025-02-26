@@ -104,7 +104,7 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
       time,
       discipline,
       user,
-      provisional: editing ? provisional : discipline.includes("W"),
+      status: editing ? status : discipline.includes("W") ? "corrected" : "",
       additionalInfo,
     };
 

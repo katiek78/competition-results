@@ -11,6 +11,7 @@ import {
   faEdit,
   faQuestion,
   faTrash,
+  faCheck,
   faCheckDouble,
   faUserCheck,
   faCalculator,
@@ -50,6 +51,24 @@ const CompetitionResults = () => {
 
   const handleToggleRounding = () => {
     setRoundingOn(!roundingOn);
+  };
+
+  const handleRequestReview = (usr) => {
+    //grey out the faQuestion icon so they can't request review again
+
+    //change status of this result to review so arbiters will see it
+    const result = getResult(usr, selectedDiscipline);
+    const { rawScore, time, additionalInfo, timestamp } = result;
+    saveScore(
+      rawScore,
+      time,
+      usr,
+      selectedDiscipline,
+      false,
+      "review",
+      additionalInfo,
+      timestamp
+    ); //only change is to mark status as review
   };
 
   // Helper function to format date as 'YYYY-MM-DD'
@@ -106,7 +125,7 @@ const CompetitionResults = () => {
       score: result.rawScore,
       user: result.compUser,
     });
-    //setEditFormValues({ score: result.rawScore, time: result.time, discipline: result.discipline, user: result.compUser, additionalInfo: result.additionalInfo, provisional: result.provisional })
+
     setShowEditScoreForm(true);
   };
 
@@ -119,34 +138,19 @@ const CompetitionResults = () => {
     }
   };
 
-  const handleMarkComplete = (usr, discipline) => {
-    const result = getResult(usr, discipline);
+  const handleMarkCorrected = (usr) => {
+    const result = getResult(usr, selectedDiscipline);
     const { rawScore, time, additionalInfo, timestamp } = result;
     saveScore(
       rawScore,
       time,
       usr,
-      discipline,
+      selectedDiscipline,
       false,
-      false,
+      "corrected",
       additionalInfo,
       timestamp
-    ); //only change is to mark provisional as false
-  };
-
-  const handleMarkProvisional = (usr, discipline) => {
-    const result = getResult(usr, discipline);
-    const { rawScore, time, additionalInfo, timestamp } = result;
-    saveScore(
-      rawScore,
-      time,
-      usr,
-      discipline,
-      false,
-      true,
-      additionalInfo,
-      timestamp
-    ); //only change is to mark provisional as true
+    ); //only change is to mark status as 'corrected'
   };
 
   const handleSubmitScore = (result, newScore) => {
@@ -156,8 +160,7 @@ const CompetitionResults = () => {
       } else setShowEditScoreForm(false);
       return;
     }
-    const { score, time, discipline, user, additionalInfo, provisional } =
-      result;
+    const { score, time, discipline, user, additionalInfo, status } = result;
     //check for duplicate result and alert
     if (
       newScore &&
@@ -181,7 +184,7 @@ const CompetitionResults = () => {
         user,
         discipline,
         newScore,
-        provisional,
+        status,
         additionalInfo,
         ""
       );
@@ -206,15 +209,16 @@ const CompetitionResults = () => {
       competitionData.compUsers.indexOf(user.userId) > -1
     );
   };
+
   const areAllResultsComplete = (d) => {
     // Filter out the results with the specified discipline
     const filteredResults = competitionData.compResults.filter(
       (result) => result.discipline === d
     );
 
-    // Check if all filtered results are complete (i.e., not provisional)
+    // Check if all filtered results are final
     const allComplete = filteredResults.every(
-      (result) => result.provisional === false
+      (result) => !result.status || result.status !== "review"
     );
 
     return allComplete;
@@ -286,91 +290,13 @@ const CompetitionResults = () => {
     }
   };
 
-  // const saveScore = (
-  //   rawScore,
-  //   time = 0,
-  //   user,
-  //   discipline,
-  //   newScore,
-  //   provisional,
-  //   additionalInfo,
-  //   timestamp
-  // ) => {
-  //   const newResult = {
-  //     compUser: user,
-  //     discipline,
-  //     rawScore,
-  //     time,
-  //     provisional,
-  //     additionalInfo,
-  //     timestamp,
-  //   };
-
-  //   try {
-  //     let updatedCompetition;
-
-  //     if (newScore) {
-  //       updatedCompetition = {
-  //         // ...competitionData,
-  //         compResults: competitionData.compResults
-  //           ? [...competitionData.compResults, newResult]
-  //           : [newResult],
-  //       };
-  //     } else {
-  //       const indexOfResultToUpdate = competitionData.compResults.findIndex(
-  //         (result) =>
-  //           result.compUser === user && result.discipline === discipline
-  //       );
-
-  //       if (indexOfResultToUpdate !== -1) {
-  //         // Create a new array with the updated result
-  //         const updatedResults = [
-  //           ...competitionData.compResults.slice(0, indexOfResultToUpdate),
-  //           newResult, // Place the updated result here
-  //           ...competitionData.compResults.slice(indexOfResultToUpdate + 1),
-  //         ];
-
-  //         updatedCompetition = {
-  //           ...competitionData,
-  //           compResults: updatedResults,
-  //         };
-  //       } else alert("could not find this result");
-  //     }
-
-  //     // set configurations
-  //     const configuration = {
-  //       method: "put",
-  //       url: `${backendUrl}/competition/${id}`,
-  //       headers: {
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //       data: updatedCompetition,
-  //     };
-
-  //     axios(configuration);
-
-  //     setCompetitionData({
-  //       ...competitionData,
-  //       compResults: updatedCompetition.compResults,
-  //     });
-  //     setShowScoreForm(false);
-  //   } catch (error) {
-  //     console.error(`Error ${newScore ? "adding" : "editing"} result:`, error);
-  //     alert(
-  //       `The score could not be ${
-  //         newScore ? "added" : "edited"
-  //       }. Please try submitting again.`
-  //     );
-  //   }
-  // };
-
   const saveScore = async (
     rawScore,
     time = 0,
     user,
     discipline,
     newScore,
-    provisional,
+    status,
     additionalInfo,
     timestamp
   ) => {
@@ -379,7 +305,7 @@ const CompetitionResults = () => {
       discipline,
       rawScore,
       time: Number(time) || 0,
-      provisional,
+      status,
       additionalInfo,
       timestamp,
     };
@@ -408,7 +334,7 @@ const CompetitionResults = () => {
                   ? newResult // Replace with the new result
                   : result // Keep the existing result
             );
-
+        console.log(updatedResults); //correct
         return {
           ...prevCompetitionData,
           compResults: updatedResults,
@@ -575,7 +501,7 @@ const CompetitionResults = () => {
       }
     };
     fetchData();
-  }, [user, id, token]);
+  }, [user, id, token, selectedDiscipline]);
 
   useEffect(() => {
     // set configurations
@@ -594,7 +520,7 @@ const CompetitionResults = () => {
       .catch((error) => {
         console.error("Error fetching competition data:", error);
       });
-  }, [id, token]);
+  }, [id, token, selectedDiscipline]);
 
   useEffect(() => {
     // set configurations
@@ -866,6 +792,11 @@ const CompetitionResults = () => {
                         {isAdmin() && <th>Timestamp</th>}
 
                         {isAdmin() && <th></th>}
+                        {!isAdmin() &&
+                          isParticipant() &&
+                          selectedDiscipline.includes("W") && (
+                            <th>Request review?</th>
+                          )}
                       </tr>
                     </thead>
                     <tbody>
@@ -885,12 +816,14 @@ const CompetitionResults = () => {
                           const thisUser = users.find(
                             (u) => u._id === result.compUser
                           );
+
+                          //determine if this user is the currently logged in user
+                          const isCurrentUser = thisUser?._id === user?.userId;
+
                           return (
                             <tr
                               key={thisUser?._id}
-                              className={
-                                result.provisional ? "provisional" : ""
-                              }
+                              className={result.status ? result.status : ""}
                             >
                               <td>{i + 1}</td>
                               <td>{`${thisUser?.firstName || "Unknown"} ${
@@ -914,17 +847,18 @@ const CompetitionResults = () => {
                                     ></td>
                                   )}
                                   <td>
-                                    {result.provisional ? (
+                                    {result.status === "review" && (
                                       <FontAwesomeIcon
-                                        title="Provisional"
+                                        title="Review requested"
                                         className="menuIcon"
                                         icon={faQuestion}
                                       />
-                                    ) : (
+                                    )}
+                                    {result.status === "corrected" && (
                                       <FontAwesomeIcon
-                                        title="Complete"
+                                        title="Corrected"
                                         className="menuIcon"
-                                        icon={faUserCheck}
+                                        icon={faCheck}
                                       />
                                     )}
                                   </td>
@@ -991,37 +925,39 @@ const CompetitionResults = () => {
                                       )
                                     }
                                   />
-                                  {/* {selectedDiscipline.includes('W') && (result.provisional ? <FontAwesomeIcon title="Mark as Complete" className="actionIcon" icon={faCheckDouble} onClick={() => handleMarkComplete(result.compUser, result.discipline)} />
-                                                                : <FontAwesomeIcon title="Mark as Provisional" className="actionIcon" icon={faQuestion} onClick={() => handleMarkProvisional(result.compUser, result.discipline)} />}
-                                                                     */}
+
                                   {selectedDiscipline.includes("W") &&
-                                    (result.provisional ? (
-                                      <FontAwesomeIcon
-                                        title="Mark as Complete"
-                                        className="actionIcon"
-                                        icon={faCheckDouble}
-                                        onClick={() =>
-                                          handleMarkComplete(
-                                            result.compUser,
-                                            result.discipline
-                                          )
-                                        }
-                                      />
-                                    ) : (
-                                      <FontAwesomeIcon
-                                        title="Mark as Provisional"
-                                        className="actionIcon"
-                                        icon={faQuestion}
-                                        onClick={() =>
-                                          handleMarkProvisional(
-                                            result.compUser,
-                                            result.discipline
-                                          )
-                                        }
-                                      />
-                                    ))}
+                                    result.status === "review" && (
+                                      <>
+                                        <FontAwesomeIcon
+                                          title="Mark as Complete"
+                                          className="actionIcon"
+                                          icon={faCheck}
+                                          onClick={() =>
+                                            handleMarkCorrected(result.compUser)
+                                          }
+                                        />
+                                      </>
+                                    )}
                                 </td>
                               )}
+
+                              {isParticipant() &&
+                                isCurrentUser &&
+                                (result.status === "submitted" ||
+                                  !result.status) &&
+                                selectedDiscipline.includes("W") && (
+                                  <td>
+                                    <FontAwesomeIcon
+                                      title="Request review"
+                                      className="actionIcon"
+                                      icon={faQuestion}
+                                      onClick={() =>
+                                        handleRequestReview(result.compUser)
+                                      }
+                                    />
+                                  </td>
+                                )}
                             </tr>
                           );
                         })}
