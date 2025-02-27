@@ -79,6 +79,7 @@ const CompetitionAddScore = () => {
     if (disciplineRef.includes("SC")) newResult.time = time;
     if (disciplineRef.includes("W")) {
       newResult.additionalInfo = additionalInfo;
+      console.log("setting status to submitted");
       newResult.status = "submitted";
     }
 

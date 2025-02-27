@@ -58,6 +58,8 @@ const CompetitionResults = () => {
 
     //change status of this result to review so arbiters will see it
     const result = getResult(usr, selectedDiscipline);
+    console.log(usr);
+    console.log(result);
     const { rawScore, time, additionalInfo, timestamp } = result;
     saveScore(
       rawScore,
@@ -309,6 +311,12 @@ const CompetitionResults = () => {
       additionalInfo,
       timestamp,
     };
+
+    console.log(
+      `${backendUrl}/competition/${id}/results/${user}/${discipline}`
+    ); //see what it's actually saving
+    // https://competition-results.onrender.com/competition/67bb3edfd48ebcbe7a58cd7c/results/662ba1e0b01fae0e1722b521/5W
+    // So it's saving correct user
 
     try {
       const configuration = {
