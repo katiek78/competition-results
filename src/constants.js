@@ -79,7 +79,7 @@ export const disciplines = [
   },
   {
     ref: "30N",
-    label: "30-Minute Numbers",
+    label: "30-minute Numbers",
     standard: 2090,
   },
   {
@@ -89,22 +89,22 @@ export const disciplines = [
   },
   {
     ref: "5F",
-    label: "5-Minute Names & Faces",
+    label: "5-minute Names & Faces",
     standard: 95,
   },
   {
     ref: "15F",
-    label: "15-Minute Names & Faces",
+    label: "15-minute Names & Faces",
     standard: 210,
   },
   {
     ref: "5W",
-    label: "5-Minute Words",
+    label: "5-minute Words",
     standard: 153,
   },
   {
     ref: "15W",
-    label: "15-Minute Words",
+    label: "15-minute Words",
     standard: 312,
   },
 
@@ -125,7 +125,7 @@ export const disciplines = [
   },
   {
     ref: "D",
-    label: "5-Minute Dates",
+    label: "5-minute Dates",
     standard: 142,
   },
   {
@@ -140,12 +140,12 @@ export const disciplines = [
   },
   {
     ref: "10C",
-    label: "10-Minute Cards",
+    label: "10-minute Cards",
     standard: 589,
   },
   {
     ref: "30C",
-    label: "30-Minute Cards",
+    label: "30-minute Cards",
     standard: 1242,
   },
   {
@@ -155,17 +155,17 @@ export const disciplines = [
   },
   {
     ref: "5I",
-    label: "5-Minute Images",
+    label: "Images",
     standard: 679,
   },
   {
     ref: "5B",
-    label: "5-Minute Binary",
+    label: "5-minute Binary",
     standard: 1550,
   },
   {
     ref: "30B",
-    label: "30-Minute Binary",
+    label: "30-minute Binary",
     standard: 6171,
   },
 ];

@@ -12,8 +12,6 @@ import {
   faQuestion,
   faTrash,
   faCheck,
-  faCheckDouble,
-  faUserCheck,
   faCalculator,
 } from "@fortawesome/free-solid-svg-icons";
 import ScoreForm from "./ScoreForm";
@@ -55,12 +53,18 @@ const CompetitionResults = () => {
 
   const handleRequestReview = (usr) => {
     //grey out the faQuestion icon so they can't request review again
+    //think this disappears automatically
+
+    // prompt user for note to be added
+    const note = prompt("Please enter a note:");
 
     //change status of this result to review so arbiters will see it
     const result = getResult(usr, selectedDiscipline);
     console.log(usr);
     console.log(result);
     const { rawScore, time, additionalInfo, timestamp } = result;
+    const expandedInfo = additionalInfo + "<br />Note: " + note;
+    console.log(expandedInfo);
     saveScore(
       rawScore,
       time,
@@ -68,9 +72,9 @@ const CompetitionResults = () => {
       selectedDiscipline,
       false,
       "review",
-      additionalInfo,
+      expandedInfo,
       timestamp
-    ); //only change is to mark status as review
+    ); //only change is to mark status as review and include note along with additionalInfo
   };
 
   // Helper function to format date as 'YYYY-MM-DD'
@@ -561,9 +565,13 @@ const CompetitionResults = () => {
     if (isMobile) setShowDisciplineMenu(false);
   };
 
-  function formatCorrections(corrections) {
-    if (!corrections) return;
-    const parts = corrections.split(/\s+/);
+  function formatCorrections(corrections, status) {
+    if (status === "submitted" || !corrections) return "";
+
+    // Split corrections and note if present
+    let [correctionsPart, notePart] = corrections.split("<br />Note:");
+
+    const parts = correctionsPart.trim().split(/\s+/);
     let output = "";
     let currentColumn = "";
 
@@ -580,11 +588,15 @@ const CompetitionResults = () => {
       }
     });
 
+    // Append the note if present
+    if (notePart) {
+      output += `<br><strong>Note:</strong> ${notePart.trim()}`;
+    }
+
     return output;
   }
 
   const handleExport = () => {
-    console.log(JSON.stringify(competitionData, null, 2));
     //Make an array to export, which will be an array of objects with keys 'name', 'total', 'unroundedTotal' and then each discipline with their scores.
     const exportData = [];
 
@@ -629,6 +641,208 @@ const CompetitionResults = () => {
   // Example usage
   //const correctionsString = "1 11111111111X1111111X micrascope(12) cabbige(20)";
 
+  // Lookup table for stats discipline IDs
+  const disciplineNameToStatsId = {
+    "5-minute Binary": "BINARY5",
+    "5-minute Names & Faces": "NAMES5",
+    "5-minute Numbers": "NUM5",
+    "5-minute Words": "WORDS5",
+    "10-minute Cards": "CARDS10",
+    "10-minute Cards (MWC)": "CARDS10MWC",
+    "15-minute Numbers": "NUM15",
+    "15-minute Numbers (MWC)": "NUM15MWC",
+    "30-minute Binary": "BINARY30",
+    "30-minute Cards": "CARDS30",
+    "30-minute Cards (MWC)": "CARDS30MWC",
+    "30-minute Numbers": "NUM30",
+    "15-minute Images": "IMAGES15",
+    "5-minute Dates": "DATES5",
+    "Hour Cards": "CARDS60",
+    "Hour Numbers": "NUM60",
+    Images: "IMAGESOLD",
+    "15-minute Names & Faces": "NAMES15",
+    "15-minute Poem/Text (Old)": "POEM15",
+    "15-minute Words": "WORDS15",
+    "Speed Cards": "SPDCARDS",
+    "Spoken Numbers": "SPOKEN1",
+    "Spoken Numbers (2 sec)": "SPOKEN2",
+    "10-minute Names & Faces": "NAMES10",
+    Vocabulary: "VOCAB5",
+    "10-minute Words": "WORDS10",
+    "10-minute Text": "POEM10",
+    "Images On Screen": "IMGSCRN",
+    "Simpson's Challenge": "SIMPSONS",
+    "5-minute Names (old format)": "NAMESold5",
+    "15-minute Names (old format)": "NAMESold15",
+    "10-Minute Names (Old Format)": "NAMESold10",
+    "5-minute Images": "IMAGES5",
+  };
+
+  const handleExportStats = () => {
+    // 1. Export competition.csv
+    const compFields = [
+      "id",
+      "title",
+      "year",
+      "location",
+      "start_date",
+      "end_date",
+      "rankable",
+      "adult_rankable",
+      "country",
+      "type",
+      "championship_status",
+    ];
+    const compRow = [
+      competitionData?._id || "N/A",
+      competitionData?.name || competitionData?.title || "N/A",
+      competitionData?.year || "N/A",
+      competitionData?.location || "N/A",
+      competitionData?.dateStart
+        ? formatDate(new Date(competitionData.dateStart))
+        : "N/A",
+      competitionData?.dateEnd
+        ? formatDate(new Date(competitionData.dateEnd))
+        : "N/A",
+      competitionData?.rankable !== undefined
+        ? competitionData.rankable
+        : "N/A",
+      competitionData?.adult_rankable !== undefined
+        ? competitionData.adult_rankable
+        : "N/A",
+      competitionData?.country || "N/A",
+      competitionData?.type || "N/A",
+      competitionData?.championship_status || "N/A",
+    ];
+    const compCsv =
+      "\uFEFF" + compFields.join(",") + "\n" + compRow.join(",") + "\n";
+    const compBlob = new Blob([compCsv], { type: "text/csv;charset=utf-8" });
+    const compUrl = URL.createObjectURL(compBlob);
+    const compLink = document.createElement("a");
+    compLink.href = compUrl;
+    compLink.download = "competition.csv";
+    document.body.appendChild(compLink);
+    compLink.click();
+    document.body.removeChild(compLink);
+    URL.revokeObjectURL(compUrl);
+
+    // 2. Export score.csv
+    // Build scoreFields: replace 5-min Numbers and Spoken Numbers with NUM5 and SPOKEN1
+    const statsDisciplineFields = [];
+    // Add NUM5 and SPOKEN1 first
+    statsDisciplineFields.push("NUM5");
+    statsDisciplineFields.push("SPOKEN1");
+    // Add all other mapped disciplines except the trials/attempts and Speed Cards
+    (competitionData?.disciplines || []).forEach((d) => {
+      const name = getDisciplineNameFromRef(d);
+      // Skip 5-min Numbers trials, Spoken Numbers attempts, and Speed Cards
+      if (
+        [
+          "5-minute Numbers Trial 1",
+          "5-minute Numbers Trial 2",
+          "Spoken Numbers Attempt 1",
+          "Spoken Numbers Attempt 2",
+          "Spoken Numbers Attempt 3",
+          "Speed Cards Trial 1",
+          "Speed Cards Trial 2",
+        ].includes(name)
+      )
+        return;
+      const statsId = disciplineNameToStatsId[name];
+      if (statsId) statsDisciplineFields.push(statsId);
+      else statsDisciplineFields.push(d);
+    });
+    statsDisciplineFields.push(
+      "spdcards1_cards",
+      "spdcards1_time",
+      "spdcards2_cards",
+      "spdcards2_time"
+    );
+
+    const scoreFields = [
+      "first name",
+      "last name",
+      "iam id",
+      "Country",
+      "Age group",
+      ...statsDisciplineFields,
+    ];
+
+    const scoreRows = [];
+    (competitionData?.compUsers || []).forEach((compUserId) => {
+      const user = users.find((u) => u._id === compUserId) || {};
+      const row = [
+        user.firstName || "N/A",
+        user.lastName || "N/A",
+        user.iamId || user.iam_id || "N/A",
+        user.country || "N/A",
+        user.ageGroup || user.age_group || "N/A",
+      ];
+      // NUM5: highest of 5-minute Numbers Trial 1/2
+      const num1 = getResult(compUserId, "5N1");
+      const num2 = getResult(compUserId, "5N2");
+      const num1Score = num1?.rawScore !== undefined ? num1.rawScore : null;
+      const num2Score = num2?.rawScore !== undefined ? num2.rawScore : null;
+      let num5Score = "N/A";
+      if (num1Score !== null && num2Score !== null)
+        num5Score = Math.max(num1Score, num2Score);
+      else if (num1Score !== null) num5Score = num1Score;
+      else if (num2Score !== null) num5Score = num2Score;
+      row.push(num5Score);
+      // SPOKEN1: highest of Spoken Numbers Attempt 1/2/3
+      const k1 = getResult(compUserId, "K1");
+      const k2 = getResult(compUserId, "K2");
+      const k3 = getResult(compUserId, "K3");
+      const kScores = [k1?.rawScore, k2?.rawScore, k3?.rawScore].filter(
+        (v) => v !== undefined
+      );
+      let spokenScore = "N/A";
+      if (kScores.length > 0) spokenScore = Math.max(...kScores);
+      row.push(spokenScore);
+      // Other disciplines
+      (competitionData?.disciplines || []).forEach((discipline) => {
+        const name = getDisciplineNameFromRef(discipline);
+        if (
+          [
+            "5-minute Numbers Trial 1",
+            "5-minute Numbers Trial 2",
+            "Spoken Numbers Attempt 1",
+            "Spoken Numbers Attempt 2",
+            "Spoken Numbers Attempt 3",
+            "Speed Cards Trial 1",
+            "Speed Cards Trial 2",
+          ].includes(name)
+        )
+          return;
+        const result = getResult(compUserId, discipline);
+        row.push(result?.rawScore !== undefined ? result.rawScore : "N/A");
+      });
+      // spdcards1 and spdcards2 use SC1 and SC2
+      const spd1 = getResult(compUserId, "SC1");
+      row.push(spd1?.rawScore !== undefined ? spd1.rawScore : "N/A");
+      row.push(spd1?.time !== undefined ? spd1.time : "N/A");
+      const spd2 = getResult(compUserId, "SC2");
+      row.push(spd2?.rawScore !== undefined ? spd2.rawScore : "N/A");
+      row.push(spd2?.time !== undefined ? spd2.time : "N/A");
+      scoreRows.push(row);
+    });
+    const scoreCsv =
+      "\uFEFF" +
+      scoreFields.join(",") +
+      "\n" +
+      scoreRows.map((r) => r.join(",")).join("\n") +
+      "\n";
+    const scoreBlob = new Blob([scoreCsv], { type: "text/csv;charset=utf-8" });
+    const scoreUrl = URL.createObjectURL(scoreBlob);
+    const scoreLink = document.createElement("a");
+    scoreLink.href = scoreUrl;
+    scoreLink.download = "score.csv";
+    document.body.appendChild(scoreLink);
+    scoreLink.click();
+    document.body.removeChild(scoreLink);
+    URL.revokeObjectURL(scoreUrl);
+  };
+
   return (
     <>
       {competitionData && (
@@ -656,6 +870,9 @@ const CompetitionResults = () => {
                   {/* <Link to={`/competition/${competitionData._id}`}> */}
                   Export Results >>>
                   {/* </Link> */}
+                </p>
+                <p onClick={handleExportStats} className="highlightText">
+                  Export Results for Stats >>>
                 </p>
               </>
             )}
@@ -849,7 +1066,8 @@ const CompetitionResults = () => {
                                     <td
                                       dangerouslySetInnerHTML={{
                                         __html: formatCorrections(
-                                          result.additionalInfo
+                                          result.additionalInfo,
+                                          result.status
                                         ),
                                       }}
                                     ></td>
