@@ -1,82 +1,107 @@
 // CompetitionForm.js
 
-import React, { useState } from 'react';
-import { Button } from 'react-bootstrap';
+import React, { useState } from "react";
+import { Button } from "react-bootstrap";
+import { generateCompId } from "./competitionIdUtils";
 
 const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
-
-    // Helper function to format date as 'YYYY-MM-DD'
-    const formatDate = (date) => {
+  // Helper function to format date as 'YYYY-MM-DD'
+  const formatDate = (date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
-  const [name, setName] = useState(editing ? form.compName : '');
-  const [dateStart, setDateStart] = useState(editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date()));
-  const [dateEnd, setDateEnd] = useState(editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date()));
-  const [format, setFormat] = useState(editing ? form.format || 'n' : 'n');
+  const [name, setName] = useState(editing ? form.compName : "");
+  const [dateStart, setDateStart] = useState(
+    editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date())
+  );
+  const [dateEnd, setDateEnd] = useState(
+    editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date())
+  );
+  const [format, setFormat] = useState(editing ? form.format || "n" : "n");
+  const [compId, setCompId] = useState(
+    editing ? form.comp_id || generateCompId(form.compName, form.dateStart) : ""
+  );
+
+  // Auto-generate comp_id when name or dateStart changes
+  const handleNameChange = (e) => {
+    const newName = e.target.value;
+    setName(newName);
+    setCompId(generateCompId(newName, dateStart));
+  };
+
+  const handleDateStartChange = (e) => {
+    const newDateStart = e.target.value;
+    setDateStart(newDateStart);
+    setCompId(generateCompId(name, newDateStart));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     // Validate form data (add more validation as needed)
     if (!name || !dateStart || !dateEnd) {
-      alert('Please fill in all fields.');
+      alert("Please fill in all fields.");
       return;
     }
 
-
     // Create a competition object with the form data
     const competition = {
-    name,
-    dateStart,
-    dateEnd,
-    format
+      name,
+      dateStart,
+      dateEnd,
+      format,
+      comp_id: compId,
     };
 
     // Call the onAddCompetition callback to add the competition
     onSubmitCompetition(competition);
 
     // Clear the form fields
-    setName('');
+    setName("");
     setDateStart(formatDate(new Date()));
     setDateEnd(formatDate(new Date()));
-    setFormat('');
-  }
+    setFormat("");
+    setCompId("");
+  };
 
   return (
     <form className="maintext" onSubmit={handleSubmit}>
-      <label>
-        Name: 
-      </label>
-      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
-     
+      <label>Name:</label>
+      <input type="text" value={name} onChange={handleNameChange} />
+
       <br />
-      <label>
-        Date Start:
-        </label>
-        <input type="date" value={dateStart} onChange={(e) => setDateStart(e.target.value)} />
-   
+      <label>Date Start:</label>
+      <input type="date" value={dateStart} onChange={handleDateStartChange} />
+
       <br />
-      <label>
-        Date End:
-        </label>
-        <input type="date" value={dateEnd} onChange={(e) => setDateEnd(e.target.value)} />
-      
+      <label>Date End:</label>
+      <input
+        type="date"
+        value={dateEnd}
+        onChange={(e) => setDateEnd(e.target.value)}
+      />
+
       <br />
-      <label>
-        Format:
-        </label>
-        <select value={format} onChange={(e) => setFormat(e.target.value)}>
-            <option value="n">National format</option>
-            <option value="i">International format</option>
-            <option value="w">World championship format</option>
-        </select>
-      
+      <label>Competition ID:</label>
+      <input
+        type="text"
+        value={compId}
+        onChange={(e) => setCompId(e.target.value)}
+      />
+
       <br />
-      <Button type="submit">{editing ? 'Save' : 'Add'} Competition</Button>
+      <label>Format:</label>
+      <select value={format} onChange={(e) => setFormat(e.target.value)}>
+        <option value="n">National format</option>
+        <option value="i">International format</option>
+        <option value="w">World championship format</option>
+      </select>
+
+      <br />
+      <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
     </form>
   );
 };

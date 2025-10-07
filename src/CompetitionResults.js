@@ -21,6 +21,7 @@ import {
   getToken,
 } from "./utils";
 import { backendUrl } from "./constants";
+import { generateCompId } from "./competitionIdUtils";
 
 const CompetitionResults = () => {
   const token = useMemo(() => getToken(), []);
@@ -694,9 +695,13 @@ const CompetitionResults = () => {
       "championship_status",
     ];
     const compRow = [
-      competitionData?._id || "N/A",
-      competitionData?.name || competitionData?.title || "N/A",
-      competitionData?.year || "N/A",
+      competitionData?.comp_id ||
+        generateCompId(competitionData?.name, competitionData?.dateStart) ||
+        "",
+      competitionData?.name || "N/A",
+      competitionData?.dateStart
+        ? new Date(competitionData.dateStart).getFullYear()
+        : "N/A",
       competitionData?.location || "N/A",
       competitionData?.dateStart
         ? formatDate(new Date(competitionData.dateStart))
