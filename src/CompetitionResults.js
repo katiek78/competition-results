@@ -702,7 +702,7 @@ const CompetitionResults = () => {
       competitionData?.dateStart
         ? new Date(competitionData.dateStart).getFullYear()
         : "N/A",
-      competitionData?.location || "N/A",
+      competitionData?.location || competitionData?.Location || "N/A",
       competitionData?.dateStart
         ? formatDate(new Date(competitionData.dateStart))
         : "N/A",
@@ -711,10 +711,16 @@ const CompetitionResults = () => {
         : "N/A",
       competitionData?.rankable !== undefined
         ? competitionData.rankable
-        : "N/A",
+        : competitionData?.Rankable !== undefined
+        ? competitionData.Rankable
+        : false, // Default to false instead of "N/A"
       competitionData?.adult_rankable !== undefined
         ? competitionData.adult_rankable
-        : "N/A",
+        : competitionData?.Adult_rankable !== undefined
+        ? competitionData.Adult_rankable
+        : competitionData?.adultRankable !== undefined
+        ? competitionData.adultRankable
+        : false, // Default to false instead of "N/A"
       competitionData?.country || "N/A",
       competitionData?.type || "N/A",
       competitionData?.championship_status || "N/A",

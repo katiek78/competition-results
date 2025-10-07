@@ -338,6 +338,10 @@ const CompetitionDetail = () => {
                 compName: competitionData.name,
                 dateStart: competitionData.dateStart,
                 dateEnd: competitionData.dateEnd,
+                comp_id: competitionData.comp_id,
+                location: competitionData.location,
+                rankable: competitionData.rankable,
+                adult_rankable: competitionData.adult_rankable,
               }}
               editing={true}
             />

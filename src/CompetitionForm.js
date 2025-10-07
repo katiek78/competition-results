@@ -24,6 +24,13 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   const [compId, setCompId] = useState(
     editing ? form.comp_id || generateCompId(form.compName, form.dateStart) : ""
   );
+  const [location, setLocation] = useState(editing ? form.location || "" : "");
+  const [rankable, setRankable] = useState(
+    editing ? form.rankable || false : false
+  );
+  const [adultRankable, setAdultRankable] = useState(
+    editing ? form.adult_rankable || false : false
+  );
 
   // Auto-generate comp_id when name or dateStart changes
   const handleNameChange = (e) => {
@@ -54,6 +61,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
       dateEnd,
       format,
       comp_id: compId,
+      location,
+      rankable,
+      adult_rankable: adultRankable,
     };
 
     // Call the onAddCompetition callback to add the competition
@@ -65,19 +75,26 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
     setDateEnd(formatDate(new Date()));
     setFormat("");
     setCompId("");
+    setLocation("");
+    setRankable(false);
+    setAdultRankable(false);
   };
 
   return (
     <form className="maintext" onSubmit={handleSubmit}>
-      <label>Name:</label>
+      <label style={{ display: "inline-block", width: "160px" }}>Name:</label>
       <input type="text" value={name} onChange={handleNameChange} />
 
       <br />
-      <label>Date Start:</label>
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Date Start:
+      </label>
       <input type="date" value={dateStart} onChange={handleDateStartChange} />
 
       <br />
-      <label>Date End:</label>
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Date End:
+      </label>
       <input
         type="date"
         value={dateEnd}
@@ -85,7 +102,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
       />
 
       <br />
-      <label>Competition ID:</label>
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Competition ID:
+      </label>
       <input
         type="text"
         value={compId}
@@ -93,7 +112,46 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
       />
 
       <br />
-      <label>Format:</label>
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Location:
+      </label>
+      <input
+        type="text"
+        value={location}
+        onChange={(e) => setLocation(e.target.value)}
+        placeholder="e.g., London"
+      />
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Rankable:
+      </label>
+      <input
+        type="checkbox"
+        checked={rankable}
+        onChange={(e) => setRankable(e.target.checked)}
+        style={{
+          transform: "scale(2.5)",
+          verticalAlign: "middle",
+        }}
+      />
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Rankable for Adults:
+      </label>
+      <input
+        type="checkbox"
+        checked={adultRankable}
+        onChange={(e) => setAdultRankable(e.target.checked)}
+        style={{
+          transform: "scale(2.5)",
+          verticalAlign: "middle",
+        }}
+      />
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>Format:</label>
       <select value={format} onChange={(e) => setFormat(e.target.value)}>
         <option value="n">National format</option>
         <option value="i">International format</option>
