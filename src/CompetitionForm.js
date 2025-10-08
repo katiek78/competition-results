@@ -31,6 +31,13 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   const [adultRankable, setAdultRankable] = useState(
     editing ? form.adult_rankable || false : false
   );
+  const [country, setCountry] = useState(editing ? form.country || "" : "");
+  const [championshipType, setChampionshipType] = useState(
+    editing ? form.championship_type || "Adult" : "Adult"
+  );
+  const [championshipStatus, setChampionshipStatus] = useState(
+    editing ? form.championship_status || "None" : "None"
+  );
 
   // Auto-generate comp_id when name or dateStart changes
   const handleNameChange = (e) => {
@@ -64,6 +71,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
       location,
       rankable,
       adult_rankable: adultRankable,
+      country,
+      championship_type: championshipType,
+      championship_status: championshipStatus,
     };
 
     // Call the onAddCompetition callback to add the competition
@@ -78,6 +88,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
     setLocation("");
     setRankable(false);
     setAdultRankable(false);
+    setCountry("");
+    setChampionshipType("Adult");
+    setChampionshipStatus("None");
   };
 
   return (
@@ -149,6 +162,44 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
           verticalAlign: "middle",
         }}
       />
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Country:
+      </label>
+      <input
+        type="text"
+        value={country}
+        onChange={(e) => setCountry(e.target.value)}
+        placeholder="e.g., United Kingdom"
+      />
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Championship Type:
+      </label>
+      <select
+        value={championshipType}
+        onChange={(e) => setChampionshipType(e.target.value)}
+      >
+        <option value="Adult">Adult</option>
+        <option value="Junior">Junior</option>
+        <option value="Kids">Kids</option>
+      </select>
+
+      <br />
+      <label style={{ display: "inline-block", width: "160px" }}>
+        Championship Status:
+      </label>
+      <select
+        value={championshipStatus}
+        onChange={(e) => setChampionshipStatus(e.target.value)}
+      >
+        <option value="None">None</option>
+        <option value="Country">Country</option>
+        <option value="International">International</option>
+        <option value="World">World</option>
+      </select>
 
       <br />
       <label style={{ display: "inline-block", width: "160px" }}>Format:</label>

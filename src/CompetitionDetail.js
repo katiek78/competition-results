@@ -28,6 +28,9 @@ const CompetitionDetail = () => {
   const [showParticipantForm, setShowParticipantForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
 
+  // Debug: Log the id parameter
+  console.log("Competition ID from useParams:", id);
+
   // Helper function to format date as 'YYYY-MM-DD'
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -193,8 +196,15 @@ const CompetitionDetail = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log(user);
-        if (!user) return;
+        console.log("User:", user);
+        console.log("ID:", id);
+
+        // Don't fetch if we don't have a valid ID
+        if (!user || !id) {
+          console.log("Missing user or id, skipping fetch");
+          return;
+        }
+
         const fetchedData = await fetchCurrentUserData(user.userId);
         console.log(fetchedData);
         if (fetchedData) {
@@ -342,6 +352,9 @@ const CompetitionDetail = () => {
                 location: competitionData.location,
                 rankable: competitionData.rankable,
                 adult_rankable: competitionData.adult_rankable,
+                country: competitionData.country,
+                championship_type: competitionData.championship_type,
+                championship_status: competitionData.championship_status,
               }}
               editing={true}
             />
@@ -350,9 +363,7 @@ const CompetitionDetail = () => {
           <div>
             {competitionData && userData && (
               <p className="highlightText">
-                <Link to={`/competition_results/${competitionData._id}`}>
-                  View Results >>>
-                </Link>
+                <Link to={`/competition_results/${id}`}>View Results >>></Link>
               </p>
             )}
 

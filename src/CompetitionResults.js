@@ -722,7 +722,7 @@ const CompetitionResults = () => {
         ? competitionData.adultRankable
         : false, // Default to false instead of "N/A"
       competitionData?.country || "N/A",
-      competitionData?.type || "N/A",
+      competitionData?.championship_type || "N/A",
       competitionData?.championship_status || "N/A",
     ];
     const compCsv =
