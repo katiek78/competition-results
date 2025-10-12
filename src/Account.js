@@ -7,7 +7,12 @@ import axios from "axios";
 import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import PasswordForm from "./PasswordForm";
-import { fetchCurrentUserData, generateToken, getToken } from "./utils";
+import {
+  fetchCurrentUserData,
+  generateToken,
+  getToken,
+  COUNTRIES,
+} from "./utils";
 import { backendUrl, frontendUrl, duplicateEmailMessage } from "./constants";
 
 export default function Account() {
@@ -252,17 +257,19 @@ export default function Account() {
               {showCountryInput && (
                 <>
                   <label>Country: </label>
-                  <input
-                    type="text"
+                  <select
                     defaultValue={userData.country || ""}
                     onBlur={(e) => handleSubmitCountry(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSubmitCountry(e.target.value);
-                      }
-                    }}
+                    onChange={(e) => handleSubmitCountry(e.target.value)}
                     autoFocus
-                  />
+                  >
+                    <option value="">Select a country...</option>
+                    {COUNTRIES.map((countryName) => (
+                      <option key={countryName} value={countryName}>
+                        {countryName}
+                      </option>
+                    ))}
+                  </select>
                   <Button onClick={() => setShowCountryInput(false)}>
                     Cancel
                   </Button>

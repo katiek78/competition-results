@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
 import { generateCompId } from "./competitionIdUtils";
+import { COUNTRIES } from "./utils";
 
 const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   // Helper function to format date as 'YYYY-MM-DD'
@@ -167,12 +168,18 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
       <label style={{ display: "inline-block", width: "160px" }}>
         Country:
       </label>
-      <input
-        type="text"
+      <select
         value={country}
         onChange={(e) => setCountry(e.target.value)}
-        placeholder="e.g., United Kingdom"
-      />
+        style={{ width: "200px" }}
+      >
+        <option value="">Select a country...</option>
+        {COUNTRIES.map((countryName) => (
+          <option key={countryName} value={countryName}>
+            {countryName}
+          </option>
+        ))}
+      </select>
 
       <br />
       <label style={{ display: "inline-block", width: "160px" }}>

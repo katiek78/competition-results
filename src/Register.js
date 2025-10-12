@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
 import { backendUrl, duplicateEmailMessage } from "./constants";
+import { COUNTRIES } from "./utils";
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -131,12 +132,18 @@ export default function Register() {
         <Form.Group controlId="formBasicCountry">
           <Form.Label>Country</Form.Label>
           <Form.Control
-            type="text"
+            as="select"
             name="country"
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            placeholder="Country"
-          />
+          >
+            <option value="">Select a country...</option>
+            {COUNTRIES.map((countryName) => (
+              <option key={countryName} value={countryName}>
+                {countryName}
+              </option>
+            ))}
+          </Form.Control>
         </Form.Group>
 
         {/* Birth Year */}

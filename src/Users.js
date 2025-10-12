@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useUser } from "./UserProvider";
-import { fetchCurrentUserData, getToken } from "./utils";
+import { fetchCurrentUserData, getToken, COUNTRIES } from "./utils";
 import { Button } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -292,20 +292,21 @@ const Users = () => {
                     {editingCountryUserId === usr._id ? (
                       <div>
                         <span>{`${usr.firstName} ${usr.lastName} (`}</span>
-                        <input
-                          type="text"
+                        <select
                           value={editingCountryValue}
                           onChange={(e) =>
                             setEditingCountryValue(e.target.value)
                           }
-                          style={{ width: "100px", display: "inline" }}
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              handleSaveCountry(usr._id);
-                            }
-                          }}
+                          style={{ width: "150px", display: "inline" }}
                           autoFocus
-                        />
+                        >
+                          <option value="">Select a country...</option>
+                          {COUNTRIES.map((countryName) => (
+                            <option key={countryName} value={countryName}>
+                              {countryName}
+                            </option>
+                          ))}
+                        </select>
                         <span>)</span>
                         <button
                           onClick={() => handleSaveCountry(usr._id)}
