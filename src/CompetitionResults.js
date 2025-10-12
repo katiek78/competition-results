@@ -547,7 +547,11 @@ const CompetitionResults = () => {
     // make the API call
     axios(configuration)
       .then((result) => {
-        setUsers(result.data.users);
+        // Filter out unverified users (treat undefined as verified for legacy users)
+        const verifiedUsers = result.data.users.filter(
+          (user) => user.verified !== false
+        );
+        setUsers(verifiedUsers);
 
         //get logged-in user details
         // console.log(result.data.userId);

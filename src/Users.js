@@ -9,6 +9,7 @@ import {
   faTrash,
   faUserPlus,
   faUserTie,
+  faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
 
@@ -17,6 +18,8 @@ const Users = () => {
   const { user } = useUser();
   const [users, setUsers] = useState([]);
   const [userData, setUserData] = useState({});
+  const [editingCountryUserId, setEditingCountryUserId] = useState(null);
+  const [editingCountryValue, setEditingCountryValue] = useState("");
 
   async function addTestUser() {
     try {
@@ -135,6 +138,54 @@ const Users = () => {
     }
   };
 
+  const handleEditCountry = (userId, currentCountry) => {
+    setEditingCountryUserId(userId);
+    setEditingCountryValue(currentCountry || "");
+  };
+
+  const handleSaveCountry = async (userId) => {
+    try {
+      // set configurations
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/user-update/${userId}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          country: editingCountryValue,
+        },
+      };
+      const response = await axios(configuration);
+      console.log("User country updated:", response.data);
+
+      // Update the local state
+      setUsers((prevUsers) => {
+        const newUsers = prevUsers.map((user) => {
+          if (user._id === userId) {
+            return {
+              ...user,
+              country: editingCountryValue,
+            };
+          }
+          return user;
+        });
+        return newUsers;
+      });
+
+      // Reset editing state
+      setEditingCountryUserId(null);
+      setEditingCountryValue("");
+    } catch (error) {
+      console.error("Error updating user country:", error);
+    }
+  };
+
+  const handleCancelCountryEdit = () => {
+    setEditingCountryUserId(null);
+    setEditingCountryValue("");
+  };
+
   const getRoleIcon = (role) => {
     switch (role) {
       case "admin":
@@ -186,8 +237,18 @@ const Users = () => {
           // make the API call
           axios(configuration)
             .then((result) => {
-              console.log(result);
-              setUsers(result.data.users);
+              console.log("All users from API:", result.data.users);
+              // Filter out unverified users (treat undefined as verified for legacy users)
+              const verifiedUsers = result.data.users.filter((user) => {
+                console.log(
+                  `User ${user.firstName} ${user.lastName}: verified = ${
+                    user.verified
+                  } (type: ${typeof user.verified})`
+                );
+                return user.verified !== false;
+              });
+              console.log("Filtered verified users:", verifiedUsers);
+              setUsers(verifiedUsers);
             })
             .catch((error) => {
               error = new Error();
@@ -227,7 +288,58 @@ const Users = () => {
               )
               .map((usr) => (
                 <tr key={usr._id}>
-                  <td>{`${usr.firstName} ${usr.lastName}`}</td>
+                  <td>
+                    {editingCountryUserId === usr._id ? (
+                      <div>
+                        <span>{`${usr.firstName} ${usr.lastName} (`}</span>
+                        <input
+                          type="text"
+                          value={editingCountryValue}
+                          onChange={(e) =>
+                            setEditingCountryValue(e.target.value)
+                          }
+                          style={{ width: "100px", display: "inline" }}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter") {
+                              handleSaveCountry(usr._id);
+                            }
+                          }}
+                          autoFocus
+                        />
+                        <span>)</span>
+                        <button
+                          onClick={() => handleSaveCountry(usr._id)}
+                          style={{ marginLeft: "5px", fontSize: "12px" }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={handleCancelCountryEdit}
+                          style={{ marginLeft: "5px", fontSize: "12px" }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <span>{`${usr.firstName} ${usr.lastName}${
+                          usr.country ? ` (${usr.country})` : ""
+                        }`}</span>
+                        {(userData.role === "superAdmin" ||
+                          userData.role === "admin") && (
+                          <FontAwesomeIcon
+                            title="Edit Country"
+                            className="actionIcon"
+                            icon={faEdit}
+                            onClick={() =>
+                              handleEditCountry(usr._id, usr.country)
+                            }
+                            style={{ marginLeft: "10px", cursor: "pointer" }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </td>
                   <td>{usr.email}</td>
                   <td>{getRoleIcon(usr.role)}</td>
                   <td>

@@ -13,6 +13,8 @@ import { backendUrl, frontendUrl, duplicateEmailMessage } from "./constants";
 export default function Account() {
   const [showNameInputs, setShowNameInputs] = useState(false);
   const [showEmailInput, setShowEmailInput] = useState(false);
+  const [showCountryInput, setShowCountryInput] = useState(false);
+  const [showBirthYearInput, setShowBirthYearInput] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmMessage, setConfirmMessage] = useState("");
@@ -43,6 +45,16 @@ export default function Account() {
   const handleSubmitName = (firstName, lastName) => {
     setShowNameInputs(false);
     saveUser({ firstName, lastName });
+  };
+
+  const handleSubmitCountry = (country) => {
+    setShowCountryInput(false);
+    saveUser({ country });
+  };
+
+  const handleSubmitBirthYear = (birthYear) => {
+    setShowBirthYearInput(false);
+    saveUser({ birthYear });
   };
 
   // const handleSubmitEmail = (email) => {
@@ -210,7 +222,6 @@ export default function Account() {
                   />
                 </>
               )}
-
               <br />
               {!showEmailInput && (
                 <>
@@ -229,12 +240,70 @@ export default function Account() {
               )}
               <br />
               <span>{confirmEmailRequestSent}</span>
-
+              <br />
+              {!showCountryInput && (
+                <>
+                  Country: {userData.country || "Not specified"}
+                  <Button onClick={() => setShowCountryInput(true)}>
+                    Edit
+                  </Button>
+                </>
+              )}
+              {showCountryInput && (
+                <>
+                  <label>Country: </label>
+                  <input
+                    type="text"
+                    defaultValue={userData.country || ""}
+                    onBlur={(e) => handleSubmitCountry(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSubmitCountry(e.target.value);
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <Button onClick={() => setShowCountryInput(false)}>
+                    Cancel
+                  </Button>
+                </>
+              )}
+              <br />
+              {!showBirthYearInput && (
+                <>
+                  Birth Year: {userData.birthYear || "Not specified"}
+                  <Button onClick={() => setShowBirthYearInput(true)}>
+                    Edit
+                  </Button>
+                </>
+              )}
+              {showBirthYearInput && (
+                <>
+                  <label>Birth Year: </label>
+                  <input
+                    type="number"
+                    defaultValue={userData.birthYear || ""}
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    onBlur={(e) => handleSubmitBirthYear(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSubmitBirthYear(e.target.value);
+                      }
+                    }}
+                    autoFocus
+                  />
+                  <Button onClick={() => setShowBirthYearInput(false)}>
+                    Cancel
+                  </Button>
+                </>
+              )}
+              <br />
+              IAM ID: {userData.iamId || "Not specified"}
               <br />
               <Button className="IAMbutton" onClick={handleShowPasswordForm}>
                 Change password
               </Button>
-
               {showPasswordForm && (
                 <>
                   <PasswordForm onSubmitPassword={handleSubmitPassword} />

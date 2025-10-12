@@ -8,6 +8,9 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [iamId, setIamId] = useState("");
+  const [country, setCountry] = useState("");
+  const [birthYear, setBirthYear] = useState("");
   const [register, setRegister] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState("");
@@ -39,6 +42,10 @@ export default function Register() {
         firstName,
         lastName,
         password,
+        iamId,
+        country,
+        birthYear,
+        verified: false, // Explicitly set new users as unverified
       },
     };
 
@@ -105,6 +112,44 @@ export default function Register() {
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             placeholder="Last name"
+          />
+        </Form.Group>
+
+        {/* IAM ID */}
+        <Form.Group controlId="formBasicIamId">
+          <Form.Label>IAM ID (if known)</Form.Label>
+          <Form.Control
+            type="text"
+            name="iamId"
+            value={iamId}
+            onChange={(e) => setIamId(e.target.value)}
+            placeholder="IAM ID (optional)"
+          />
+        </Form.Group>
+
+        {/* Country */}
+        <Form.Group controlId="formBasicCountry">
+          <Form.Label>Country</Form.Label>
+          <Form.Control
+            type="text"
+            name="country"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="Country"
+          />
+        </Form.Group>
+
+        {/* Birth Year */}
+        <Form.Group controlId="formBasicBirthYear">
+          <Form.Label>Birth Year</Form.Label>
+          <Form.Control
+            type="number"
+            name="birthYear"
+            value={birthYear}
+            onChange={(e) => setBirthYear(e.target.value)}
+            placeholder="Birth Year (e.g., 1990)"
+            min="1900"
+            max={new Date().getFullYear()}
           />
         </Form.Group>
 

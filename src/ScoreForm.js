@@ -65,7 +65,11 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
     // make the API call
     axios(configuration)
       .then((result) => {
-        setUsers(result.data.users);
+        // Filter out unverified users (treat undefined as verified for legacy users)
+        const verifiedUsers = result.data.users.filter(
+          (user) => user.verified !== false
+        );
+        setUsers(verifiedUsers);
       })
       .catch((error) => {
         error = new Error();
