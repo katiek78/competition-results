@@ -188,7 +188,7 @@ const Users = () => {
   };
 
   const handleRefreshUsers = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   const getRoleIcon = (role) => {
@@ -244,26 +244,39 @@ const Users = () => {
             .then((result) => {
               console.log(`Fetched ${result.data.users.length} users from API`);
               console.log("Raw API response:", result.data.users);
-              
+
               // Check if any users have verified field
-              const usersWithVerified = result.data.users.filter(user => user.hasOwnProperty('verified'));
-              console.log(`Users with 'verified' field: ${usersWithVerified.length}`);
-              
+              const usersWithVerified = result.data.users.filter((user) =>
+                user.hasOwnProperty("verified")
+              );
+              console.log(
+                `Users with 'verified' field: ${usersWithVerified.length}`
+              );
+
               // Log a sample user object to see all fields
               if (result.data.users.length > 0) {
-                console.log("Sample user object structure:", Object.keys(result.data.users[0]));
+                console.log(
+                  "Sample user object structure:",
+                  Object.keys(result.data.users[0])
+                );
                 console.log("Full sample user:", result.data.users[0]);
               }
-              
+
               // Filter out unverified users (treat undefined as verified for legacy users)
               const verifiedUsers = result.data.users.filter((user) => {
                 const isVerified = user.verified !== false;
                 if (user.verified === true) {
-                  console.log(`✓ ${user.firstName} ${user.lastName}: verified = true`);
+                  console.log(
+                    `✓ ${user.firstName} ${user.lastName}: verified = true`
+                  );
                 } else if (user.verified === false) {
-                  console.log(`✗ ${user.firstName} ${user.lastName}: verified = false (filtered out)`);
+                  console.log(
+                    `✗ ${user.firstName} ${user.lastName}: verified = false (filtered out)`
+                  );
                 } else {
-                  console.log(`? ${user.firstName} ${user.lastName}: verified = undefined (legacy user, treated as verified)`);
+                  console.log(
+                    `? ${user.firstName} ${user.lastName}: verified = undefined (legacy user, treated as verified)`
+                  );
                 }
                 return isVerified;
               });
