@@ -36,41 +36,41 @@ const EmailVerification = () => {
           setUserEmail(response.data.email || "");
 
           // Send welcome email
-          if (response.data.email && response.data.firstName) {
-            try {
-              await axios.post(`${backendUrl}/send-email`, {
-                to: response.data.email,
-                subject: "Welcome to the IAM Results Centre!",
-                html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h2 style="color: #333;">Welcome to the IAM Results Centre!</h2>
-                    <p>Dear ${response.data.firstName},</p>
-                    <p>Congratulations! Your email has been successfully verified and your account is now active.</p>
-                    <p>You can now:</p>
-                    <ul>
-                      <li>Participate in memory competitions</li>
-                      <li>Track your scores and progress</li>
-                      <li>View competition results</li>
-                      <li>Connect with the memory sports community</li>
-                    </ul>
-                    <p>
-                      <a href="${window.location.origin}/login" 
-                         style="background-color: #007bff; color: white; padding: 10px 20px; 
-                                text-decoration: none; border-radius: 5px; display: inline-block;">
-                        Login to Your Account
-                      </a>
-                    </p>
-                    <p>If you have any questions, please don't hesitate to contact us.</p>
-                    <p>Best regards,<br>The IAM Results Centre Team</p>
-                  </div>
-                `,
-              });
-              console.log("Welcome email sent successfully");
-            } catch (emailError) {
-              console.error("Error sending welcome email:", emailError);
-              // Don't fail verification if welcome email fails
-            }
-          }
+          //   if (response.data.email && response.data.firstName) {
+          //     try {
+          //       await axios.post(`${backendUrl}/send-email`, {
+          //         to: response.data.email,
+          //         subject: "Welcome to the IAM Results Centre!",
+          //         html: `
+          //           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          //             <h2 style="color: #333;">Welcome to the IAM Results Centre!</h2>
+          //             <p>Dear ${response.data.firstName},</p>
+          //             <p>Congratulations! Your email has been successfully verified and your account is now active.</p>
+          //             <p>You can now:</p>
+          //             <ul>
+          //               <li>Participate in memory competitions</li>
+          //               <li>Track your scores and progress</li>
+          //               <li>View competition results</li>
+          //               <li>Connect with the memory sports community</li>
+          //             </ul>
+          //             <p>
+          //               <a href="${window.location.origin}/login"
+          //                  style="background-color: #007bff; color: white; padding: 10px 20px;
+          //                         text-decoration: none; border-radius: 5px; display: inline-block;">
+          //                 Login to Your Account
+          //               </a>
+          //             </p>
+          //             <p>If you have any questions, please don't hesitate to contact us.</p>
+          //             <p>Best regards,<br>The IAM Results Centre Team</p>
+          //           </div>
+          //         `,
+          //       });
+          //       console.log("Welcome email sent successfully");
+          //     } catch (emailError) {
+          //       console.error("Error sending welcome email:", emailError);
+          //       // Don't fail verification if welcome email fails
+          //     }
+          //  }
         } else {
           setVerificationStatus("error");
           setMessage(response.data.message || "Email verification failed.");
