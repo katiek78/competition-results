@@ -24,7 +24,8 @@ const EmailChange = () => {
       const response = await axios(configuration);
       console.log("Email updated:", response.data);
       setSuccessMessage(
-        "Your email address has been changed successfully." + response.message
+        "Your email address has been changed successfully." +
+          (response.message ?? "")
       );
     } catch (error) {
       console.error("Error updating email:", error);

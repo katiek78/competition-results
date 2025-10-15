@@ -254,7 +254,26 @@ export default function Account() {
                 </>
               )}
               <br />
-              <span>{confirmEmailRequestSent}</span>
+              {confirmEmailRequestSent && (
+                <span
+                  style={{
+                    color: "#d9534f",
+                    fontWeight: "bold",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
+                >
+                  <span
+                    role="img"
+                    aria-label="important"
+                    style={{ fontSize: "1.5em" }}
+                  >
+                    ❗
+                  </span>
+                  {confirmEmailRequestSent}
+                </span>
+              )}
               <br />
               {!showCountryInput && (
                 <>
