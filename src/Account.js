@@ -337,10 +337,10 @@ export default function Account() {
                     Cancel
                   </Button>
                   <br />
-                  <span>{confirmMessage}</span>
                   <span className="text-danger">{errorMessage}</span>
                 </>
               )}
+              <span>{confirmMessage}</span>
             </div>
           </Row>
         </Container>
