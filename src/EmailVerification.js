@@ -23,11 +23,8 @@ const EmailVerification = () => {
       try {
         // Call backend API to verify the email
         const configuration = {
-          method: "post",
-          url: `${backendUrl}/verify-email`,
-          data: {
-            token: token,
-          },
+          method: "get",
+          url: `${backendUrl}/verify-email?token=${token}`,
         };
 
         const response = await axios(configuration);
