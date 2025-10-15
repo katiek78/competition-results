@@ -13,6 +13,7 @@ import MyCompetitions from "./MyCompetitions";
 import CompetitionAddScore from "./CompetitionAddScore";
 import EmailChange from "./EmailChange";
 import PasswordReset from "./PasswordReset";
+import EmailVerification from "./EmailVerification";
 import Home from "./Home";
 import Users from "./Users";
 import RequireAuth from "./RequireAuth";
@@ -213,6 +214,7 @@ function App() {
           />
           <Route path="/email-change/" element={<EmailChange />} />
           <Route path="/password-reset/" element={<PasswordReset />} />
+          <Route path="/verify-email/" element={<EmailVerification />} />
           {/* Route to handle unmatched routes */}
           <Route path="*" element={<Navigate to="/login" />} />
           {/* <Route

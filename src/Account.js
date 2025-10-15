@@ -6,7 +6,6 @@ import Login from "./Login";
 import axios from "axios";
 import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
-import PasswordForm from "./PasswordForm";
 import {
   fetchCurrentUserData,
   generateToken,
@@ -136,35 +135,45 @@ export default function Account() {
     }
   };
 
-  const handleSubmitPassword = async (oldPassword, newPassword) => {
+  const handleSubmitPassword = async () => {
     setErrorMessage("");
+    setConfirmMessage("");
 
     try {
+      // Generate a token to be sent
+      const confirmationToken = generateToken();
+      const confirmationURL = `${frontendUrl}/password-reset?token=${confirmationToken}`;
+
+      // Determine when the token expires
+      const createdAt = new Date();
+      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
+
+      // Send a request to the backend to initiate password change
       const configuration = {
         method: "post",
-        url: `${backendUrl}/change-password`,
+        url: `${backendUrl}/initiate-password-change`,
         headers: {
           Authorization: `Bearer ${token}`,
         },
         data: {
-          oldPassword,
-          newPassword,
+          createdAt,
+          expiresAt,
+          dynamic_link: confirmationURL,
+          token: confirmationToken,
+          email: userData.email,
         },
       };
+
       const response = await axios(configuration);
-      console.log("User updated:", response.data);
-      setConfirmMessage("Password changed successfully.");
-      // setUserData({
-      //     ...userData,
-      //     ...changes
-      // });
+
+      // Handle the response
+      console.log("Initiate Password Change Response:", response.data);
+      setConfirmMessage(
+        "An email has been sent to your email address. Click on the link in the email to reset your password."
+      );
     } catch (error) {
-      if (error.response && error.response.status === 401) {
-        // Unauthorized (incorrect old password)
-        setErrorMessage("Old password is incorrect.");
-      } else {
-        console.error("Error updating user:", error);
-      }
+      console.error("Error initiating password reset:", error);
+      setErrorMessage("Failed to initiate password reset. Please try again.");
     }
   };
 
@@ -313,7 +322,19 @@ export default function Account() {
               </Button>
               {showPasswordForm && (
                 <>
-                  <PasswordForm onSubmitPassword={handleSubmitPassword} />
+                  <p>
+                    Click the button below to receive an email with a link to
+                    reset your password.
+                  </p>
+                  <Button onClick={handleSubmitPassword} className="IAMbutton">
+                    Send Password Reset Email
+                  </Button>
+                  <Button
+                    onClick={() => setShowPasswordForm(false)}
+                    className="IAMbutton"
+                  >
+                    Cancel
+                  </Button>
                   <span>{confirmMessage}</span>
                   <span className="text-danger">{errorMessage}</span>
                 </>
