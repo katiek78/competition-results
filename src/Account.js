@@ -171,6 +171,7 @@ export default function Account() {
       setConfirmMessage(
         "An email has been sent to your email address. Click on the link in the email to reset your password."
       );
+      setShowPasswordForm(false);
     } catch (error) {
       console.error("Error initiating password reset:", error);
       setErrorMessage("Failed to initiate password reset. Please try again.");
@@ -335,6 +336,7 @@ export default function Account() {
                   >
                     Cancel
                   </Button>
+                  <br />
                   <span>{confirmMessage}</span>
                   <span className="text-danger">{errorMessage}</span>
                 </>
