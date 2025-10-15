@@ -62,8 +62,10 @@ export default function Register() {
           configuration.data.firstName
         );
 
-        // redirect user to the home page
-        window.location.href = "/";
+        // Don't redirect - show verification message instead
+        setMessage(
+          `Registration successful! We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`
+        );
       })
       .catch((error) => {
         console.log(error);
@@ -177,14 +179,30 @@ export default function Register() {
           variant="primary"
           type="submit"
           onClick={(e) => handleSubmit(e)}
+          disabled={register} // Disable button after successful registration
         >
           Register
         </Button>
 
-        {/* {register && (
-          <p className="text-success">Registered successfully</p>
-        )} */}
-        {!register && isSubmitted && <p className="text-danger">{message}</p>}
+        {register && (
+          <div className="alert alert-success mt-3" role="alert">
+            <h5>Registration Successful!</h5>
+            <p>{message}</p>
+            <hr />
+            <p className="mb-0">
+              Don't see the email? Check your spam folder or{" "}
+              <a href="/register" className="alert-link">
+                try registering again
+              </a>
+              .
+            </p>
+          </div>
+        )}
+        {!register && isSubmitted && (
+          <div className="alert alert-danger mt-3" role="alert">
+            {message}
+          </div>
+        )}
       </Form>
     </>
   );
