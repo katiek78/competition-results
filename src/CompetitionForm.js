@@ -95,130 +95,134 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   };
 
   return (
-    <form className="maintext" onSubmit={handleSubmit}>
-      <label style={{ display: "inline-block", width: "160px" }}>Name:</label>
-      <input type="text" value={name} onChange={handleNameChange} />
+    <>
+      <form className="maintext" onSubmit={handleSubmit}>
+        <label style={{ display: "inline-block", width: "160px" }}>Name:</label>
+        <input type="text" value={name} onChange={handleNameChange} />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Date Start:
-      </label>
-      <input type="date" value={dateStart} onChange={handleDateStartChange} />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Date Start:
+        </label>
+        <input type="date" value={dateStart} onChange={handleDateStartChange} />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Date End:
-      </label>
-      <input
-        type="date"
-        value={dateEnd}
-        onChange={(e) => setDateEnd(e.target.value)}
-      />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Date End:
+        </label>
+        <input
+          type="date"
+          value={dateEnd}
+          onChange={(e) => setDateEnd(e.target.value)}
+        />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Competition ID:
-      </label>
-      <input
-        type="text"
-        value={compId}
-        onChange={(e) => setCompId(e.target.value)}
-      />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Competition ID:
+        </label>
+        <input
+          type="text"
+          value={compId}
+          onChange={(e) => setCompId(e.target.value)}
+        />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Location:
-      </label>
-      <input
-        type="text"
-        value={location}
-        onChange={(e) => setLocation(e.target.value)}
-        placeholder="e.g., London"
-      />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Location:
+        </label>
+        <input
+          type="text"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+          placeholder="e.g., London"
+        />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Rankable:
-      </label>
-      <input
-        type="checkbox"
-        checked={rankable}
-        onChange={(e) => setRankable(e.target.checked)}
-        style={{
-          transform: "scale(2.5)",
-          verticalAlign: "middle",
-        }}
-      />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Rankable:
+        </label>
+        <input
+          type="checkbox"
+          checked={rankable}
+          onChange={(e) => setRankable(e.target.checked)}
+          style={{
+            transform: "scale(2.5)",
+            verticalAlign: "middle",
+          }}
+        />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Rankable for Adults:
-      </label>
-      <input
-        type="checkbox"
-        checked={adultRankable}
-        onChange={(e) => setAdultRankable(e.target.checked)}
-        style={{
-          transform: "scale(2.5)",
-          verticalAlign: "middle",
-        }}
-      />
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Rankable for Adults:
+        </label>
+        <input
+          type="checkbox"
+          checked={adultRankable}
+          onChange={(e) => setAdultRankable(e.target.checked)}
+          style={{
+            transform: "scale(2.5)",
+            verticalAlign: "middle",
+          }}
+        />
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Country:
-      </label>
-      <select
-        value={country}
-        onChange={(e) => setCountry(e.target.value)}
-        style={{ width: "200px" }}
-      >
-        <option value="">Select a country...</option>
-        {COUNTRIES.map((countryName) => (
-          <option key={countryName} value={countryName}>
-            {countryName}
-          </option>
-        ))}
-      </select>
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Country:
+        </label>
+        <select
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          style={{ width: "200px" }}
+        >
+          <option value="">Select a country...</option>
+          {COUNTRIES.map((countryName) => (
+            <option key={countryName} value={countryName}>
+              {countryName}
+            </option>
+          ))}
+        </select>
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Championship Type:
-      </label>
-      <select
-        value={championshipType}
-        onChange={(e) => setChampionshipType(e.target.value)}
-      >
-        <option value="Adult">Adult</option>
-        <option value="Junior">Junior</option>
-        <option value="Kids">Kids</option>
-      </select>
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Championship Type:
+        </label>
+        <select
+          value={championshipType}
+          onChange={(e) => setChampionshipType(e.target.value)}
+        >
+          <option value="Adult">Adult</option>
+          <option value="Junior">Junior</option>
+          <option value="Kids">Kids</option>
+        </select>
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>
-        Championship Status:
-      </label>
-      <select
-        value={championshipStatus}
-        onChange={(e) => setChampionshipStatus(e.target.value)}
-      >
-        <option value="None">None</option>
-        <option value="Country">Country</option>
-        <option value="International">International</option>
-        <option value="World">World</option>
-      </select>
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Championship Status:
+        </label>
+        <select
+          value={championshipStatus}
+          onChange={(e) => setChampionshipStatus(e.target.value)}
+        >
+          <option value="None">None</option>
+          <option value="Country">Country</option>
+          <option value="International">International</option>
+          <option value="World">World</option>
+        </select>
 
-      <br />
-      <label style={{ display: "inline-block", width: "160px" }}>Format:</label>
-      <select value={format} onChange={(e) => setFormat(e.target.value)}>
-        <option value="n">National format</option>
-        <option value="i">International format</option>
-        <option value="w">World championship format</option>
-      </select>
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Format:
+        </label>
+        <select value={format} onChange={(e) => setFormat(e.target.value)}>
+          <option value="n">National format</option>
+          <option value="i">International format</option>
+          <option value="w">World championship format</option>
+        </select>
 
-      <br />
-      <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
-    </form>
+        <br />
+        <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
+      </form>
+    </>
   );
 };
 

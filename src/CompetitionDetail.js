@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Container, Row, Col, Button } from "react-bootstrap";
+import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData, getToken } from "./utils";
 import axios from "axios";
@@ -27,6 +27,9 @@ const CompetitionDetail = () => {
   const [showForm, setShowForm] = useState(false);
   const [showParticipantForm, setShowParticipantForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+  const [importError, setImportError] = useState("");
 
   // Debug: Log the id parameter
   console.log("Competition ID from useParams:", id);
@@ -73,6 +76,85 @@ const CompetitionDetail = () => {
       setShowParticipantForm(false);
     } catch (error) {
       console.error("Error adding participant:", error);
+    }
+  };
+
+  // Handler for import button
+  const handleImportClick = () => {
+    setShowImportModal(true);
+    setImportUrl("");
+    setImportError("");
+  };
+
+  // Handler for closing modal
+  const handleImportModalClose = () => {
+    setShowImportModal(false);
+    setImportUrl("");
+    setImportError("");
+  };
+
+  // Handler for submitting import
+  const handleImportSubmit = async (e) => {
+    e.preventDefault();
+    setImportError("");
+    if (!importUrl) {
+      setImportError("Please provide a Google Sheets link.");
+      return;
+    }
+    try {
+      // Convert Google Sheets link to CSV export link
+      // Example: https://docs.google.com/spreadsheets/d/ID/edit#gid=0 => https://docs.google.com/spreadsheets/d/ID/gviz/tq?tqx=out:csv&sheet=Overview
+      const match = importUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (!match) {
+        setImportError("Invalid Google Sheets link format.");
+        return;
+      }
+      const sheetId = match[1];
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Overview`;
+      const response = await fetch(csvUrl);
+      if (!response.ok) {
+        setImportError(
+          "Failed to fetch Google Sheet. Make sure the sheet is public or shared."
+        );
+        return;
+      }
+      const csvText = await response.text();
+      // Parse CSV (simple split, assumes no commas in fields)
+      const rows = csvText.split(/\r?\n/).filter(Boolean);
+      // Find header row (the one with 'Name' and 'Nationality')
+      let headerIdx = rows.findIndex(
+        (row) => row.includes("Name") && row.includes("Nationality")
+      );
+      if (headerIdx === -1) {
+        setImportError(
+          "Could not find header row with 'Name' and 'Nationality'."
+        );
+        return;
+      }
+      // Data starts after header
+      const dataRows = rows.slice(headerIdx + 1);
+      // Extract Name (B), Country (C), Birth Year (D)
+      const competitors = dataRows
+        .map((row) => {
+          const cols = row.split(",");
+          return {
+            name: cols[1]?.trim() || "",
+            country: cols[2]?.trim() || "",
+            birthYear: cols[3]?.match(/\d{4}/)?.[0] || "",
+          };
+        })
+        .filter((c) => c.name);
+      if (competitors.length === 0) {
+        setImportError("No competitors found in the sheet.");
+        return;
+      }
+      // TODO: Save competitors to DB and add to competition
+      alert(
+        `Parsed ${competitors.length} competitors. (Saving to DB not yet implemented)`
+      );
+      setShowImportModal(false);
+    } catch (err) {
+      setImportError("Error importing competitors: " + err.message);
     }
   };
 
@@ -437,7 +519,13 @@ const CompetitionDetail = () => {
                   <Button onClick={() => setShowParticipantForm(true)}>
                     New participant
                   </Button>
-
+                  <Button
+                    variant="secondary"
+                    style={{ marginLeft: "10px" }}
+                    onClick={handleImportClick}
+                  >
+                    Import participants
+                  </Button>
                   {showParticipantForm && (
                     <ParticipantsForm
                       onSubmitParticipant={saveParticipant}
@@ -523,6 +611,37 @@ const CompetitionDetail = () => {
           </div>
         </div>
       )}
+      <Modal show={showImportModal} onHide={handleImportModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Import Competitors</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleImportSubmit}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>
+                Google Sheets Link or CSV Upload (coming soon)
+              </Form.Label>
+              <Form.Control
+                type="text"
+                placeholder="Paste Google Sheets link here..."
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+              />
+              {importError && (
+                <div style={{ color: "red", marginTop: 8 }}>{importError}</div>
+              )}
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={handleImportModalClose}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit">
+              Import
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
     </>
   );
 };
