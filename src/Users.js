@@ -28,7 +28,6 @@ const Users = () => {
     firstName: "",
     lastName: "",
     email: "",
-    password: "",
     iamId: "",
     birthYear: "",
     country: "",
@@ -78,7 +77,6 @@ const Users = () => {
       firstName: "",
       lastName: "",
       email: "",
-      password: "",
       iamId: "",
       birthYear: "",
       country: "",
@@ -87,6 +85,10 @@ const Users = () => {
 
   async function handleAddUserFormSubmit(e) {
     e.preventDefault();
+    if (!addUserForm.firstName || !addUserForm.lastName) {
+      alert("First name and last name are required.");
+      return;
+    }
     await saveUser(addUserForm);
     handleAddUserModalClose();
   }
@@ -186,16 +188,27 @@ const Users = () => {
         data: userPayload,
       };
       const response = await axios(configuration);
+      console.log("User creation response:", response.data);
+
+      // Try to find the correct user ID property
+      let userId = response.data._id || response.data.userId;
+      if (!userId) {
+        console.warn(
+          "No userId found in user creation response:",
+          response.data
+        );
+      }
 
       // If email is present, send verification email with password and suggestion
-      if (userPayload.email) {
+      if (userPayload.email && userId) {
         try {
           await axios.post(
             `${backendUrl}/send-verification-email`,
             {
               email: userPayload.email,
-              userId: response.data._id || response.data.userId,
+              userId,
               password: generatedPassword,
+              message: `Your account has been created. Please log in using this password and change it after your first login.`,
             },
             {
               headers: {
@@ -209,15 +222,19 @@ const Users = () => {
         }
       }
 
-      setUsers((prevUsers) => {
-        const newUsers = [...prevUsers, response.data];
-        return newUsers;
-      });
+      // Merge the original user data with the returned userId
+      const userToAdd = { ...userPayload, _id: userId };
+      // Only add to state if verified (or verified is undefined for legacy)
+      if (userToAdd.verified !== false) {
+        setUsers((prevUsers) => {
+          const newUsers = [...prevUsers, userToAdd];
+          return newUsers;
+        });
+      }
     } catch (error) {
       console.error("Error adding test user:", error);
     }
   };
-
   const handleEditCountry = (userId, currentCountry) => {
     setEditingCountryUserId(userId);
     setEditingCountryValue(currentCountry || "");
@@ -343,15 +360,6 @@ const Users = () => {
                 `Users with 'verified' field: ${usersWithVerified.length}`
               );
 
-              // Log a sample user object to see all fields
-              if (result.data.users.length > 0) {
-                console.log(
-                  "Sample user object structure:",
-                  Object.keys(result.data.users[0])
-                );
-                console.log("Full sample user:", result.data.users[0]);
-              }
-
               // Filter out unverified users (treat undefined as verified for legacy users)
               const verifiedUsers = result.data.users.filter((user) => {
                 const isVerified = user.verified !== false;
@@ -438,16 +446,6 @@ const Users = () => {
                 />
               </Form.Group>
               <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="password"
-                  value={addUserForm.password}
-                  onChange={handleAddUserFormChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
                 <Form.Label>IAM ID (if they have one)</Form.Label>
                 <Form.Control
                   name="iamId"
@@ -455,7 +453,6 @@ const Users = () => {
                   onChange={handleAddUserFormChange}
                   maxLength={6}
                   minLength={0}
-                  required
                 />
               </Form.Group>
               <Form.Group className="mb-3">
