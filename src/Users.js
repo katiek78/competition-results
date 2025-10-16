@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData, getToken, COUNTRIES } from "./utils";
-import { Button } from "react-bootstrap";
+import { Button, Modal, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faStar,
@@ -22,23 +22,19 @@ const Users = () => {
   const [editingCountryValue, setEditingCountryValue] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
-  async function addTestUser() {
-    try {
-      const result = await axios.get(
-        "https://random-data-api.com/api/v2/users"
-      );
-      const newUser = {
-        firstName: result.data.first_name,
-        lastName: result.data.last_name,
-        email: result.data.email,
-        password: result.data.password,
-      };
-      saveUser(newUser);
-    } catch (err) {
-      console.log("error: ", err);
-    }
-  }
+  // Modal state for add user
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [addUserForm, setAddUserForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    iamId: "",
+    birthYear: "",
+    country: "",
+  });
 
+  // Delete user handler (must be inside Users component)
   const handleDeleteUser = async (userId) => {
     if (
       !window.confirm(
@@ -57,19 +53,73 @@ const Users = () => {
       };
       const response = await axios(configuration);
       console.log("User deleted:", response.data);
-
-      // setUsers(prevUsers => [...prevUsers, newUser]);
-
       setUsers((prevUsers) => {
         // Use filter to exclude the user with the specified userId
         const newUsers = prevUsers.filter((user) => user._id !== userId);
-
         return newUsers;
       });
     } catch (error) {
       console.error("Error deleting user:", error);
     }
   };
+
+  function addUser() {
+    setShowAddUserModal(true);
+  }
+
+  function handleAddUserFormChange(e) {
+    const { name, value } = e.target;
+    setAddUserForm((prev) => ({ ...prev, [name]: value }));
+  }
+
+  function handleAddUserModalClose() {
+    setShowAddUserModal(false);
+    setAddUserForm({
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      iamId: "",
+      birthYear: "",
+      country: "",
+    });
+  }
+
+  async function handleAddUserFormSubmit(e) {
+    e.preventDefault();
+    await saveUser(addUserForm);
+    handleAddUserModalClose();
+  }
+
+  async function addTestUser() {
+    try {
+      const response = await axios.get("https://randomuser.me/api/");
+      const userData = response.data.results[0];
+      // Generate random IAM Id (6 digits)
+      const iamId = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generate random birth year (between 1950 and 2015)
+      const birthYear = Math.floor(Math.random() * (2015 - 1950 + 1)) + 1950;
+      // Pick a random country from COUNTRIES, fallback to API country
+      const countryList =
+        COUNTRIES && COUNTRIES.length > 0
+          ? COUNTRIES
+          : [userData.location.country];
+      const country =
+        countryList[Math.floor(Math.random() * countryList.length)];
+      const newUser = {
+        firstName: userData.name.first + " (TEST)",
+        lastName: userData.name.last,
+        email: userData.email,
+        password: userData.login.password,
+        iamId,
+        birthYear,
+        country,
+      };
+      saveUser(newUser);
+    } catch (err) {
+      console.log("error: ", err);
+    }
+  }
 
   const handleMakeUserSiteAdmin = async (userId) => {
     const user = fetchCurrentUserData(userId);
@@ -303,6 +353,9 @@ const Users = () => {
       <div>
         <h1 className="text-center">Users</h1>
         <div style={{ marginBottom: "15px" }}>
+          <Button onClick={addUser} style={{ marginRight: "10px" }}>
+            Add user
+          </Button>
           <Button onClick={addTestUser} style={{ marginRight: "10px" }}>
             Add test user
           </Button>
@@ -310,6 +363,100 @@ const Users = () => {
             Refresh Users
           </Button>
         </div>
+        <Modal show={showAddUserModal} onHide={handleAddUserModalClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>Add User</Modal.Title>
+          </Modal.Header>
+          <Form onSubmit={handleAddUserFormSubmit}>
+            <Modal.Body>
+              <Form.Group className="mb-3">
+                <Form.Label>First Name</Form.Label>
+                <Form.Control
+                  name="firstName"
+                  value={addUserForm.firstName}
+                  onChange={handleAddUserFormChange}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Last Name</Form.Label>
+                <Form.Control
+                  name="lastName"
+                  value={addUserForm.lastName}
+                  onChange={handleAddUserFormChange}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Email</Form.Label>
+                <Form.Control
+                  type="email"
+                  name="email"
+                  value={addUserForm.email}
+                  onChange={handleAddUserFormChange}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Password</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="password"
+                  value={addUserForm.password}
+                  onChange={handleAddUserFormChange}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>IAM ID (if they have one)</Form.Label>
+                <Form.Control
+                  name="iamId"
+                  value={addUserForm.iamId}
+                  onChange={handleAddUserFormChange}
+                  maxLength={6}
+                  minLength={0}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Birth Year</Form.Label>
+                <Form.Control
+                  name="birthYear"
+                  value={addUserForm.birthYear}
+                  onChange={handleAddUserFormChange}
+                  type="number"
+                  min={1950}
+                  max={2015}
+                  required
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Country</Form.Label>
+                <Form.Select
+                  name="country"
+                  value={addUserForm.country}
+                  onChange={handleAddUserFormChange}
+                  required
+                >
+                  <option value="">Select a country...</option>
+                  {COUNTRIES.map((countryName) => (
+                    <option key={countryName} value={countryName}>
+                      {countryName}
+                    </option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleAddUserModalClose}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Save User
+              </Button>
+            </Modal.Footer>
+          </Form>
+        </Modal>
         <table className="niceTable usersTable">
           <thead>
             <tr>
