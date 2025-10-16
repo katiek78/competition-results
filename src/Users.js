@@ -166,6 +166,16 @@ const Users = () => {
 
   const saveUser = async (newUser) => {
     try {
+      let userPayload = { ...newUser };
+      let generatedPassword = "";
+      // If no email, mark as verified
+      if (!userPayload.email) {
+        userPayload.verified = true;
+      } else {
+        // If email, generate a strong password and set it
+        generatedPassword = generateStrongPassword();
+        userPayload.password = generatedPassword;
+      }
       // set configurations
       const configuration = {
         method: "post",
@@ -173,15 +183,34 @@ const Users = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        data: newUser,
+        data: userPayload,
       };
       const response = await axios(configuration);
-      console.log("User added:", response.data);
 
-      // setUsers(prevUsers => [...prevUsers, newUser]);
+      // If email is present, send verification email with password and suggestion
+      if (userPayload.email) {
+        try {
+          await axios.post(
+            `${backendUrl}/send-verification-email`,
+            {
+              email: userPayload.email,
+              userId: response.data._id || response.data.userId,
+              password: generatedPassword,
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("Verification email sent to user.");
+        } catch (err) {
+          console.error("Error sending verification email:", err);
+        }
+      }
 
       setUsers((prevUsers) => {
-        const newUsers = [...prevUsers, newUser];
+        const newUsers = [...prevUsers, response.data];
         return newUsers;
       });
     } catch (error) {
@@ -193,6 +222,17 @@ const Users = () => {
     setEditingCountryUserId(userId);
     setEditingCountryValue(currentCountry || "");
   };
+
+  // Helper to generate a strong password
+  function generateStrongPassword(length = 12) {
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
+    let password = "";
+    for (let i = 0; i < length; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  }
 
   const handleSaveCountry = async (userId) => {
     try {
