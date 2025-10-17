@@ -2,18 +2,19 @@
 
 import React, { useState } from "react";
 import { Button } from "react-bootstrap";
+
 import { generateCompId } from "./competitionIdUtils";
 import { COUNTRIES } from "./utils";
 
-const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
-  // Helper function to format date as 'YYYY-MM-DD'
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+// Helper function to format date as 'YYYY-MM-DD'
+const formatDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
+const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
   const [name, setName] = useState(editing ? form.compName : "");
   const [dateStart, setDateStart] = useState(
     editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date())
@@ -221,9 +222,9 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
 
         <br />
         <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
+        <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
       </form>
     </>
   );
 };
-
 export default CompetitionForm;

@@ -15,7 +15,7 @@ import {
   getDisciplineNameFromRef,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const CompetitionDetail = () => {
   const token = useMemo(() => getToken(), []);
@@ -94,68 +94,128 @@ const CompetitionDetail = () => {
   };
 
   // Handler for submitting import
-  const handleImportSubmit = async (e) => {
+  const handleImportSubmit = (e) => {
     e.preventDefault();
     setImportError("");
-    if (!importUrl) {
-      setImportError("Please provide a Google Sheets link.");
+    if (!importUrl.trim()) {
+      setImportError("Please paste CSV data.");
       return;
     }
-    try {
-      // Convert Google Sheets link to CSV export link
-      // Example: https://docs.google.com/spreadsheets/d/ID/edit#gid=0 => https://docs.google.com/spreadsheets/d/ID/gviz/tq?tqx=out:csv&sheet=Overview
-      const match = importUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (!match) {
-        setImportError("Invalid Google Sheets link format.");
-        return;
-      }
-      const sheetId = match[1];
-      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=Overview`;
-      const response = await fetch(csvUrl);
-      if (!response.ok) {
-        setImportError(
-          "Failed to fetch Google Sheet. Make sure the sheet is public or shared."
-        );
-        return;
-      }
-      const csvText = await response.text();
-      // Parse CSV (simple split, assumes no commas in fields)
-      const rows = csvText.split(/\r?\n/).filter(Boolean);
-      // Find header row (the one with 'Name' and 'Nationality')
-      let headerIdx = rows.findIndex(
-        (row) => row.includes("Name") && row.includes("Nationality")
-      );
-      if (headerIdx === -1) {
-        setImportError(
-          "Could not find header row with 'Name' and 'Nationality'."
-        );
-        return;
-      }
+    // Parse pasted CSV data
+    const rows = importUrl.split(/\r?\n/).filter(Boolean);
+    // Find header row (the first one with 'Name' in it and 'Country' or 'Nationality')
+    let headerIdx = rows.findIndex(
+      (row) =>
+        row.includes("Name") &&
+        (row.includes("Country") || row.includes("Nationality"))
+    );
+    let dataRows;
+    if (headerIdx === -1) {
+      // No header row, treat all rows as data
+      dataRows = rows;
+    } else {
       // Data starts after header
-      const dataRows = rows.slice(headerIdx + 1);
-      // Extract Name (B), Country (C), Birth Year (D)
-      const competitors = dataRows
-        .map((row) => {
-          const cols = row.split(",");
-          return {
-            name: cols[1]?.trim() || "",
-            country: cols[2]?.trim() || "",
-            birthYear: cols[3]?.match(/\d{4}/)?.[0] || "",
-          };
-        })
-        .filter((c) => c.name);
-      if (competitors.length === 0) {
-        setImportError("No competitors found in the sheet.");
-        return;
-      }
-      // TODO: Save competitors to DB and add to competition
-      alert(
-        `Parsed ${competitors.length} competitors. (Saving to DB not yet implemented)`
-      );
-      setShowImportModal(false);
-    } catch (err) {
-      setImportError("Error importing competitors: " + err.message);
+      dataRows = rows.slice(headerIdx + 1);
     }
+    // Extract Name (A), Country (B), Birth Year (C)
+    const competitors = dataRows
+      .map((row) => {
+        const cols = row.split(/\t|,/); // support tab or comma separated
+        let nameRaw = cols[0]?.trim() || "";
+        let birthYearRaw = cols[2]?.trim() || "";
+        let birthYear = "";
+        // If it's just a year, use it. If it's a date, extract year from end or regex
+        if (/^\d{4}$/.test(birthYearRaw)) {
+          birthYear = birthYearRaw;
+        } else if (/\d{4}$/.test(birthYearRaw)) {
+          birthYear = birthYearRaw.slice(-4);
+        } else {
+          birthYear = birthYearRaw.match(/\d{4}/)?.[0] || "";
+        }
+        // Assign last word as lastName, rest as firstName
+        let firstName = "";
+        let lastName = "";
+        const nameParts = nameRaw.split(" ").filter(Boolean);
+        if (nameParts.length === 1) {
+          firstName = nameParts[0];
+          lastName = "";
+        } else if (nameParts.length > 1) {
+          lastName = nameParts[nameParts.length - 1];
+          firstName = nameParts.slice(0, -1).join(" ");
+        }
+        return {
+          firstName,
+          lastName,
+          country: cols[1]?.trim() || "",
+          birthYear,
+        };
+      })
+      .filter((c) => c.firstName);
+    if (competitors.length === 0) {
+      setImportError("No competitors found in the pasted data.");
+      return;
+    }
+
+    // Save competitors to DB and add to competition
+    const saveCompetitors = async () => {
+      try {
+        // 1. Create competitors in bulk using new endpoint
+        const response = await axios.post(
+          `${backendUrl}/users/bulk`,
+          {
+            users: competitors.map((c) => ({
+              firstName: c.firstName,
+              lastName: c.lastName,
+              country: c.country,
+              birthYear: c.birthYear,
+              verified: true,
+              role: "user",
+            })),
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const createdIds = response.data.userIds || [];
+        console.log(createdIds);
+        // 2. Add all created competitor IDs to the competition
+        const updatedCompetition = {
+          compUsers: competitionData.compUsers
+            ? [...competitionData.compUsers, ...createdIds]
+            : [...createdIds],
+        };
+        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCompetitionData({
+          ...competitionData,
+          compUsers: updatedCompetition.compUsers,
+        });
+        // Optimistically add new competitors to users state
+        const newUsers = createdIds.map((id, idx) => ({
+          _id: id,
+          firstName: competitors[idx].firstName,
+          lastName: competitors[idx].lastName,
+          country: competitors[idx].country,
+          birthYear: competitors[idx].birthYear,
+          verified: true,
+          role: "user",
+        }));
+        setUsers((prevUsers) => [...prevUsers, ...newUsers]);
+        alert(`Imported and saved ${createdIds.length} competitors.`);
+        setShowImportModal(false);
+      } catch (err) {
+        setImportError(
+          "Error saving competitors. Please check your data and try again."
+        );
+        console.error(err);
+      }
+    };
+    saveCompetitors();
   };
 
   const saveAdmin = async (participantId) => {
@@ -449,7 +509,9 @@ const CompetitionDetail = () => {
           <div>
             {competitionData && userData && (
               <p className="highlightText">
-                <Link to={`/competition_results/${id}`}>View Results >>></Link>
+                <Link to={`/competition_results/${id}`}>
+                  View Results {">>>"}
+                </Link>
               </p>
             )}
 
@@ -544,7 +606,7 @@ const CompetitionDetail = () => {
                       {competitionData.compUsers?.map((userId) => {
                         // Find the user with the matching ID in the users array
                         const user = users.find((user) => user._id === userId);
-
+                        console.log(users);
                         // Display the user names and actions
                         return (
                           <tr key={userId}>
@@ -619,11 +681,13 @@ const CompetitionDetail = () => {
           <Modal.Body>
             <Form.Group className="mb-3">
               <Form.Label>
-                Google Sheets Link or CSV Upload (coming soon)
+                Paste CSV data below (columns: Name, Country, DOB/Birth Year)
               </Form.Label>
               <Form.Control
-                type="text"
-                placeholder="Paste Google Sheets link here..."
+                as="textarea"
+                rows={16}
+                style={{ fontSize: "1rem" }}
+                placeholder="Paste CSV rows here..."
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
               />
