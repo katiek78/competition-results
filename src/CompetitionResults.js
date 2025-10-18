@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import { Modal, Form, Button } from "react-bootstrap";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
 import axios from "axios";
@@ -34,10 +35,15 @@ const CompetitionResults = () => {
   const [standard, setStandard] = useState(1);
   const [showScoreForm, setShowScoreForm] = useState(false);
   const [showEditScoreForm, setShowEditScoreForm] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [editFormValues, setEditFormValues] = useState("");
   const [compUserTotals, setCompUserTotals] = useState([]);
   const [showDisciplineMenu, setShowDisciplineMenu] = useState(false);
   const [roundingOn, setRoundingOn] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importError, setImportError] = useState("");
+  const [importDiscipline, setImportDiscipline] = useState("");
+
   const isMobile = window.innerWidth < 769;
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
@@ -50,6 +56,30 @@ const CompetitionResults = () => {
 
   const handleToggleRounding = () => {
     setRoundingOn(!roundingOn);
+  };
+
+  const handleImportModalClose = () => {
+    setShowImportModal(false);
+  };
+
+  const handleImportSubmit = () => {
+    // For now just do an alert with the names and scores
+    // Get names and scores from what was entered in textarea of modal
+    const namesAndScores = importText.split("\n").map((line) => {
+      const [name, category, score] = line
+        .split("\t")
+        .map((item) => item.trim());
+      return { name, category, score };
+    });
+    const disciplineLabel = importDiscipline
+      ? getDisciplineNameFromRef(importDiscipline)
+      : "No discipline selected";
+    alert(
+      `Discipline: ${disciplineLabel}\n` +
+        namesAndScores.map((ns) => `${ns.name} - ${ns.score}`).join("\n")
+    );
+    setShowImportModal(false);
+    return false;
   };
 
   const handleRequestReview = (usr) => {
@@ -878,16 +908,16 @@ const CompetitionResults = () => {
               <>
                 <p className="highlightText">
                   <Link to={`/competition/${competitionData._id}`}>
-                    View Setup >>>
+                    View Setup {">>>"}
                   </Link>
                 </p>
                 <p onClick={handleExport} className="highlightText">
                   {/* <Link to={`/competition/${competitionData._id}`}> */}
-                  Export Results >>>
+                  Export Results {">>>"}
                   {/* </Link> */}
                 </p>
                 <p onClick={handleExportStats} className="highlightText">
-                  Export Results for Stats >>>
+                  Export Results for Stats {">>>"}
                 </p>
               </>
             )}
@@ -895,7 +925,7 @@ const CompetitionResults = () => {
             {isParticipant() && (
               <p className="highlightText">
                 <Link to={`/competition_add_score/${competitionData._id}`}>
-                  Add my score >>>
+                  Add my score {">>>"}
                 </Link>
               </p>
             )}
@@ -905,7 +935,12 @@ const CompetitionResults = () => {
                 <p className="highlightText">
                   {/* <Link to={`/competition_add_user_score/${competitionData._id}/`}>Add score for a user >>></Link> */}
                   <span onClick={() => setShowScoreForm(true)}>
-                    Add score for a user >>>
+                    Add score for a user {">>>"}
+                  </span>
+                </p>
+                <p className="highlightText">
+                  <span onClick={() => setShowImportModal(true)}>
+                    Import scores {">>>"}
                   </span>
                 </p>
               </>
@@ -1259,6 +1294,58 @@ const CompetitionResults = () => {
           )}
         </div>
       )}
+      <Modal show={showImportModal} onHide={handleImportModalClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Import Scores</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleImportSubmit}>
+            <Form.Group controlId="importDisciplineDropdown">
+              <Form.Label>Select discipline:</Form.Label>
+              <Form.Select
+                value={importDiscipline}
+                onChange={(e) => setImportDiscipline(e.target.value)}
+              >
+                <option value="">-- Select discipline --</option>
+                {competitionData &&
+                  competitionData.disciplines &&
+                  require("./constants")
+                    .disciplines.filter((d) =>
+                      competitionData.disciplines.includes(d.ref)
+                    )
+                    .map((d) => (
+                      <option key={d.ref} value={d.ref}>
+                        {d.label}
+                      </option>
+                    ))}
+              </Form.Select>
+            </Form.Group>
+            <Form.Group
+              controlId="importScoresTextarea"
+              style={{ marginTop: "1em" }}
+            >
+              <Form.Label>Paste scores (name, age group, score):</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={10}
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder="e.g. John Smith\tSenior\t123"
+                style={{ fontSize: "1.2em" }}
+              />
+            </Form.Group>
+            {importError && <div style={{ color: "red" }}>{importError}</div>}
+            <Button
+              variant="primary"
+              type="button"
+              style={{ marginTop: "1em" }}
+              onClick={handleImportSubmit}
+            >
+              Import
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </>
   );
 };
