@@ -3,6 +3,39 @@ import Cookies from "universal-cookie";
 import { backendUrl, getDisciplineNameFromRef } from "./constants";
 import ExcelJS from "exceljs";
 
+export const countryNameToCode = {
+  "United States": "US",
+  "United Kingdom": "GB",
+  Canada: "CA",
+  Australia: "AU",
+  Germany: "DE",
+  France: "FR",
+  Finland: "FI",
+  Sweden: "SE",
+  Norway: "NO",
+  Denmark: "DK",
+  Estonia: "EE",
+  Latvia: "LV",
+  Lithuania: "LT",
+  Poland: "PL",
+  Russia: "RU",
+  Japan: "JP",
+  China: "CN",
+  India: "IN",
+  Italy: "IT",
+  // ...add more as needed
+};
+
+export function getFlagEmoji(countryName) {
+  if (!countryName || countryName === "(none)") return null;
+  let code = countryNameToCode[countryName];
+  if (!code && countryName.length === 2) code = countryName.toUpperCase();
+  if (!code) return "(" + countryName + ")";
+  return code
+    .toUpperCase()
+    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+}
+
 export const getToken = () => {
   const cookies = new Cookies();
   return cookies.get("TOKEN");

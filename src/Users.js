@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import { useUser } from "./UserProvider";
-import { fetchCurrentUserData, getToken, COUNTRIES } from "./utils";
+import {
+  fetchCurrentUserData,
+  getToken,
+  COUNTRIES,
+  getFlagEmoji,
+} from "./utils";
 import { Button, Modal, Form } from "react-bootstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -398,207 +403,228 @@ const Users = () => {
   return (
     userData &&
     (userData.role === "superAdmin" || userData.role === "admin") && (
-      <div>
-        <h1 className="text-center">Users</h1>
-        <div style={{ marginBottom: "15px" }}>
-          <Button onClick={addUser} style={{ marginRight: "10px" }}>
-            Add user
-          </Button>
-          <Button onClick={addTestUser} style={{ marginRight: "10px" }}>
-            Add test user
-          </Button>
-          <Button onClick={handleRefreshUsers} variant="outline-primary">
-            Refresh Users
-          </Button>
-        </div>
-        <Modal show={showAddUserModal} onHide={handleAddUserModalClose}>
-          <Modal.Header closeButton>
-            <Modal.Title>Add User</Modal.Title>
-          </Modal.Header>
-          <Form onSubmit={handleAddUserFormSubmit}>
-            <Modal.Body>
-              <Form.Group className="mb-3">
-                <Form.Label>First Name</Form.Label>
-                <Form.Control
-                  name="firstName"
-                  value={addUserForm.firstName}
-                  onChange={handleAddUserFormChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Last Name</Form.Label>
-                <Form.Control
-                  name="lastName"
-                  value={addUserForm.lastName}
-                  onChange={handleAddUserFormChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  value={addUserForm.email}
-                  onChange={handleAddUserFormChange}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>IAM ID (if they have one)</Form.Label>
-                <Form.Control
-                  name="iamId"
-                  value={addUserForm.iamId}
-                  onChange={handleAddUserFormChange}
-                  maxLength={6}
-                  minLength={0}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Birth Year</Form.Label>
-                <Form.Control
-                  name="birthYear"
-                  value={addUserForm.birthYear}
-                  onChange={handleAddUserFormChange}
-                  type="number"
-                  min={1950}
-                  max={2015}
-                  required
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Country</Form.Label>
-                <Form.Select
-                  name="country"
-                  value={addUserForm.country}
-                  onChange={handleAddUserFormChange}
-                  required
-                >
-                  <option value="">Select a country...</option>
-                  <option value="(none)">No country affiliation</option>
-                  {COUNTRIES.map((countryName) => (
-                    <option key={countryName} value={countryName}>
-                      {countryName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Form.Group>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="secondary" onClick={handleAddUserModalClose}>
-                Cancel
-              </Button>
-              <Button variant="primary" type="submit">
-                Save User
-              </Button>
-            </Modal.Footer>
-          </Form>
-        </Modal>
-        <table className="niceTable usersTable">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users
-              .sort((a, b) =>
-                a.lastName.localeCompare(
-                  b.lastName || a.firstName.localeCompare(b.firstName)
+      <>
+        <div>
+          <h1 className="text-center">Users</h1>
+          <div style={{ marginBottom: "15px" }}>
+            <Button onClick={addUser} style={{ marginRight: "10px" }}>
+              Add user
+            </Button>
+            <Button onClick={addTestUser} style={{ marginRight: "10px" }}>
+              Add test user
+            </Button>
+            <Button onClick={handleRefreshUsers} variant="outline-primary">
+              Refresh Users
+            </Button>
+          </div>
+
+          <Modal show={showAddUserModal} onHide={handleAddUserModalClose}>
+            <Modal.Header closeButton>
+              <Modal.Title>Add User</Modal.Title>
+            </Modal.Header>
+            <Form onSubmit={handleAddUserFormSubmit}>
+              <Modal.Body>
+                <Form.Group className="mb-3">
+                  <Form.Label>First Name</Form.Label>
+                  <Form.Control
+                    name="firstName"
+                    value={addUserForm.firstName}
+                    onChange={handleAddUserFormChange}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Last Name</Form.Label>
+                  <Form.Control
+                    name="lastName"
+                    value={addUserForm.lastName}
+                    onChange={handleAddUserFormChange}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    type="email"
+                    name="email"
+                    value={addUserForm.email}
+                    onChange={handleAddUserFormChange}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>IAM ID (if they have one)</Form.Label>
+                  <Form.Control
+                    name="iamId"
+                    value={addUserForm.iamId}
+                    onChange={handleAddUserFormChange}
+                    maxLength={6}
+                    minLength={0}
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Birth Year</Form.Label>
+                  <Form.Control
+                    name="birthYear"
+                    value={addUserForm.birthYear}
+                    onChange={handleAddUserFormChange}
+                    type="number"
+                    min={1950}
+                    max={2015}
+                    required
+                  />
+                </Form.Group>
+                <Form.Group className="mb-3">
+                  <Form.Label>Country</Form.Label>
+                  <Form.Select
+                    name="country"
+                    value={addUserForm.country}
+                    onChange={handleAddUserFormChange}
+                    required
+                  >
+                    <option value="">Select a country...</option>
+                    <option value="(none)">No country affiliation</option>
+                    {COUNTRIES.map((countryName) => (
+                      <option key={countryName} value={countryName}>
+                        {countryName}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Form.Group>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={handleAddUserModalClose}>
+                  Cancel
+                </Button>
+                <Button variant="primary" type="submit">
+                  Save User
+                </Button>
+              </Modal.Footer>
+            </Form>
+          </Modal>
+          <table className="niceTable usersTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {users
+                .sort((a, b) =>
+                  a.lastName.localeCompare(
+                    b.lastName || a.firstName.localeCompare(b.firstName)
+                  )
                 )
-              )
-              .map((usr) => (
-                <tr key={usr._id}>
-                  <td>
-                    {editingCountryUserId === usr._id ? (
-                      <div>
-                        <span>{`${usr.firstName} ${usr.lastName} (`}</span>
-                        <select
-                          value={editingCountryValue}
-                          onChange={(e) =>
-                            setEditingCountryValue(e.target.value)
-                          }
-                          style={{ width: "150px", display: "inline" }}
-                          autoFocus
-                        >
-                          <option value="">Select a country...</option>
-                          <option value="(none)">No country affiliation</option>
-                          {COUNTRIES.map((countryName) => (
-                            <option key={countryName} value={countryName}>
-                              {countryName}
-                            </option>
-                          ))}
-                        </select>
-                        <span>)</span>
-                        <button
-                          onClick={() => handleSaveCountry(usr._id)}
-                          style={{ marginLeft: "5px", fontSize: "12px" }}
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={handleCancelCountryEdit}
-                          style={{ marginLeft: "5px", fontSize: "12px" }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div>
-                        <span>{`${usr.firstName} ${usr.lastName}${
-                          usr.country ? ` (${usr.country})` : ""
-                        }`}</span>
-                        {(userData.role === "superAdmin" ||
-                          userData.role === "admin") && (
-                          <FontAwesomeIcon
-                            title="Edit Country"
-                            className="actionIcon"
-                            icon={faEdit}
-                            onClick={() =>
-                              handleEditCountry(usr._id, usr.country)
+                .map((usr) => (
+                  <tr key={usr._id}>
+                    <td>
+                      {editingCountryUserId === usr._id ? (
+                        <div>
+                          <span>{`${usr.firstName} ${usr.lastName} (`}</span>
+                          <select
+                            value={editingCountryValue}
+                            onChange={(e) =>
+                              setEditingCountryValue(e.target.value)
                             }
-                            style={{ marginLeft: "10px", cursor: "pointer" }}
+                            style={{ width: "150px", display: "inline" }}
+                            autoFocus
+                          >
+                            <option value="">Select a country...</option>
+                            <option value="(none)">
+                              No country affiliation
+                            </option>
+                            {COUNTRIES.map((countryName) => (
+                              <option key={countryName} value={countryName}>
+                                {countryName}
+                              </option>
+                            ))}
+                          </select>
+                          <span>)</span>
+                          <button
+                            onClick={() => handleSaveCountry(usr._id)}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelCountryEdit}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <span>
+                            {`${usr.firstName} ${usr.lastName}`}
+                            {usr.country && usr.country !== "(none)" && (
+                              <span style={{ marginLeft: "6px" }}>
+                                {getFlagEmoji(usr.country)}
+                              </span>
+                            )}
+                            {usr.country === "(none)" && (
+                              <span
+                                style={{
+                                  marginLeft: "6px",
+                                  fontStyle: "italic",
+                                  color: "#888",
+                                }}
+                              >
+                                (no affiliation)
+                              </span>
+                            )}
+                          </span>
+                          {(userData.role === "superAdmin" ||
+                            userData.role === "admin") && (
+                            <FontAwesomeIcon
+                              title="Edit Country"
+                              className="actionIcon"
+                              icon={faEdit}
+                              onClick={() =>
+                                handleEditCountry(usr._id, usr.country)
+                              }
+                              style={{ marginLeft: "10px", cursor: "pointer" }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </td>
+                    <td>{usr.email}</td>
+                    <td>{getRoleIcon(usr.role)}</td>
+                    <td>
+                      {" "}
+                      {usr.role !== "superAdmin" && usr.role !== "admin" && (
+                        <>
+                          <FontAwesomeIcon
+                            title="Delete User"
+                            className="actionIcon"
+                            icon={faTrash}
+                            onClick={() => handleDeleteUser(usr._id)}
                           />
-                        )}
-                      </div>
-                    )}
-                  </td>
-                  <td>{usr.email}</td>
-                  <td>{getRoleIcon(usr.role)}</td>
-                  <td>
-                    {" "}
-                    {usr.role !== "superAdmin" && usr.role !== "admin" && (
-                      <>
-                        <FontAwesomeIcon
-                          title="Delete User"
-                          className="actionIcon"
-                          icon={faTrash}
-                          onClick={() => handleDeleteUser(usr._id)}
-                        />
-                        <FontAwesomeIcon
-                          title="Make User Site Admin"
-                          className="actionIcon"
-                          icon={faUserPlus}
-                          onClick={() => handleMakeUserSiteAdmin(usr._id)}
-                        />
-                        {/* <span
+                          <FontAwesomeIcon
+                            title="Make User Site Admin"
+                            className="actionIcon"
+                            icon={faUserPlus}
+                            onClick={() => handleMakeUserSiteAdmin(usr._id)}
+                          />
+                          {/* <span
                         className="actionTableItem"
                         onClick={() => handleMakeUserSiteAdmin(usr._id)}
                       >
                         Make Admin
                       </span> */}
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
+                        </>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      </>
     )
   );
 };

@@ -20,6 +20,7 @@ import {
   exportCompetitionToExcel,
   fetchCurrentUserData,
   getToken,
+  getFlagEmoji,
 } from "./utils";
 import { backendUrl } from "./constants";
 import { generateCompId } from "./competitionIdUtils";
@@ -1400,7 +1401,37 @@ const CompetitionResults = () => {
                             return (
                               <tr key={i}>
                                 <td>{i + 1}</td>
-                                <td>{`${thisUser.firstName} ${thisUser.lastName}`}</td>
+                                <td>
+                                  {`${thisUser.firstName} ${thisUser.lastName}`}
+                                  {thisUser.country &&
+                                    thisUser.country !== "(none)" && (
+                                      <span style={{ marginLeft: "6px" }}>
+                                        {getFlagEmoji(thisUser.country)}
+                                      </span>
+                                    )}
+                                  {thisUser.country === "(none)" && (
+                                    <span
+                                      style={{
+                                        marginLeft: "6px",
+                                        fontStyle: "italic",
+                                        color: "#888",
+                                      }}
+                                    >
+                                      (no affiliation)
+                                    </span>
+                                  )}
+                                  {/* {thisUser.country &&
+                                    thisUser.country !== "(none)" && (
+                                      <span
+                                        style={{
+                                          marginLeft: "6px",
+                                          color: "#888",
+                                        }}
+                                      >
+                                        ({thisUser.country})
+                                      </span>
+                                    )} */}
+                                </td>
                                 <td className="champ-points">
                                   {roundingOn
                                     ? competitor.unroundedTotal.toFixed(2)
