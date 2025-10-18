@@ -25,6 +25,102 @@ import { backendUrl } from "./constants";
 import { generateCompId } from "./competitionIdUtils";
 
 const CompetitionResults = () => {
+  // Show competitors who haven't submitted a result for selectedDiscipline
+  function showCompUsersNotSubmitted() {
+    if (
+      !competitionData ||
+      !competitionData.compUsers ||
+      !competitionData.compResults ||
+      !selectedDiscipline
+    )
+      return;
+    const submittedUserIds = competitionData.compResults
+      .filter((r) => r.discipline === selectedDiscipline)
+      .map((r) => r.compUser);
+    const notSubmitted = competitionData.compUsers
+      .filter((userId) => !submittedUserIds.includes(userId))
+      .map((userId) => {
+        const user = users.find((u) => u._id === userId);
+        return user ? `${user.firstName} ${user.lastName}` : userId;
+      });
+    alert(
+      notSubmitted.length > 0
+        ? `Competitors who haven't submitted a result for ${getDisciplineNameFromRef(
+            selectedDiscipline
+          )}:\n\n${notSubmitted.join("\n")}`
+        : "All competitors have submitted a result for this discipline."
+    );
+  }
+
+  // Handle request review for a user's result
+  async function handleRequestReview(compUserId) {
+    if (!competitionData || !selectedDiscipline) return;
+    const result = getResult(compUserId, selectedDiscipline);
+    if (!result) {
+      alert("No result found for this user and discipline.");
+      return;
+    }
+    // Update status to 'review'
+    const updatedResult = { ...result, status: "review" };
+    try {
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/competition/${id}/results/${compUserId}/${selectedDiscipline}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: updatedResult,
+      };
+      await axios(configuration);
+      // Update local state
+      setCompetitionData((prevCompetitionData) => {
+        const updatedResults = prevCompetitionData.compResults.map((r) =>
+          r.compUser === compUserId && r.discipline === selectedDiscipline
+            ? updatedResult
+            : r
+        );
+        return {
+          ...prevCompetitionData,
+          compResults: updatedResults,
+        };
+      });
+      alert("Review requested successfully.");
+    } catch (error) {
+      console.error("Error requesting review:", error);
+      alert("Failed to request review. Please try again.");
+    }
+  }
+  // Helper: getResult
+  function getResult(compUser, discipline) {
+    if (!competitionData || !competitionData.compResults) return null;
+    return (
+      competitionData.compResults.find(
+        (result) =>
+          result.compUser === compUser && result.discipline === discipline
+      ) || null
+    );
+  }
+
+  // Helper: getNumberOfResultsForDiscipline
+  function getNumberOfResultsForDiscipline(discipline) {
+    if (!competitionData || !competitionData.compResults) return 0;
+    return competitionData.compResults.filter(
+      (result) => result.discipline === discipline
+    ).length;
+  }
+
+  // Helper: formatDate
+  function formatDate(date) {
+    if (!date) return "";
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  }
+  const [importMode, setImportMode] = useState(""); // '', 'overwrite', 'skip', 'cancel'
+  const [pendingImports, setPendingImports] = useState([]);
+  const [validImports, setValidImports] = useState([]);
   const token = useMemo(() => getToken(), []);
   const { id } = useParams();
   const { user } = useUser();
@@ -85,7 +181,8 @@ const CompetitionResults = () => {
       : "No discipline selected";
 
     let issues = [];
-    let validImports = [];
+    let valid = [];
+    let duplicates = [];
 
     namesAndScores.forEach((entry, idx) => {
       // Match name to competitor
@@ -101,16 +198,7 @@ const CompetitionResults = () => {
         (r) =>
           r.compUser === competitor._id && r.discipline === importDiscipline
       );
-      if (alreadyHasScore) {
-        issues.push(
-          `Row ${idx + 1}: Duplicate score for '${
-            entry.name
-          }' in ${disciplineLabel}`
-        );
-        return;
-      }
-      // If valid, add to import list
-      validImports.push({
+      const importObj = {
         compUser: competitor._id,
         discipline: importDiscipline,
         rawScore: parseFloat(entry.score),
@@ -118,99 +206,66 @@ const CompetitionResults = () => {
         status: "submitted",
         additionalInfo: entry.category,
         timestamp: Date.now(),
-      });
+        name: entry.name,
+        row: idx + 1,
+      };
+      if (alreadyHasScore) {
+        issues.push(
+          `Row ${idx + 1}: Duplicate score for '${
+            entry.name
+          }' in ${disciplineLabel}`
+        );
+        duplicates.push(importObj);
+      } else {
+        valid.push(importObj);
+      }
     });
 
+    // If there are issues (unmatched names or duplicates), show error and options
     if (issues.length > 0) {
-      setImportError(`Issues found:\n${issues.join("\n")}`);
+      setImportError(issues.join("\n"));
+      setPendingImports(duplicates);
+      setValidImports(valid);
       return;
     }
 
-    // Save valid scores
+    // If no valid imports, show message
+    if (validImports.length === 0) {
+      alert("No valid scores to import.");
+      setValidImports([]);
+      setPendingImports([]);
+      return;
+    }
+
+    // If no issues, import all valid scores
     Promise.all(
-      validImports.map((result) =>
-        saveScore(
-          result.rawScore,
-          result.time,
-          result.compUser,
-          result.discipline,
-          true,
-          result.status,
-          result.additionalInfo,
-          result.timestamp
-        )
-      )
-    ).then(() => {
-      setShowImportModal(false);
-      setImportError("");
-    });
-    return false;
-  };
-
-  const handleRequestReview = (usr) => {
-    //grey out the faQuestion icon so they can't request review again
-    //think this disappears automatically
-
-    // prompt user for note to be added
-    const note = prompt("Please enter a note:");
-
-    //change status of this result to review so arbiters will see it
-    const result = getResult(usr, selectedDiscipline);
-    console.log(usr);
-    console.log(result);
-    const { rawScore, time, additionalInfo, timestamp } = result;
-    const expandedInfo = additionalInfo + "<br />Note: " + note;
-    console.log(expandedInfo);
-    saveScore(
-      rawScore,
-      time,
-      usr,
-      selectedDiscipline,
-      false,
-      "review",
-      expandedInfo,
-      timestamp
-    ); //only change is to mark status as review and include note along with additionalInfo
-  };
-
-  // Helper function to format date as 'YYYY-MM-DD'
-  const formatDate = (date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const getResult = (user, discipline) => {
-    return competitionData.compResults.find(
-      (el) => el.compUser === user && el.discipline === discipline
-    );
-  };
-
-  // const getNumberOfResultsForDiscipline = (d) => competitionData.compResults.filter(r => r.discipline === d).length;
-
-  const getNumberOfResultsForDiscipline = (d) => {
-    const results = competitionData.compResults.filter(
-      (r) => r.discipline === d
-    );
-    return results.length;
-  };
-
-  const showCompUsersNotSubmitted = () => {
-    const notSubmittedList = competitionData.compUsers
-      .filter(
-        (cuId) =>
-          !competitionData.compResults.find(
-            (r) => r.discipline === selectedDiscipline && r.compUser === cuId
-          )
-      )
-      .map((cuId) => {
-        const user = users.find((u) => u._id === cuId);
-        return `${user.firstName} ${user.lastName}`;
+      validImports.map((importObj) => {
+        const configuration = {
+          method: "put",
+          url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: importObj,
+        };
+        return axios(configuration);
       })
-      .join("\n");
-
-    alert(notSubmittedList);
+    )
+      .then(() => {
+        alert(
+          `${validImports.length} new score${
+            validImports.length !== 1 ? "s" : ""
+          } imported.`
+        );
+        setShowImportModal(false);
+        setImportError("");
+        setImportMode("");
+        setPendingImports([]);
+        setImportText("");
+      })
+      .catch((error) => {
+        alert("Error importing scores. Please try again.");
+      });
   };
 
   function isDuplicateResult(compResults, compUser, discipline) {
@@ -1400,15 +1455,116 @@ const CompetitionResults = () => {
               />
             </Form.Group>
             {importError && <div style={{ color: "red" }}>{importError}</div>}
-            <Button
-              variant={importDiscipline ? "primary" : "secondary"}
-              type="button"
-              style={{ marginTop: "1em" }}
-              onClick={handleImportSubmit}
-              disabled={!importDiscipline}
-            >
-              Import
-            </Button>
+            {/* Show options if there are duplicate issues */}
+            {importError && pendingImports.length > 0 ? (
+              <div style={{ marginTop: "1em" }}>
+                <div style={{ fontWeight: "bold" }}>
+                  How would you like to proceed?
+                </div>
+                <div
+                  style={{ display: "flex", gap: "1em", marginTop: "0.5em" }}
+                >
+                  <Button
+                    variant={"outline-primary"}
+                    type="button"
+                    onClick={() => {
+                      // Overwrite all old scores (import all, including duplicates)
+                      const allImports = [...validImports, ...pendingImports];
+                      Promise.all(
+                        allImports.map((importObj) => {
+                          const configuration = {
+                            method: "put",
+                            url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                            data: importObj,
+                          };
+                          return axios(configuration);
+                        })
+                      )
+                        .then(() => {
+                          alert(
+                            `${allImports.length} score${
+                              allImports.length !== 1 ? "s" : ""
+                            } imported (including overwrites).`
+                          );
+                          setShowImportModal(false);
+                          setImportError("");
+                          setImportMode("");
+                          setPendingImports([]);
+                          setImportText("");
+                        })
+                        .catch((error) => {
+                          alert("Error importing scores. Please try again.");
+                        });
+                    }}
+                  >
+                    Overwrite all old scores
+                  </Button>
+                  <Button
+                    variant={"outline-primary"}
+                    type="button"
+                    onClick={() => {
+                      // Import only new scores
+                      Promise.all(
+                        validImports.map((importObj) => {
+                          const configuration = {
+                            method: "put",
+                            url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                            data: importObj,
+                          };
+                          return axios(configuration);
+                        })
+                      )
+                        .then(() => {
+                          alert(
+                            `${validImports.length} new score${
+                              validImports.length !== 1 ? "s" : ""
+                            } imported.`
+                          );
+                          setShowImportModal(false);
+                          setImportError("");
+                          setImportMode("");
+                          setPendingImports([]);
+                          setImportText("");
+                        })
+                        .catch((error) => {
+                          alert("Error importing scores. Please try again.");
+                        });
+                    }}
+                  >
+                    Import only new scores
+                  </Button>
+                  <Button
+                    variant={"outline-primary"}
+                    type="button"
+                    onClick={() => {
+                      setImportMode("cancel");
+                      setShowImportModal(false);
+                      setImportError("");
+                      setPendingImports([]);
+                      setImportText("");
+                    }}
+                  >
+                    Cancel import
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant={importDiscipline ? "primary" : "secondary"}
+                type="button"
+                style={{ marginTop: "1em" }}
+                onClick={handleImportSubmit}
+                disabled={!importDiscipline}
+              >
+                Import
+              </Button>
+            )}
           </Form>
         </Modal.Body>
       </Modal>
