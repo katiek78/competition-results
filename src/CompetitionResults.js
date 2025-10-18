@@ -63,22 +63,87 @@ const CompetitionResults = () => {
   };
 
   const handleImportSubmit = () => {
-    // For now just do an alert with the names and scores
-    // Get names and scores from what was entered in textarea of modal
+    // Parse imported scores
     const namesAndScores = importText.split("\n").map((line) => {
       const [name, category, score] = line
         .split("\t")
         .map((item) => item.trim());
       return { name, category, score };
     });
+
+    // Prepare competitor lookup (firstName + lastName)
+    const competitors = competitionData.compUsers.map((cuId) => {
+      const user = users.find((u) => u._id === cuId);
+      return {
+        _id: cuId,
+        name: user ? `${user.firstName} ${user.lastName}`.trim() : "",
+      };
+    });
+
     const disciplineLabel = importDiscipline
       ? getDisciplineNameFromRef(importDiscipline)
       : "No discipline selected";
-    alert(
-      `Discipline: ${disciplineLabel}\n` +
-        namesAndScores.map((ns) => `${ns.name} - ${ns.score}`).join("\n")
-    );
-    setShowImportModal(false);
+
+    let issues = [];
+    let validImports = [];
+
+    namesAndScores.forEach((entry, idx) => {
+      // Match name to competitor
+      const competitor = competitors.find(
+        (c) => c.name.toLowerCase() === entry.name.toLowerCase()
+      );
+      if (!competitor) {
+        issues.push(`Row ${idx + 1}: Name not matched: '${entry.name}'`);
+        return;
+      }
+      // Check for duplicate score for this discipline
+      const alreadyHasScore = competitionData.compResults.some(
+        (r) =>
+          r.compUser === competitor._id && r.discipline === importDiscipline
+      );
+      if (alreadyHasScore) {
+        issues.push(
+          `Row ${idx + 1}: Duplicate score for '${
+            entry.name
+          }' in ${disciplineLabel}`
+        );
+        return;
+      }
+      // If valid, add to import list
+      validImports.push({
+        compUser: competitor._id,
+        discipline: importDiscipline,
+        rawScore: parseFloat(entry.score),
+        time: 0,
+        status: "submitted",
+        additionalInfo: entry.category,
+        timestamp: Date.now(),
+      });
+    });
+
+    if (issues.length > 0) {
+      setImportError(`Issues found:\n${issues.join("\n")}`);
+      return;
+    }
+
+    // Save valid scores
+    Promise.all(
+      validImports.map((result) =>
+        saveScore(
+          result.rawScore,
+          result.time,
+          result.compUser,
+          result.discipline,
+          true,
+          result.status,
+          result.additionalInfo,
+          result.timestamp
+        )
+      )
+    ).then(() => {
+      setShowImportModal(false);
+      setImportError("");
+    });
     return false;
   };
 
@@ -1336,10 +1401,11 @@ const CompetitionResults = () => {
             </Form.Group>
             {importError && <div style={{ color: "red" }}>{importError}</div>}
             <Button
-              variant="primary"
+              variant={importDiscipline ? "primary" : "secondary"}
               type="button"
               style={{ marginTop: "1em" }}
               onClick={handleImportSubmit}
+              disabled={!importDiscipline}
             >
               Import
             </Button>
