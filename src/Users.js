@@ -476,6 +476,7 @@ const Users = () => {
                   required
                 >
                   <option value="">Select a country...</option>
+                  <option value="(none)">No country affiliation</option>
                   {COUNTRIES.map((countryName) => (
                     <option key={countryName} value={countryName}>
                       {countryName}
@@ -525,6 +526,7 @@ const Users = () => {
                           autoFocus
                         >
                           <option value="">Select a country...</option>
+                          <option value="(none)">No country affiliation</option>
                           {COUNTRIES.map((countryName) => (
                             <option key={countryName} value={countryName}>
                               {countryName}

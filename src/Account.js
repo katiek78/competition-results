@@ -287,12 +287,17 @@ export default function Account() {
                 <>
                   <label>Country: </label>
                   <select
-                    defaultValue={userData.country || ""}
+                    defaultValue={
+                      userData.country === "(none)"
+                        ? "(none)"
+                        : userData.country || ""
+                    }
                     onBlur={(e) => handleSubmitCountry(e.target.value)}
                     onChange={(e) => handleSubmitCountry(e.target.value)}
                     autoFocus
                   >
                     <option value="">Select a country...</option>
+                    <option value="(none)">No country affiliation</option>
                     {COUNTRIES.map((countryName) => (
                       <option key={countryName} value={countryName}>
                         {countryName}

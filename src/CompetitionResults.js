@@ -936,11 +936,14 @@ const CompetitionResults = () => {
     const scoreRows = [];
     (competitionData?.compUsers || []).forEach((compUserId) => {
       const user = users.find((u) => u._id === compUserId) || {};
+      // If country is '(none)', export as 'undefined'
+      let exportCountry = user.country;
+      if (exportCountry === "(none)") exportCountry = "undefined";
       const row = [
         user.firstName || "N/A",
         user.lastName || "N/A",
         user.iamId || user.iam_id || "N/A",
-        user.country || "N/A",
+        exportCountry || "N/A",
         user.ageGroup || user.age_group || "N/A",
       ];
       // NUM5: highest of 5-minute Numbers Trial 1/2
