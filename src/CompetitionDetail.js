@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import stringSimilarity from "string-similarity";
 
 const CompetitionDetail = () => {
   const token = useMemo(() => getToken(), []);
@@ -28,11 +29,71 @@ const CompetitionDetail = () => {
   const [showParticipantForm, setShowParticipantForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [userMatches, setUserMatches] = useState([]);
   const [importUrl, setImportUrl] = useState("");
   const [importError, setImportError] = useState("");
 
   // Debug: Log the id parameter
   console.log("Competition ID from useParams:", id);
+
+  // Utility: Find possible matches for imported participants
+  // importedParticipants: [{ fullName, country, ... }]
+  // existingUsers: [{ fullName, country, ... }]
+  // Returns: [{ participant, matches: [user, ...] }]
+  function findUserMatches(
+    importedParticipants,
+    existingUsers,
+    nameThreshold = 0.85
+  ) {
+    return importedParticipants
+      .map((participant) => {
+        // Construct participant's full name for display and comparison
+        const participantFullName = (
+          (participant.firstName || "") +
+          " " +
+          (participant.lastName || "")
+        ).trim();
+
+        // Filter users by country first
+        const countryMatches = existingUsers.filter(
+          (user) => user.country === participant.country || user.country === ""
+        );
+
+        // Combine firstName and lastName for users
+        const nameCandidates = countryMatches.map((user) => {
+          const userFullName = (
+            (user.firstName || "") +
+            " " +
+            (user.lastName || "")
+          ).trim();
+          return {
+            user,
+            similarity: stringSimilarity.compareTwoStrings(
+              userFullName.toLowerCase(),
+              participantFullName.toLowerCase()
+            ),
+            userFullName,
+          };
+        });
+
+        // Only keep matches above threshold
+        const matches = nameCandidates
+          .filter((c) => c.similarity >= nameThreshold)
+          .sort((a, b) => b.similarity - a.similarity)
+          .map((c) => ({
+            ...c.user,
+            similarity: c.similarity,
+            userFullName: c.userFullName,
+          }));
+
+        // Only return participants with at least one match
+        if (matches.length > 0) {
+          return { participantFullName, matches };
+        }
+        return null;
+      })
+      .filter(Boolean); // Remove nulls (participants with no matches)
+  }
 
   // Helper function to format date as 'YYYY-MM-DD'
   const formatDate = (date) => {
@@ -82,6 +143,7 @@ const CompetitionDetail = () => {
   // Handler for import button
   const handleImportClick = () => {
     setShowImportModal(true);
+    setUserMatches([]);
     setImportUrl("");
     setImportError("");
   };
@@ -151,9 +213,17 @@ const CompetitionDetail = () => {
         };
       })
       .filter((c) => c.firstName);
+
+    const foundMatches = findUserMatches(competitors, users, 0.8);
+    setUserMatches(foundMatches);
+
     if (competitors.length === 0) {
       setImportError("No competitors found in the pasted data.");
       return;
+    }
+
+    if (foundMatches.length > 0) {
+      return; // Do not save yet!
     }
 
     // Save competitors to DB and add to competition
@@ -693,6 +763,38 @@ const CompetitionDetail = () => {
               />
               {importError && (
                 <div style={{ color: "red", marginTop: 8 }}>{importError}</div>
+              )}
+              {/* Example: Display flagged matches if any */}
+              {userMatches.length > 0 && (
+                <div
+                  style={{
+                    background: "#ffe",
+                    border: "1px solid #cc0",
+                    padding: "1em",
+                    marginBottom: "1em",
+                  }}
+                >
+                  <h4>Possible User Matches</h4>
+                  {userMatches.map(({ participantFullName, matches }, idx) => (
+                    <div key={idx} style={{ marginBottom: "1em" }}>
+                      <strong>{participantFullName}</strong>
+                      {matches.length > 0 ? (
+                        <ul>
+                          {matches.map((user, i) => (
+                            <li key={i}>
+                              {user.firstName + " " + user.lastName} (
+                              {user.country})
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span style={{ color: "#888" }}>
+                          No close matches found.
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </Form.Group>
           </Modal.Body>
