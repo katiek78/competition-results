@@ -32,6 +32,7 @@ const CompetitionDetail = () => {
   const [userMatches, setUserMatches] = useState([]);
   const [importUrl, setImportUrl] = useState("");
   const [importError, setImportError] = useState("");
+  const [importedCompetitors, setImportedCompetitors] = useState([]);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -210,6 +211,8 @@ const CompetitionDetail = () => {
         };
       })
       .filter((c) => c.firstName);
+
+    setImportedCompetitors(competitors);
 
     const foundMatches = findUserMatches(competitors, users, 0.8);
     setUserMatches(foundMatches);
@@ -500,16 +503,99 @@ const CompetitionDetail = () => {
       deleteParticipant(id);
   };
 
-  const handleContinueImport = () => {
-    // Build selections from dropdowns
+  const handleContinueImport = async () => {
+    // userMatches: [{ participantFullName, matches }]
+    // competitors: the original array of imported participants
+
     const selections = {};
     userMatches.forEach((match, idx) => {
       // Get the value from the select element for this participant
       const selectElem = document.getElementById(`participant-select-${idx}`);
       selections[idx] = selectElem ? selectElem.value : "new";
     });
-    console.log(selections);
-    // Proceed with your import logic using selections
+
+    try {
+      // 1. Prepare arrays for linking and creating
+      const toLink = []; // { participantIdx, userId }
+      const toCreate = []; // participantIdx
+
+      userMatches.forEach((match, idx) => {
+        const selection = selections[idx];
+        if (selection && selection !== "new") {
+          toLink.push({ participantIdx: idx, userId: selection });
+        } else {
+          toCreate.push(idx);
+        }
+      });
+
+      // 2. Link participants to existing users
+      // (Assuming you want to add their userId to the competition)
+      if (toLink.length > 0) {
+        const userIds = toLink.map((item) => item.userId);
+        const updatedCompetition = {
+          compUsers: competitionData.compUsers
+            ? [...competitionData.compUsers, ...userIds]
+            : [...userIds],
+        };
+        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCompetitionData((prev) => ({
+          ...prev,
+          compUsers: updatedCompetition.compUsers,
+        }));
+      }
+
+      // 3. Create new users for remaining participants
+      if (toCreate.length > 0) {
+        // Get the participant objects to create
+        const newUsersData = toCreate.map((idx) => importedCompetitors[idx]);
+        const response = await axios.post(
+          `${backendUrl}/users/bulk`,
+          {
+            users: newUsersData.map((c) => ({
+              firstName: c.firstName,
+              lastName: c.lastName,
+              country: c.country,
+              birthYear: c.birthYear,
+              verified: true,
+              role: "user",
+            })),
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const createdIds = response.data.userIds || [];
+        // Add new user IDs to competition
+        const updatedCompetition = {
+          compUsers: competitionData.compUsers
+            ? [...competitionData.compUsers, ...createdIds]
+            : [...createdIds],
+        };
+        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCompetitionData((prev) => ({
+          ...prev,
+          compUsers: updatedCompetition.compUsers,
+        }));
+        // Optionally update local users state
+        const newUsers = createdIds.map((id, idx) => ({
+          _id: id,
+          ...newUsersData[idx],
+          verified: true,
+          role: "user",
+        }));
+        setUsers((prevUsers) => [...prevUsers, ...newUsers]);
+      }
+
+      alert("Import complete!");
+      setShowImportModal(false);
+    } catch (err) {
+      setImportError(
+        "Error during import. Please check your data and try again."
+      );
+      console.error(err);
+    }
   };
 
   const handleDeleteDiscipline = (discipline) => {
