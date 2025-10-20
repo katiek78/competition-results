@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useUser } from "./UserProvider";
-import { fetchCurrentUserData, getToken } from "./utils";
+import { fetchCurrentUserData, getToken, getFlagEmoji } from "./utils";
 import axios from "axios";
 import CompetitionForm from "./CompetitionForm";
 import ParticipantsForm from "./ParticipantsForm";
@@ -776,6 +776,22 @@ const CompetitionDetail = () => {
                             <td>
                               {!user && "<Deleted User>"}
                               {user?.firstName} {user?.lastName}
+                              {user?.country && user?.country !== "(none)" && (
+                                <span style={{ marginLeft: "6px" }}>
+                                  {getFlagEmoji(user.country)}
+                                </span>
+                              )}
+                              {user?.country === "(none)" && (
+                                <span
+                                  style={{
+                                    marginLeft: "6px",
+                                    fontStyle: "italic",
+                                    color: "#888",
+                                  }}
+                                >
+                                  (no affiliation)
+                                </span>
+                              )}
                             </td>
                             <td onClick={() => handleDeleteParticipant(userId)}>
                               <FontAwesomeIcon
