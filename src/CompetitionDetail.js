@@ -33,9 +33,6 @@ const CompetitionDetail = () => {
   const [importUrl, setImportUrl] = useState("");
   const [importError, setImportError] = useState("");
 
-  // Debug: Log the id parameter
-  console.log("Competition ID from useParams:", id);
-
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
   // existingUsers: [{ fullName, country, ... }]
@@ -418,7 +415,7 @@ const CompetitionDetail = () => {
         }
 
         const fetchedData = await fetchCurrentUserData(user.userId);
-        console.log(fetchedData);
+
         if (fetchedData) {
           // Do something with the userData
           setUserData(fetchedData);
@@ -436,7 +433,7 @@ const CompetitionDetail = () => {
           axios(configuration)
             .then((result) => {
               setCompetitionData(result.data);
-              console.log(result.data);
+
               //only allow users who are in compAdmins, or superAdmins
               if (
                 result.data.compAdmins?.indexOf(fetchedData._id) === -1 &&
@@ -501,6 +498,18 @@ const CompetitionDetail = () => {
       )
     )
       deleteParticipant(id);
+  };
+
+  const handleContinueImport = () => {
+    // Build selections from dropdowns
+    const selections = {};
+    userMatches.forEach((match, idx) => {
+      // Get the value from the select element for this participant
+      const selectElem = document.getElementById(`participant-select-${idx}`);
+      selections[idx] = selectElem ? selectElem.value : "new";
+    });
+    console.log(selections);
+    // Proceed with your import logic using selections
   };
 
   const handleDeleteDiscipline = (discipline) => {
@@ -676,8 +685,6 @@ const CompetitionDetail = () => {
                       {competitionData.compUsers?.map((userId) => {
                         // Find the user with the matching ID in the users array
                         const user = users.find((user) => user._id === userId);
-                        console.log(users);
-                        // Display the user names and actions
                         return (
                           <tr key={userId}>
                             <td>
@@ -777,20 +784,18 @@ const CompetitionDetail = () => {
                   <h4>Possible User Matches</h4>
                   {userMatches.map(({ participantFullName, matches }, idx) => (
                     <div key={idx} style={{ marginBottom: "1em" }}>
-                      <strong>{participantFullName}</strong>
-                      {matches.length > 0 ? (
-                        <ul>
-                          {matches.map((user, i) => (
-                            <li key={i}>
-                              {user.firstName + " " + user.lastName} (
-                              {user.country})
-                            </li>
+                      <strong>{participantFullName}</strong>&nbsp;&nbsp;
+                      {matches.length > 0 && (
+                        <select id={`participant-select-${idx}`}>
+                          {matches.map((user) => (
+                            <option key={user._id} value={user._id}>
+                              {user.firstName} {user.lastName} ({user.country})
+                            </option>
                           ))}
-                        </ul>
-                      ) : (
-                        <span style={{ color: "#888" }}>
-                          No close matches found.
-                        </span>
+                          <option value="new">
+                            Continue adding as new user
+                          </option>
+                        </select>
                       )}
                     </div>
                   ))}
@@ -802,9 +807,15 @@ const CompetitionDetail = () => {
             <Button variant="secondary" onClick={handleImportModalClose}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              Import
-            </Button>
+            {userMatches.length > 0 ? (
+              <Button variant="primary" onClick={handleContinueImport}>
+                Continue Import
+              </Button>
+            ) : (
+              <Button variant="primary" type="submit">
+                Import
+              </Button>
+            )}
           </Modal.Footer>
         </Form>
       </Modal>
