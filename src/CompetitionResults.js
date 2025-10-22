@@ -142,6 +142,23 @@ const CompetitionResults = () => {
   const [importDiscipline, setImportDiscipline] = useState("");
 
   const isMobile = window.innerWidth < 769;
+
+  // Age group filter state: all selected by default
+  const ageGroups = [
+    { key: "kids", label: "Kids", color: "#87cefa", textColor: "#222" },
+    { key: "juniors", label: "Juniors", color: "#4682b4", textColor: "#fff" },
+    { key: "adults", label: "Adults", color: "#274472", textColor: "#fff" },
+  ];
+  const [selectedAgeGroups, setSelectedAgeGroups] = useState(
+    ageGroups.map((g) => g.key)
+  );
+
+  // Toggle age group selection (for now, just visual, no filtering)
+  const handleToggleAgeGroup = (key) => {
+    setSelectedAgeGroups((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
   const handleDisciplineToggle = () => {
@@ -1126,51 +1143,34 @@ const CompetitionResults = () => {
                 justifyContent: "center",
               }}
             >
-              <button
-                style={{
-                  background: "#87cefa",
-                  color: "#222",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "0.5em 1.2em",
-                  fontWeight: 600,
-                  fontSize: "1em",
-                  cursor: "pointer",
-                }}
-                type="button"
-              >
-                Kids
-              </button>
-              <button
-                style={{
-                  background: "#4682b4",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "0.5em 1.2em",
-                  fontWeight: 600,
-                  fontSize: "1em",
-                  cursor: "pointer",
-                }}
-                type="button"
-              >
-                Juniors
-              </button>
-              <button
-                style={{
-                  background: "#274472",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "6px",
-                  padding: "0.5em 1.2em",
-                  fontWeight: 600,
-                  fontSize: "1em",
-                  cursor: "pointer",
-                }}
-                type="button"
-              >
-                Adults
-              </button>
+              {ageGroups.map((group) => {
+                const selected = selectedAgeGroups.includes(group.key);
+                return (
+                  <button
+                    key={group.key}
+                    type="button"
+                    onClick={() => handleToggleAgeGroup(group.key)}
+                    style={{
+                      background: group.color,
+                      color: group.textColor,
+                      border: selected ? "3px solid #222" : "none",
+                      borderRadius: "6px",
+                      padding: "0.5em 1.2em",
+                      fontWeight: 600,
+                      fontSize: "1em",
+                      cursor: "pointer",
+                      boxShadow: selected
+                        ? "0 0 0 2px #fff, 0 0 0 4px #222"
+                        : "none",
+                      opacity: selected ? 1 : 0.6,
+                      outline: selected ? "2px solid #222" : "none",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {group.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
