@@ -1117,6 +1117,61 @@ const CompetitionResults = () => {
                 ))}
               </div>
             )}
+            {/* Age group buttons below discipline buttons */}
+            <div
+              style={{
+                display: "flex",
+                gap: "1em",
+                marginTop: "1em",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                style={{
+                  background: "#87cefa",
+                  color: "#222",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "0.5em 1.2em",
+                  fontWeight: 600,
+                  fontSize: "1em",
+                  cursor: "pointer",
+                }}
+                type="button"
+              >
+                Kids
+              </button>
+              <button
+                style={{
+                  background: "#4682b4",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "0.5em 1.2em",
+                  fontWeight: 600,
+                  fontSize: "1em",
+                  cursor: "pointer",
+                }}
+                type="button"
+              >
+                Juniors
+              </button>
+              <button
+                style={{
+                  background: "#274472",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: "6px",
+                  padding: "0.5em 1.2em",
+                  fontWeight: 600,
+                  fontSize: "1em",
+                  cursor: "pointer",
+                }}
+                type="button"
+              >
+                Adults
+              </button>
+            </div>
           </div>
 
           {competitionData && (
