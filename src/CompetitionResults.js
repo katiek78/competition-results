@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import CompetitorModal from "./CompetitorModal";
 import { Modal, Form, Button } from "react-bootstrap";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
@@ -27,6 +28,14 @@ import { backendUrl } from "./constants";
 import { generateCompId } from "./competitionIdUtils";
 
 const CompetitionResults = () => {
+  // Modal state and handler already declared above
+  const [showCompetitorModal, setShowCompetitorModal] = useState(false);
+  const [selectedCompetitor, setSelectedCompetitor] = useState(null);
+
+  const handleCompetitorClick = (user) => {
+    setSelectedCompetitor(user);
+    setShowCompetitorModal(true);
+  };
   // Show competitors who haven't submitted a result for selectedDiscipline
   function showCompUsersNotSubmitted() {
     if (
@@ -120,7 +129,7 @@ const CompetitionResults = () => {
       year: "numeric",
     });
   }
-  const [importMode, setImportMode] = useState(""); // '', 'overwrite', 'skip', 'cancel'
+  // importMode state removed (was unused)
   const [pendingImports, setPendingImports] = useState([]);
   const [validImports, setValidImports] = useState([]);
   const token = useMemo(() => getToken(), []);
@@ -292,7 +301,6 @@ const CompetitionResults = () => {
         );
         setShowImportModal(false);
         setImportError("");
-        setImportMode("");
         setPendingImports([]);
         setImportText("");
       })
@@ -1300,9 +1308,22 @@ const CompetitionResults = () => {
                               className={result.status ? result.status : ""}
                             >
                               <td>{i + 1}</td>
-                              <td>{`${thisUser?.firstName || "Unknown"} ${
-                                thisUser?.lastName || "Unknown"
-                              }`}</td>
+                              <td>
+                                <span
+                                  className="asLink"
+                                  style={{
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                  }}
+                                  onClick={() =>
+                                    handleCompetitorClick(thisUser)
+                                  }
+                                >
+                                  {`${thisUser?.firstName || "Unknown"} ${
+                                    thisUser?.lastName || "Unknown"
+                                  }`}
+                                </span>
+                              </td>
                               <td>{result.rawScore}</td>
                               {selectedDiscipline.includes("SC") && (
                                 <td>
@@ -1479,7 +1500,18 @@ const CompetitionResults = () => {
                             <tr key={i}>
                               <td>{i + 1}</td>
                               <td>
-                                {`${thisUser.firstName} ${thisUser.lastName}`}
+                                <span
+                                  className="asLink"
+                                  style={{
+                                    cursor: "pointer",
+                                    textDecoration: "underline",
+                                  }}
+                                  onClick={() =>
+                                    handleCompetitorClick(thisUser)
+                                  }
+                                >
+                                  {`${thisUser.firstName} ${thisUser.lastName}`}
+                                </span>
                                 {thisUser.country &&
                                   thisUser.country !== "(none)" && (
                                     <span style={{ marginLeft: "6px" }}>
@@ -1494,9 +1526,14 @@ const CompetitionResults = () => {
                                       color: "#888",
                                     }}
                                   >
-                                    (no affiliation)
+                                    (-)
                                   </span>
                                 )}
+                                <CompetitorModal
+                                  show={showCompetitorModal}
+                                  onHide={() => setShowCompetitorModal(false)}
+                                  competitor={selectedCompetitor}
+                                />
                               </td>
                               <td className="champ-points">
                                 {roundingOn
@@ -1513,6 +1550,12 @@ const CompetitionResults = () => {
           )}
         </div>
       )}
+      <CompetitorModal
+        show={showCompetitorModal}
+        onHide={() => setShowCompetitorModal(false)}
+        competitor={selectedCompetitor}
+      />
+
       <Modal show={showImportModal} onHide={handleImportModalClose}>
         <Modal.Header closeButton>
           <Modal.Title>Import Scores</Modal.Title>
@@ -1590,7 +1633,6 @@ const CompetitionResults = () => {
                           );
                           setShowImportModal(false);
                           setImportError("");
-                          setImportMode("");
                           setPendingImports([]);
                           setImportText("");
                         })
@@ -1627,7 +1669,6 @@ const CompetitionResults = () => {
                           );
                           setShowImportModal(false);
                           setImportError("");
-                          setImportMode("");
                           setPendingImports([]);
                           setImportText("");
                         })
@@ -1642,7 +1683,6 @@ const CompetitionResults = () => {
                     variant={"outline-primary"}
                     type="button"
                     onClick={() => {
-                      setImportMode("cancel");
                       setShowImportModal(false);
                       setImportError("");
                       setPendingImports([]);
