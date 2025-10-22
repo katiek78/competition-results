@@ -272,7 +272,7 @@ const CompetitionResults = () => {
     }
 
     // If no valid imports, show message
-    if (validImports.length === 0) {
+    if (valid.length === 0) {
       alert("No valid scores to import.");
       setValidImports([]);
       setPendingImports([]);
@@ -1554,6 +1554,9 @@ const CompetitionResults = () => {
         show={showCompetitorModal}
         onHide={() => setShowCompetitorModal(false)}
         competitor={selectedCompetitor}
+        results={competitionData ? competitionData.compResults : []}
+        disciplines={competitionData ? competitionData.disciplines : []}
+        getDisciplineNameFromRef={getDisciplineNameFromRef}
       />
 
       <Modal show={showImportModal} onHide={handleImportModalClose}>
