@@ -1,3 +1,21 @@
+// Age group year cutoffs (based on current year 2025)
+export const AGE_GROUPS = {
+  kids: {
+    label: "Kids",
+    minYear: 2013, // born 2013 or later (up to age 12)
+    maxYear: 2025,
+  },
+  juniors: {
+    label: "Juniors",
+    minYear: 2008, // born 2008-2012 (age 13-17)
+    maxYear: 2012,
+  },
+  adults: {
+    label: "Adults",
+    minYear: 1900, // born 1900-2007 (age 18+)
+    maxYear: 2007,
+  },
+};
 export const backendUrl = process.env.REACT_APP_BACKEND_URL;
 export const frontendUrl = process.env.REACT_APP_FRONTEND_URL;
 

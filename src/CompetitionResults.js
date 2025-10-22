@@ -6,6 +6,7 @@ import axios from "axios";
 import {
   getDisciplineNameFromRef,
   getDisciplineStandardFromRef,
+  AGE_GROUPS,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -153,12 +154,26 @@ const CompetitionResults = () => {
     ageGroups.map((g) => g.key)
   );
 
-  // Toggle age group selection (for now, just visual, no filtering)
+  // Toggle age group selection
   const handleToggleAgeGroup = (key) => {
     setSelectedAgeGroups((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     );
   };
+
+  // Helper: get age group for a user (by birthYear)
+  function getUserAgeGroup(user) {
+    const year = user?.birthYear;
+    if (!year) return "adults";
+    if (year >= AGE_GROUPS.kids.minYear && year <= AGE_GROUPS.kids.maxYear)
+      return "kids";
+    if (
+      year >= AGE_GROUPS.juniors.minYear &&
+      year <= AGE_GROUPS.juniors.maxYear
+    )
+      return "juniors";
+    return "adults";
+  }
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
   const handleDisciplineToggle = () => {
@@ -1258,6 +1273,13 @@ const CompetitionResults = () => {
                         .filter(
                           (result) => result.discipline === selectedDiscipline
                         )
+                        .filter((result) => {
+                          const thisUser = users.find(
+                            (u) => u._id === result.compUser
+                          );
+                          const group = getUserAgeGroup(thisUser);
+                          return selectedAgeGroups.includes(group);
+                        })
                         .sort((a, b) =>
                           selectedDiscipline.includes("SC")
                             ? a.rawScore === 52 && b.rawScore === 52
@@ -1270,10 +1292,8 @@ const CompetitionResults = () => {
                           const thisUser = users.find(
                             (u) => u._id === result.compUser
                           );
-
                           //determine if this user is the currently logged in user
                           const isCurrentUser = thisUser?._id === user?.userId;
-
                           return (
                             <tr
                               key={thisUser?._id}
@@ -1319,7 +1339,6 @@ const CompetitionResults = () => {
                                   </td>
                                 </>
                               )}
-
                               {!selectedDiscipline.includes("SC") &&
                                 !selectedDiscipline.includes("K") && (
                                   <td className="champ-points">
@@ -1329,7 +1348,6 @@ const CompetitionResults = () => {
                                     ).toFixed(2)}
                                   </td>
                                 )}
-
                               {selectedDiscipline.includes("SC") && (
                                 <td className="champ-points">
                                   {result.rawScore === 52
@@ -1343,7 +1361,6 @@ const CompetitionResults = () => {
                                       ).toFixed(2)}
                                 </td>
                               )}
-
                               {selectedDiscipline.includes("K") && (
                                 <td className="champ-points">
                                   {(
@@ -1351,11 +1368,9 @@ const CompetitionResults = () => {
                                   ).toFixed(2)}
                                 </td>
                               )}
-
                               {isAdmin() && (
                                 <td>{getReadableDate(result.timestamp)}</td>
                               )}
-
                               {isAdmin() && !isParticipant() && (
                                 <td>
                                   <FontAwesomeIcon
@@ -1380,7 +1395,6 @@ const CompetitionResults = () => {
                                       )
                                     }
                                   />
-
                                   {selectedDiscipline.includes("W") &&
                                     result.status === "review" && (
                                       <>
@@ -1396,7 +1410,6 @@ const CompetitionResults = () => {
                                     )}
                                 </td>
                               )}
-
                               {isParticipant() &&
                                 isCurrentUser &&
                                 (result.status === "submitted" ||
@@ -1443,8 +1456,7 @@ const CompetitionResults = () => {
                     <tbody>
                       {compUserTotals &&
                         compUserTotals
-                          .sort((a, b) => b.unroundedTotal - a.unroundedTotal)
-                          .map((competitor, i) => {
+                          .map((competitor) => {
                             // Find the user with the matching ID in the users array
                             const thisUser = users.find(
                               (u) => u._id === competitor.userId
@@ -1452,49 +1464,47 @@ const CompetitionResults = () => {
                               firstName: "Unknown",
                               lastName: "Unknown",
                             };
-
-                            return (
-                              <tr key={i}>
-                                <td>{i + 1}</td>
-                                <td>
-                                  {`${thisUser.firstName} ${thisUser.lastName}`}
-                                  {thisUser.country &&
-                                    thisUser.country !== "(none)" && (
-                                      <span style={{ marginLeft: "6px" }}>
-                                        {getFlagEmoji(thisUser.country)}
-                                      </span>
-                                    )}
-                                  {thisUser.country === "(none)" && (
-                                    <span
-                                      style={{
-                                        marginLeft: "6px",
-                                        fontStyle: "italic",
-                                        color: "#888",
-                                      }}
-                                    >
-                                      (no affiliation)
+                            const group = getUserAgeGroup(thisUser);
+                            return { competitor, thisUser, group };
+                          })
+                          .filter(({ group }) =>
+                            selectedAgeGroups.includes(group)
+                          )
+                          .sort(
+                            (a, b) =>
+                              b.competitor.unroundedTotal -
+                              a.competitor.unroundedTotal
+                          )
+                          .map(({ competitor, thisUser }, i) => (
+                            <tr key={i}>
+                              <td>{i + 1}</td>
+                              <td>
+                                {`${thisUser.firstName} ${thisUser.lastName}`}
+                                {thisUser.country &&
+                                  thisUser.country !== "(none)" && (
+                                    <span style={{ marginLeft: "6px" }}>
+                                      {getFlagEmoji(thisUser.country)}
                                     </span>
                                   )}
-                                  {/* {thisUser.country &&
-                                    thisUser.country !== "(none)" && (
-                                      <span
-                                        style={{
-                                          marginLeft: "6px",
-                                          color: "#888",
-                                        }}
-                                      >
-                                        ({thisUser.country})
-                                      </span>
-                                    )} */}
-                                </td>
-                                <td className="champ-points">
-                                  {roundingOn
-                                    ? competitor.unroundedTotal.toFixed(2)
-                                    : competitor.total}
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                {thisUser.country === "(none)" && (
+                                  <span
+                                    style={{
+                                      marginLeft: "6px",
+                                      fontStyle: "italic",
+                                      color: "#888",
+                                    }}
+                                  >
+                                    (no affiliation)
+                                  </span>
+                                )}
+                              </td>
+                              <td className="champ-points">
+                                {roundingOn
+                                  ? competitor.unroundedTotal.toFixed(2)
+                                  : competitor.total}
+                              </td>
+                            </tr>
+                          ))}
                     </tbody>
                   </table>
                 </>
