@@ -209,6 +209,8 @@ const CompetitionResults = () => {
       return { name, category, score };
     });
 
+    console.log("[Import Debug] Parsed names and scores:", namesAndScores);
+
     // Prepare competitor lookup (firstName + lastName)
     const competitors = competitionData.compUsers.map((cuId) => {
       const user = users.find((u) => u._id === cuId);
@@ -217,6 +219,7 @@ const CompetitionResults = () => {
         name: user ? `${user.firstName} ${user.lastName}`.trim() : "",
       };
     });
+    console.log("[Import Debug] Competitors:", competitors);
 
     const disciplineLabel = importDiscipline
       ? getDisciplineNameFromRef(importDiscipline)
@@ -233,6 +236,9 @@ const CompetitionResults = () => {
       );
       if (!competitor) {
         issues.push(`Row ${idx + 1}: Name not matched: '${entry.name}'`);
+        console.log(
+          `[Import Debug] Row ${idx + 1}: Name not matched: '${entry.name}'`
+        );
         return;
       }
       // Check for duplicate score for this discipline
@@ -258,13 +264,20 @@ const CompetitionResults = () => {
           }' in ${disciplineLabel}`
         );
         duplicates.push(importObj);
+        console.log(
+          `[Import Debug] Row ${idx + 1}: Duplicate score for '${
+            entry.name
+          }' in ${disciplineLabel}`
+        );
       } else {
         valid.push(importObj);
+        console.log(`[Import Debug] Row ${idx + 1}: Valid import:`, importObj);
       }
     });
 
     // If there are issues (unmatched names or duplicates), show error and options
     if (issues.length > 0) {
+      console.log("[Import Debug] Issues found:", issues);
       setImportError(issues.join("\n"));
       setPendingImports(duplicates);
       setValidImports(valid);
@@ -273,6 +286,7 @@ const CompetitionResults = () => {
 
     // If no valid imports, show message
     if (valid.length === 0) {
+      console.log("[Import Debug] No valid scores to import.");
       alert("No valid scores to import.");
       setValidImports([]);
       setPendingImports([]);
@@ -281,10 +295,18 @@ const CompetitionResults = () => {
 
     // If no issues, import all valid scores
     Promise.all(
-      validImports.map((importObj) => {
+      valid.map((importObj) => {
+        // Use the 'add' URL for new results (no existing score), else use the 'edit' URL
+        const alreadyHasScore = competitionData.compResults.some(
+          (r) =>
+            r.compUser === importObj.compUser &&
+            r.discipline === importObj.discipline
+        );
         const configuration = {
           method: "put",
-          url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+          url: !alreadyHasScore
+            ? `${backendUrl}/competition/${id}/results` // Add new result
+            : `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -294,15 +316,30 @@ const CompetitionResults = () => {
       })
     )
       .then(() => {
-        alert(
-          `${validImports.length} new score${
-            validImports.length !== 1 ? "s" : ""
-          } imported.`
-        );
-        setShowImportModal(false);
-        setImportError("");
-        setPendingImports([]);
-        setImportText("");
+        // Fetch latest competition data to refresh the page
+        const configuration = {
+          method: "get",
+          url: `${backendUrl}/competition/${id}`,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+        axios(configuration)
+          .then((result) => {
+            setCompetitionData(result.data);
+            alert(
+              `${valid.length} new score${
+                valid.length !== 1 ? "s" : ""
+              } imported.`
+            );
+            setShowImportModal(false);
+            setImportError("");
+            setPendingImports([]);
+            setImportText("");
+          })
+          .catch((error) => {
+            alert("Scores imported, but failed to refresh data.");
+          });
       })
       .catch((error) => {
         alert("Error importing scores. Please try again.");
@@ -507,12 +544,6 @@ const CompetitionResults = () => {
       additionalInfo,
       timestamp,
     };
-
-    console.log(
-      `${backendUrl}/competition/${id}/results/${user}/${discipline}`
-    ); //see what it's actually saving
-    // https://competition-results.onrender.com/competition/67bb3edfd48ebcbe7a58cd7c/results/662ba1e0b01fae0e1722b521/5W
-    // So it's saving correct user
 
     try {
       const configuration = {
