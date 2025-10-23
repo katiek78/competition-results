@@ -778,13 +778,16 @@ const CompetitionDetail = () => {
         }
       });
 
-      // 2. Link participants to existing users
+      // 2. Link participants to existing users (avoid duplicates)
       if (toLink.length > 0) {
         const userIds = toLink.map((item) => item.userId);
+        // Only add userIds that are not already in compUsers
+        const existingCompUsers = competitionData.compUsers || [];
+        const newUserIds = userIds.filter(
+          (id) => !existingCompUsers.includes(id)
+        );
         const updatedCompetition = {
-          compUsers: competitionData.compUsers
-            ? [...competitionData.compUsers, ...userIds]
-            : [...userIds],
+          compUsers: [...existingCompUsers, ...newUserIds],
         };
         await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
           headers: { Authorization: `Bearer ${token}` },
