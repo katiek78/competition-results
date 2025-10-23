@@ -149,6 +149,7 @@ const CompetitionDetail = () => {
     setUserMatches([]);
     setImportUrl("");
     setImportError("");
+    setCountryFlagSummary(null);
   };
 
   // Handler for closing modal
@@ -767,16 +768,24 @@ const CompetitionDetail = () => {
     try {
       // 1. Prepare arrays for linking and creating
       const toLink = []; // { participantIdx, userId }
-      const toCreate = []; // participantIdx
+      const toCreate = []; // participantIdx (from userMatches)
+      const matchedIdxs = new Set();
 
       userMatches.forEach((match, idx) => {
         const selection = selections[idx];
         if (selection && selection !== "new") {
           toLink.push({ participantIdx: idx, userId: selection });
+          matchedIdxs.add(idx);
         } else {
           toCreate.push(idx);
+          matchedIdxs.add(idx);
         }
       });
+
+      // Find all imported competitors that were NOT matched by name (not in userMatches)
+      const unmatchedCompetitors = importedCompetitors
+        .map((c, idx) => ({ ...c, idx }))
+        .filter((c) => !matchedIdxs.has(c.idx));
 
       // 2. Link participants to existing users (avoid duplicates)
       if (toLink.length > 0) {
@@ -798,7 +807,7 @@ const CompetitionDetail = () => {
         }));
       }
 
-      // 3. Create new users for remaining participants
+      // 3. Create new users for remaining participants (from userMatches)
       let newUsers = [];
       if (toCreate.length > 0) {
         const newUsersData = toCreate.map((idx) => importedCompetitors[idx]);
@@ -838,13 +847,42 @@ const CompetitionDetail = () => {
         setUsers((prevUsers) => [...prevUsers, ...newUsers]);
       }
 
-      // Show summary of flagged country issues before closing modal
-      const flagged = importedCompetitors.filter(
-        (c) => c.countryFlag === "close" || c.countryFlag === "none"
-      );
-      if (flagged.length > 0) {
-        setCountryFlagSummary(flagged);
-        return; // Wait for user to acknowledge before closing modal
+      // 4. Create new users for all unmatched competitors (not in userMatches)
+      if (unmatchedCompetitors.length > 0) {
+        const response = await axios.post(
+          `${backendUrl}/users/bulk`,
+          {
+            users: unmatchedCompetitors.map((c) => ({
+              firstName: c.firstName,
+              lastName: c.lastName,
+              country: c.country,
+              birthYear: c.birthYear,
+              verified: true,
+              role: "user",
+            })),
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const createdIds = response.data.userIds || [];
+        const updatedCompetition = {
+          compUsers: competitionData.compUsers
+            ? [...competitionData.compUsers, ...createdIds]
+            : [...createdIds],
+        };
+        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setCompetitionData((prev) => ({
+          ...prev,
+          compUsers: updatedCompetition.compUsers,
+        }));
+        const newUsers = createdIds.map((id, idx) => ({
+          _id: id,
+          ...unmatchedCompetitors[idx],
+          verified: true,
+          role: "user",
+        }));
+        setUsers((prevUsers) => [...prevUsers, ...newUsers]);
       }
 
       alert("Import complete!");
@@ -1293,7 +1331,7 @@ const CompetitionDetail = () => {
             <Button variant="secondary" onClick={handleImportModalClose}>
               Cancel
             </Button>
-            {userMatches.length > 0 ? (
+            {userMatches.length > 0 || countryFlagSummary ? (
               <Button variant="primary" onClick={handleContinueImport}>
                 Continue Import
               </Button>
