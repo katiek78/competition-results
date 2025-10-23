@@ -33,6 +33,7 @@ const CompetitionDetail = () => {
   const [importUrl, setImportUrl] = useState("");
   const [importError, setImportError] = useState("");
   const [importedCompetitors, setImportedCompetitors] = useState([]);
+  const [countryFlagSummary, setCountryFlagSummary] = useState(null);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -108,6 +109,10 @@ const CompetitionDetail = () => {
     setShowForm(false);
   };
 
+  const handleCancelEdit = () => {
+    setShowForm(false);
+  };
+
   const saveParticipant = async (participantId) => {
     try {
       const updatedCompetition = {
@@ -177,7 +182,212 @@ const CompetitionDetail = () => {
       // Data starts after header
       dataRows = rows.slice(headerIdx + 1);
     }
-    // Extract Name (A), Country (B), Birth Year (C)
+
+    // --- Country matching logic ---
+    // 1. Load country list from countries.csv (hardcoded here for now)
+    const countryList = [
+      "Afghanistan",
+      "Albania",
+      "Algeria",
+      "Andorra",
+      "Angola",
+      "Antigua and Barbuda",
+      "Argentina",
+      "Armenia",
+      "Australia",
+      "Austria",
+      "Azerbaijan",
+      "The Bahamas",
+      "Bahrain",
+      "Bangladesh",
+      "Barbados",
+      "Belarus",
+      "Belgium",
+      "Belize",
+      "Benin",
+      "Bhutan",
+      "Bolivia",
+      "Bosnia and Herzegovina",
+      "Botswana",
+      "Brazil",
+      "Brunei",
+      "Bulgaria",
+      "Burkina Faso",
+      "Burundi",
+      "Cabo Verde",
+      "Cambodia",
+      "Cameroon",
+      "Canada",
+      "Central African Republic",
+      "Chad",
+      "Chile",
+      "China",
+      "Colombia",
+      "Comoros",
+      "Congo, Democratic Republic of the",
+      "Congo, Republic of the",
+      "Costa Rica",
+      "Côte d’Ivoire",
+      "Croatia",
+      "Cuba",
+      "Cyprus",
+      "Czech Republic",
+      "Denmark",
+      "Djibouti",
+      "Dominica",
+      "Dominican Republic",
+      "England",
+      "East Timor (Timor-Leste)",
+      "Ecuador",
+      "Egypt",
+      "El Salvador",
+      "Equatorial Guinea",
+      "Eritrea",
+      "Estonia",
+      "Eswatini",
+      "Ethiopia",
+      "Fiji",
+      "Finland",
+      "France",
+      "Gabon",
+      "The Gambia",
+      "Georgia",
+      "Germany",
+      "Ghana",
+      "Greece",
+      "Grenada",
+      "Guatemala",
+      "Guinea",
+      "Guinea-Bissau",
+      "Guyana",
+      "Haiti",
+      "Honduras",
+      "Hungary",
+      "Iceland",
+      "India",
+      "Indonesia",
+      "Iran",
+      "Iraq",
+      "Ireland",
+      "Israel",
+      "Italy",
+      "Jamaica",
+      "Japan",
+      "Jordan",
+      "Kazakhstan",
+      "Kenya",
+      "Kiribati",
+      "Korea, North",
+      "Korea, South",
+      "Kosovo",
+      "Kuwait",
+      "Kyrgyzstan",
+      "Laos",
+      "Latvia",
+      "Lebanon",
+      "Lesotho",
+      "Liberia",
+      "Libya",
+      "Liechtenstein",
+      "Lithuania",
+      "Luxembourg",
+      "Madagascar",
+      "Malawi",
+      "Malaysia",
+      "Maldives",
+      "Mali",
+      "Malta",
+      "Marshall Islands",
+      "Mauritania",
+      "Mauritius",
+      "Mexico",
+      "Micronesia, Federated States of",
+      "Moldova",
+      "Monaco",
+      "Mongolia",
+      "Montenegro",
+      "Morocco",
+      "Mozambique",
+      "Myanmar (Burma)",
+      "Namibia",
+      "Nauru",
+      "Nepal",
+      "Netherlands",
+      "New Zealand",
+      "Nicaragua",
+      "Niger",
+      "Nigeria",
+      "North Macedonia",
+      "Northern Ireland",
+      "Norway",
+      "Oman",
+      "Pakistan",
+      "Palau",
+      "Panama",
+      "Papua New Guinea",
+      "Paraguay",
+      "Peru",
+      "Philippines",
+      "Poland",
+      "Portugal",
+      "Qatar",
+      "Romania",
+      "Russia",
+      "Rwanda",
+      "Saint Kitts and Nevis",
+      "Saint Lucia",
+      "Saint Vincent and the Grenadines",
+      "Samoa",
+      "San Marino",
+      "Sao Tome and Principe",
+      "Saudi Arabia",
+      "Scotland",
+      "Senegal",
+      "Serbia",
+      "Seychelles",
+      "Sierra Leone",
+      "Singapore",
+      "Slovakia",
+      "Slovenia",
+      "Solomon Islands",
+      "Somalia",
+      "South Africa",
+      "Spain",
+      "Sri Lanka",
+      "Sudan",
+      "Sudan, South",
+      "Suriname",
+      "Sweden",
+      "Switzerland",
+      "Syria",
+      "Taiwan",
+      "Tajikistan",
+      "Tanzania",
+      "Thailand",
+      "Togo",
+      "Tonga",
+      "Trinidad and Tobago",
+      "Tunisia",
+      "Turkey",
+      "Turkmenistan",
+      "Tuvalu",
+      "Uganda",
+      "Ukraine",
+      "United Arab Emirates",
+      "United States",
+      "Uruguay",
+      "Uzbekistan",
+      "Vanuatu",
+      "Vatican City",
+      "Venezuela",
+      "Vietnam",
+      "Wales",
+      "Yemen",
+      "Zambia",
+      "Zimbabwe",
+    ];
+
+    // 2. For each competitor, match country using string similarity
     const competitors = dataRows
       .map((row) => {
         const cols = row.split(/\t|,/); // support tab or comma separated
@@ -203,11 +413,38 @@ const CompetitionDetail = () => {
           lastName = nameParts[nameParts.length - 1];
           firstName = nameParts.slice(0, -1).join(" ");
         }
+        // --- Country matching ---
+        let countryRaw = cols[1]?.trim() || "";
+        let matchedCountry = countryRaw;
+        let countryMatchStatus = null;
+        if (countryRaw && !countryList.includes(countryRaw)) {
+          // Find closest match using string similarity
+          let bestMatch = stringSimilarity.findBestMatch(
+            countryRaw,
+            countryList
+          );
+          if (bestMatch.bestMatch.rating >= 0.8) {
+            matchedCountry = bestMatch.bestMatch.target;
+            countryMatchStatus = {
+              type: "close",
+              matched: matchedCountry,
+              original: countryRaw,
+            };
+          } else {
+            matchedCountry = "(none)";
+            countryMatchStatus = { type: "none", original: countryRaw };
+          }
+        } else if (!countryRaw) {
+          matchedCountry = "(none)";
+          countryMatchStatus = { type: "none", original: countryRaw };
+        }
         return {
           firstName,
           lastName,
-          country: cols[1]?.trim() || "",
+          country: matchedCountry,
           birthYear,
+          originalCountry: countryRaw,
+          countryMatchStatus,
         };
       })
       .filter((c) => c.firstName);
@@ -222,7 +459,20 @@ const CompetitionDetail = () => {
       return;
     }
 
+    // Block import if there are participant name matches (as before)
     if (foundMatches.length > 0) {
+      return; // Do not save yet!
+    }
+
+    // Block import if there are any country partial matches (type 'close') or unrecognized (type 'none')
+    const flaggedCountryMatches = competitors.filter(
+      (c) =>
+        c.countryMatchStatus &&
+        (c.countryMatchStatus.type === "close" ||
+          c.countryMatchStatus.type === "none")
+    );
+    if (flaggedCountryMatches.length > 0) {
+      setCountryFlagSummary(flaggedCountryMatches);
       return; // Do not save yet!
     }
 
@@ -529,7 +779,6 @@ const CompetitionDetail = () => {
       });
 
       // 2. Link participants to existing users
-      // (Assuming you want to add their userId to the competition)
       if (toLink.length > 0) {
         const userIds = toLink.map((item) => item.userId);
         const updatedCompetition = {
@@ -547,8 +796,8 @@ const CompetitionDetail = () => {
       }
 
       // 3. Create new users for remaining participants
+      let newUsers = [];
       if (toCreate.length > 0) {
-        // Get the participant objects to create
         const newUsersData = toCreate.map((idx) => importedCompetitors[idx]);
         const response = await axios.post(
           `${backendUrl}/users/bulk`,
@@ -565,7 +814,6 @@ const CompetitionDetail = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const createdIds = response.data.userIds || [];
-        // Add new user IDs to competition
         const updatedCompetition = {
           compUsers: competitionData.compUsers
             ? [...competitionData.compUsers, ...createdIds]
@@ -578,14 +826,22 @@ const CompetitionDetail = () => {
           ...prev,
           compUsers: updatedCompetition.compUsers,
         }));
-        // Optionally update local users state
-        const newUsers = createdIds.map((id, idx) => ({
+        newUsers = createdIds.map((id, idx) => ({
           _id: id,
           ...newUsersData[idx],
           verified: true,
           role: "user",
         }));
         setUsers((prevUsers) => [...prevUsers, ...newUsers]);
+      }
+
+      // Show summary of flagged country issues before closing modal
+      const flagged = importedCompetitors.filter(
+        (c) => c.countryFlag === "close" || c.countryFlag === "none"
+      );
+      if (flagged.length > 0) {
+        setCountryFlagSummary(flagged);
+        return; // Wait for user to acknowledge before closing modal
       }
 
       alert("Import complete!");
@@ -630,6 +886,9 @@ const CompetitionDetail = () => {
     }
   };
 
+  // Handler for acknowledging country flag summary
+  // handleAcknowledgeCountryFlags removed (no longer needed)
+
   return (
     <>
       {competitionData && (
@@ -655,6 +914,7 @@ const CompetitionDetail = () => {
           {showForm && (
             <CompetitionForm
               onSubmitCompetition={handleEditCompetition}
+              onCancel={handleCancelEdit}
               form={{
                 compName: competitionData.name,
                 dateStart: competitionData.dateStart,
@@ -792,6 +1052,50 @@ const CompetitionDetail = () => {
                                   (no affiliation)
                                 </span>
                               )}
+                              {/* Flag if imported with a close or unrecognized country match */}
+                              {importedCompetitors &&
+                                importedCompetitors.length > 0 &&
+                                (() => {
+                                  const imported = importedCompetitors.find(
+                                    (c) =>
+                                      c.firstName === user?.firstName &&
+                                      c.lastName === user?.lastName &&
+                                      c.birthYear === user?.birthYear
+                                  );
+                                  if (
+                                    imported &&
+                                    imported.countryFlag === "close"
+                                  ) {
+                                    return (
+                                      <span
+                                        style={{
+                                          color: "#b8860b",
+                                          marginLeft: 8,
+                                          fontWeight: 600,
+                                        }}
+                                      >
+                                        (imported: matched country)
+                                      </span>
+                                    );
+                                  }
+                                  if (
+                                    imported &&
+                                    imported.countryFlag === "none"
+                                  ) {
+                                    return (
+                                      <span
+                                        style={{
+                                          color: "#b00",
+                                          marginLeft: 8,
+                                          fontWeight: 600,
+                                        }}
+                                      >
+                                        (imported: country not recognized)
+                                      </span>
+                                    );
+                                  }
+                                  return null;
+                                })()}
                             </td>
                             <td onClick={() => handleDeleteParticipant(userId)}>
                               <FontAwesomeIcon
@@ -858,6 +1162,55 @@ const CompetitionDetail = () => {
         </Modal.Header>
         <Form onSubmit={handleImportSubmit}>
           <Modal.Body>
+            {/* Show summary of flagged country issues after import, before closing modal */}
+            {countryFlagSummary && (
+              <div
+                style={{
+                  background: "#fffbe6",
+                  border: "1px solid #b8860b",
+                  padding: 16,
+                  marginBottom: 16,
+                }}
+              >
+                <h5>Country Issues Detected</h5>
+                <ul>
+                  {countryFlagSummary.map((c, i) => (
+                    <li key={i}>
+                      <strong>
+                        {c.firstName} {c.lastName}
+                      </strong>
+                      {c.countryMatchStatus &&
+                        c.countryMatchStatus.type === "close" && (
+                          <span style={{ color: "#b8860b", marginLeft: 8 }}>
+                            Country not found: "{c.countryMatchStatus.original}
+                            ". Closest match used: "
+                            {c.countryMatchStatus.matched}".
+                          </span>
+                        )}
+                      {c.countryMatchStatus &&
+                        c.countryMatchStatus.type === "none" && (
+                          <span style={{ color: "#b00", marginLeft: 8 }}>
+                            Country not recognized: "
+                            {c.countryMatchStatus.original}" (set as "(none)")
+                          </span>
+                        )}
+                    </li>
+                  ))}
+                </ul>
+                <div
+                  style={{
+                    fontSize: "0.95em",
+                    color: "#b8860b",
+                    marginBottom: 8,
+                  }}
+                >
+                  <strong>Note:</strong> Some country names may differ from the
+                  official list. Please check your data for spelling or naming
+                  variations.
+                </div>
+                {/* No OK button needed */}
+              </div>
+            )}
             <Form.Group className="mb-3">
               <Form.Label>
                 Paste CSV data below (columns: Name, Country, DOB/Birth Year)
@@ -884,23 +1237,51 @@ const CompetitionDetail = () => {
                   }}
                 >
                   <h4>Possible User Matches</h4>
-                  {userMatches.map(({ participantFullName, matches }, idx) => (
-                    <div key={idx} style={{ marginBottom: "1em" }}>
-                      <strong>{participantFullName}</strong>&nbsp;&nbsp;
-                      {matches.length > 0 && (
-                        <select id={`participant-select-${idx}`}>
-                          {matches.map((user) => (
-                            <option key={user._id} value={user._id}>
-                              {user.firstName} {user.lastName} ({user.country})
+                  {userMatches.map(({ participantFullName, matches }, idx) => {
+                    // Find the imported competitor for this match
+                    const competitor = importedCompetitors.find(
+                      (c) =>
+                        (
+                          c.firstName + (c.lastName ? " " + c.lastName : "")
+                        ).trim() === participantFullName
+                    );
+                    return (
+                      <div key={idx} style={{ marginBottom: "1em" }}>
+                        <strong>{participantFullName}</strong>
+                        {competitor &&
+                          competitor.countryMatchStatus &&
+                          competitor.countryMatchStatus.type === "close" && (
+                            <span style={{ color: "#b8860b", marginLeft: 8 }}>
+                              (Country matched to "
+                              {competitor.countryMatchStatus.matched}" from "
+                              {competitor.countryMatchStatus.original}")
+                            </span>
+                          )}
+                        {competitor &&
+                          competitor.countryMatchStatus &&
+                          competitor.countryMatchStatus.type === "none" && (
+                            <span style={{ color: "#b00", marginLeft: 8 }}>
+                              (Country not recognized: "
+                              {competitor.countryMatchStatus.original}")
+                            </span>
+                          )}
+                        &nbsp;&nbsp;
+                        {matches.length > 0 && (
+                          <select id={`participant-select-${idx}`}>
+                            {matches.map((user) => (
+                              <option key={user._id} value={user._id}>
+                                {user.firstName} {user.lastName} ({user.country}
+                                )
+                              </option>
+                            ))}
+                            <option value="new">
+                              Continue adding as new user
                             </option>
-                          ))}
-                          <option value="new">
-                            Continue adding as new user
-                          </option>
-                        </select>
-                      )}
-                    </div>
-                  ))}
+                          </select>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </Form.Group>

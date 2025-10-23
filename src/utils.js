@@ -23,6 +23,12 @@ export const countryNameToCode = {
   China: "CN",
   India: "IN",
   Italy: "IT",
+  Turkey: "TR",
+  Spain: "ES",
+  Portugal: "PT",
+  Netherlands: "NL",
+  Belgium: "BE",
+  Switzerland: "CH",
   // ...add more as needed
 };
 

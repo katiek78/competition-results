@@ -14,7 +14,7 @@ const formatDate = (date) => {
   return `${year}-${month}-${day}`;
 };
 
-const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
+const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
   const [name, setName] = useState(editing ? form.compName : "");
   const [dateStart, setDateStart] = useState(
     editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date())
@@ -222,7 +222,7 @@ const CompetitionForm = ({ onSubmitCompetition, form, editing }) => {
 
         <br />
         <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
-        <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>
+        <Button onClick={onCancel}>Cancel</Button>
       </form>
     </>
   );
