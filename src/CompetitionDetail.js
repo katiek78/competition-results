@@ -15,7 +15,7 @@ import {
   getDisciplineNameFromRef,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faRedoAlt } from "@fortawesome/free-solid-svg-icons";
 import stringSimilarity from "string-similarity";
 
 const CompetitionDetail = () => {
@@ -688,7 +688,7 @@ const CompetitionDetail = () => {
             .then((result) => {
               setCompetitionData(result.data);
 
-              //only allow users who are in compAdmins, or superAdmins
+              //only allow users who are in compAdmins, or admins or superAdmins
               if (
                 result.data.compAdmins?.indexOf(fetchedData._id) === -1 &&
                 fetchedData.role !== "superAdmin" &&
@@ -926,6 +926,22 @@ const CompetitionDetail = () => {
       console.error("Error saving competition:", error);
     }
   };
+
+  // Handler for regenerating discipline data
+  function handleRegenerateDisciplineData(discipline) {
+    if (
+      !window.confirm(
+        `Are you sure you want to regenerate data for ${getDisciplineNameFromRef(
+          discipline
+        )}? This action cannot be undone.`
+      )
+    )
+      return;
+    // TODO: Implement the actual regeneration logic here (API call or local logic)
+    alert(
+      `Regeneration for ${getDisciplineNameFromRef(discipline)} triggered.`
+    );
+  }
 
   // Handler for acknowledging country flag summary
   // handleAcknowledgeCountryFlags removed (no longer needed)
@@ -1165,19 +1181,42 @@ const CompetitionDetail = () => {
                       {competitionData.disciplines?.map((discipline) => {
                         return (
                           <tr key={discipline}>
-                            <td>{getDisciplineNameFromRef(discipline)}</td>
-                            {userData.role === "superAdmin" && (
-                              <td>
-                                {/* <Link
-                                  to={`/compete/${competitionData._id}/${discipline}`}
-                                >
+                            <td
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "0.5em",
+                              }}
+                            >
+                              {getDisciplineNameFromRef(discipline)}
+                              {/* Regenerate button for superAdmin, admin or comp admin (not participant) */}
+                              {(userData.role === "superAdmin" ||
+                                userData.role === "admin" ||
+                                (competitionData.compAdmins &&
+                                  competitionData.compAdmins.includes(
+                                    userData._id
+                                  ))) &&
+                                !(
+                                  competitionData.compUsers &&
+                                  competitionData.compUsers.includes(
+                                    userData._id
+                                  )
+                                ) && (
                                   <FontAwesomeIcon
                                     className="menuIcon"
-                                    icon={faPlay}
+                                    icon={faRedoAlt}
+                                    title="Regenerate Data"
+                                    style={{
+                                      fontSize: "1em",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() =>
+                                      handleRegenerateDisciplineData(discipline)
+                                    }
                                   />
-                                </Link> */}
-                              </td>
-                            )}
+                                )}
+                            </td>
+                            {userData.role === "superAdmin" && <td></td>}
                             <td
                               onClick={() => handleDeleteDiscipline(discipline)}
                             >
