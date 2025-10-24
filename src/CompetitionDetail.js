@@ -1012,7 +1012,7 @@ const CompetitionDetail = () => {
     let y = 20;
     // Add all logos (IAM + up to 3 custom URLs) at the top of the first page
     let logoDrawn = false;
-    const drawHeader = () => {
+    const drawPaper = () => {
       if (!logoDrawn) {
         // IAM logo first
         const logoSources = [
@@ -1038,15 +1038,15 @@ const CompetitionDetail = () => {
               // All images loaded, draw them
               const desiredHeight = 8;
               // Calculate logo widths and total width
-              const logoDims = logoImages.map((img) => {
-                const aspect = img.width / img.height;
-                return { w: desiredHeight * aspect, h: desiredHeight };
-              });
-              let totalLogoWidth =
-                logoDims.reduce((sum, dim) => sum + dim.w, 0) +
-                (logoDims.length - 1) * 4;
-              // Competition name left, logos right
-              const margin = 10;
+              // const logoDims = logoImages.map((img) => {
+              //   const aspect = img.width / img.height;
+              //   return { w: desiredHeight * aspect, h: desiredHeight };
+              // });
+              // let totalLogoWidth =
+              //   logoDims.reduce((sum, dim) => sum + dim.w, 0) +
+              //   (logoDims.length - 1) * 4;
+              // // Competition name left, logos right
+              // const margin = 10;
               // IAM logo always first, top left
               const iamImg = logoImages[0];
               const iamAspect = iamImg.width / iamImg.height;
@@ -1081,47 +1081,54 @@ const CompetitionDetail = () => {
               });
 
               logoDrawn = true;
-              // y = 8 + desiredHeight + 4;
               y = 10;
-
-              doc.setFontSize(18);
-              doc.setTextColor(10, 30, 120); // dark blue
-              doc.text(
-                competitionData.name || "Competition",
-                pageWidth / 2,
-                y,
-                { align: "center" }
-              );
-              y += 10;
-              doc.setFontSize(14);
-              doc.setTextColor(10, 30, 120); // dark blue
-              doc.text(
-                `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-                pageWidth / 2,
-                y,
-                { align: "center" }
-              );
-              doc.setTextColor(0, 0, 0); // reset to black for rest
-              y += 15;
+              // Only show title and discipline name on first page
+              if (arguments[0] !== true) {
+                doc.setFontSize(18);
+                doc.setTextColor(10, 30, 120); // dark blue
+                doc.text(
+                  competitionData.name || "Competition",
+                  pageWidth / 2,
+                  y,
+                  { align: "center" }
+                );
+                y += 10;
+                doc.setFontSize(14);
+                doc.setTextColor(10, 30, 120); // dark blue
+                doc.text(
+                  `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+                  pageWidth / 2,
+                  y,
+                  { align: "center" }
+                );
+                doc.setTextColor(0, 0, 0); // reset to black for rest
+                y += 15;
+              }
               drawRows();
             }
           };
         });
         return;
       }
-      doc.setFontSize(18);
-      doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-        align: "center",
-      });
-      y += 10;
-      doc.setFontSize(14);
-      doc.text(
-        `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-        pageWidth / 2,
-        y,
-        { align: "center" }
-      );
-      y += 15;
+      // Only draw title and discipline name on first page
+      if (arguments[0] !== true) {
+        doc.setFontSize(18);
+        doc.setTextColor(10, 30, 120); // dark blue
+        doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+          align: "center",
+        });
+        y += 10;
+        doc.setFontSize(14);
+        doc.setTextColor(10, 30, 120); // dark blue
+        doc.text(
+          `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+          pageWidth / 2,
+          y,
+          { align: "center" }
+        );
+        doc.setTextColor(0, 0, 0); // reset to black for rest
+        y += 15;
+      }
     };
 
     const numbersPerRow = 40;
@@ -1141,7 +1148,6 @@ const CompetitionDetail = () => {
         if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
           doc.addPage();
           y = 20;
-          drawHeader();
         }
         const row = data.slice(i, i + numbersPerRow).join(" ");
         doc.setFontSize(labelFontSize);
@@ -1160,7 +1166,7 @@ const CompetitionDetail = () => {
         )}_memorisation.pdf`
       );
     }
-    drawHeader();
+    drawPaper();
   }
 
   return (
