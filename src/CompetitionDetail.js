@@ -13,6 +13,7 @@ import {
   internationalEvents,
   worldEvents,
   getDisciplineNameFromRef,
+  disciplines,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faRedoAlt } from "@fortawesome/free-solid-svg-icons";
@@ -937,10 +938,51 @@ const CompetitionDetail = () => {
       )
     )
       return;
-    // TODO: Implement the actual regeneration logic here (API call or local logic)
-    alert(
-      `Regeneration for ${getDisciplineNameFromRef(discipline)} triggered.`
-    );
+
+    //get the amount from disciplines in constants.js
+    const amount = disciplines.find((d) => d.ref === discipline)?.amount;
+    if (!amount) {
+      alert("Discipline not found or invalid.");
+      return;
+    }
+
+    let data;
+
+    if (discipline.includes("N")) {
+      //generate array of random digits (amount is number of digits)
+      data = Array.from({ length: amount }, () =>
+        Math.floor(Math.random() * 10)
+      );
+    } else {
+      alert("not implemented");
+      return;
+    }
+
+    //save the data
+    if (data) {
+      //save in discipline_data
+      const updatedDisciplineData = {
+        ...competitionData.discipline_data,
+        [discipline]: data,
+      };
+      axios
+        .put(`${backendUrl}/competition/${id}`, {
+          discipline_data: updatedDisciplineData,
+        })
+        .then((response) => {
+          console.log("Competition saved:", response.data);
+          setCompetitionData((prevData) => ({
+            ...prevData,
+            discipline_data: updatedDisciplineData,
+          }));
+          alert("Data generated successfully!");
+        })
+        .catch((error) => {
+          console.error("Error saving competition:", error);
+        });
+    } else {
+      alert("no data was generated");
+    }
   }
 
   // Handler for acknowledging country flag summary
