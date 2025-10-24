@@ -1010,44 +1010,104 @@ const CompetitionDetail = () => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
-    // Add association logo (top-left, first page only)
+    // Add all logos (IAM + up to 3 custom URLs) at the top of the first page
     let logoDrawn = false;
     const drawHeader = () => {
       if (!logoDrawn) {
-        try {
-          const img = new window.Image();
-          img.src = require("./assets/IAM-main-Logo-transparent-bg-for-web.png");
-          img.onload = function () {
-            const canvas = document.createElement("canvas");
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(img, 0, 0);
-            const base64 = canvas.toDataURL("image/png");
-            const desiredHeight = 12;
-            const aspect = img.width / img.height;
-            const logoWidth = desiredHeight * aspect;
-            doc.addImage(base64, "PNG", 10, 8, logoWidth, desiredHeight);
-            logoDrawn = true;
-            doc.setFontSize(18);
-            doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-              align: "center",
-            });
-            y += 10;
-            doc.setFontSize(14);
-            doc.text(
-              `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-              pageWidth / 2,
-              y,
-              { align: "center" }
-            );
-            y += 15;
-            drawRows();
-          };
-          return;
-        } catch (e) {
-          // Fallback: no logo
+        // IAM logo first
+        const logoSources = [
+          require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
+        ];
+        if (Array.isArray(competitionData.logos)) {
+          logoSources.push(...competitionData.logos.filter(Boolean));
         }
+        // Only show up to 4 logos
+        const maxLogos = 4;
+        const logosToShow = logoSources.slice(0, maxLogos);
+        // Load all images and draw them in a row
+        let loaded = 0;
+        const logoImages = [];
+        logosToShow.forEach((src, idx) => {
+          const img = new window.Image();
+          img.crossOrigin = "anonymous";
+          img.src = src;
+          img.onload = function () {
+            logoImages[idx] = img;
+            loaded++;
+            if (loaded === logosToShow.length) {
+              // All images loaded, draw them
+              const desiredHeight = 8;
+              // Calculate logo widths and total width
+              const logoDims = logoImages.map((img) => {
+                const aspect = img.width / img.height;
+                return { w: desiredHeight * aspect, h: desiredHeight };
+              });
+              let totalLogoWidth =
+                logoDims.reduce((sum, dim) => sum + dim.w, 0) +
+                (logoDims.length - 1) * 4;
+              // Competition name left, logos right
+              const margin = 10;
+              // IAM logo always first, top left
+              const iamImg = logoImages[0];
+              const iamAspect = iamImg.width / iamImg.height;
+              const iamW = desiredHeight * iamAspect;
+              const iamCanvas = document.createElement("canvas");
+              iamCanvas.width = iamImg.width;
+              iamCanvas.height = iamImg.height;
+              const iamCtx = iamCanvas.getContext("2d");
+              iamCtx.drawImage(iamImg, 0, 0);
+              const iamBase64 = iamCanvas.toDataURL("image/png");
+              doc.addImage(iamBase64, "PNG", 10, 8, iamW, desiredHeight);
+
+              // Other logos (if any) on top right
+              const otherDims = logoImages.slice(1).map((img) => {
+                const aspect = img.width / img.height;
+                return { w: desiredHeight * aspect, h: desiredHeight };
+              });
+              let totalOtherWidth =
+                otherDims.reduce((sum, dim) => sum + dim.w, 0) +
+                (otherDims.length - 1) * 4;
+              let x = pageWidth - 10 - totalOtherWidth;
+              logoImages.slice(1).forEach((img, i) => {
+                const dim = otherDims[i];
+                const canvas = document.createElement("canvas");
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext("2d");
+                ctx.drawImage(img, 0, 0);
+                const base64 = canvas.toDataURL("image/png");
+                doc.addImage(base64, "PNG", x, 8, dim.w, dim.h);
+                x += dim.w + 4;
+              });
+
+              logoDrawn = true;
+              // y = 8 + desiredHeight + 4;
+              y = 10;
+
+              doc.setFontSize(18);
+              doc.setTextColor(10, 30, 120); // dark blue
+              doc.text(
+                competitionData.name || "Competition",
+                pageWidth / 2,
+                y,
+                { align: "center" }
+              );
+              y += 10;
+              doc.setFontSize(14);
+              doc.setTextColor(10, 30, 120); // dark blue
+              doc.text(
+                `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+                pageWidth / 2,
+                y,
+                { align: "center" }
+              );
+              doc.setTextColor(0, 0, 0); // reset to black for rest
+              y += 15;
+              drawRows();
+            }
+          };
+        });
+        return;
       }
       doc.setFontSize(18);
       doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
@@ -1066,8 +1126,8 @@ const CompetitionDetail = () => {
 
     const numbersPerRow = 40;
     const rowsPerPage = 25;
-    const numberFontSize = 14;
-    const rowHeight = 8;
+    const numberFontSize = 15; // larger digits
+    const rowHeight = 8.7; // slightly tighter spacing
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
     const labelStyle = "italic";
@@ -1087,11 +1147,11 @@ const CompetitionDetail = () => {
         doc.setFontSize(labelFontSize);
         doc.setTextColor(...labelColor);
         doc.setFont("helvetica", labelStyle);
-        doc.text(`row ${rowNum}`, 12, y, { baseline: "top" });
+        doc.text(`row ${rowNum}`, 6, y, { baseline: "top" }); // narrower margin
         doc.setFontSize(numberFontSize);
         doc.setTextColor(0, 0, 0);
         doc.setFont("helvetica", "normal");
-        doc.text(row, 35, y, { baseline: "top", maxWidth: pageWidth - 45 });
+        doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 }); // start numbers further left
         y += rowHeight;
       }
       doc.save(
