@@ -174,12 +174,11 @@ const CompetitionResults = () => {
   function getUserAgeGroup(user) {
     const year = user?.birthYear;
     if (!year) return "adults";
-    if (year >= AGE_GROUPS.kids.minYear && year <= AGE_GROUPS.kids.maxYear)
+    const currentYear = new Date().getFullYear();
+    const age = currentYear - year;
+    if (age >= AGE_GROUPS.kids.minAge && age <= AGE_GROUPS.kids.maxAge)
       return "kids";
-    if (
-      year >= AGE_GROUPS.juniors.minYear &&
-      year <= AGE_GROUPS.juniors.maxYear
-    )
+    if (age >= AGE_GROUPS.juniors.minAge && age <= AGE_GROUPS.juniors.maxAge)
       return "juniors";
     return "adults";
   }
