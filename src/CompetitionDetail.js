@@ -100,6 +100,95 @@ const CompetitionDetail = () => {
       .filter(Boolean); // Remove nulls (participants with no matches)
   }
 
+  // Handler for creating a Recall PDF (empty for now)
+  function handleRecallPDF(discipline) {
+    // Generate Recall PDF: header, logos, and blank grid
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    // Draw logos (IAM left, others right)
+    const logoSources = [
+      require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
+    ];
+    if (Array.isArray(competitionData.logos)) {
+      logoSources.push(...competitionData.logos.filter(Boolean));
+    }
+    const maxLogos = 4;
+    const logosToShow = logoSources.slice(0, maxLogos);
+    // IAM logo left
+    // For jsPDF, images must be base64 or URLs; here we assume base64 or public URLs
+    // If you have base64, use doc.addImage(base64, ...)
+    // If not, skip image drawing (jsPDF in browser can use URLs)
+    // IAM logo
+    try {
+      doc.addImage(logoSources[0], "PNG", 10, 8, 18, 8);
+    } catch (e) {}
+    // Other logos (up to 3) on right
+    let xLogo = pageWidth - 10 - 18 * (logosToShow.length - 1);
+    for (let i = 1; i < logosToShow.length; i++) {
+      try {
+        doc.addImage(logosToShow[i], "PNG", xLogo, 8, 18, 8);
+      } catch (e) {}
+      xLogo += 18;
+    }
+    y = 20;
+
+    // Header: dark blue
+    doc.setFontSize(18);
+    doc.setTextColor(10, 30, 120); // dark blue
+    doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+      align: "center",
+    });
+    y += 10;
+    doc.setFontSize(14);
+    doc.setTextColor(10, 30, 120);
+    doc.text(
+      `${getDisciplineNameFromRef(discipline)}  –  Recall`,
+      pageWidth / 2,
+      y,
+      { align: "center" }
+    );
+    doc.setTextColor(0, 0, 0);
+    y += 12;
+    doc.setFontSize(12);
+    doc.text("Name: ____________________________", 10, y);
+    doc.text("ID: ____________________________", pageWidth - 70, y);
+    y += 10;
+
+    // Draw blank grid: 40 cells per row, 25 rows per page
+    const numbersPerRow = 40;
+    const rowsPerPage = 25;
+    const cellWidth = (pageWidth - 20) / numbersPerRow;
+    const cellHeight = 8.7;
+    let rowNum = 1;
+    for (let r = 0; r < rowsPerPage; r++, rowNum++) {
+      if (r !== 0 && r % rowsPerPage === 0) {
+        doc.addPage();
+        y = 20;
+      }
+      // Row label (red, wrap if needed)
+      doc.setFontSize(8);
+      doc.setTextColor(200, 0, 0); // red
+      doc.setFont("helvetica", "italic");
+      // If label overlaps, allow wrapping
+      doc.text([`row`, `${rowNum}`], 6, y + cellHeight / 2, {
+        baseline: "middle",
+      });
+      // Draw cells
+      for (let c = 0; c < numbersPerRow; c++) {
+        const x = 10 + c * cellWidth;
+        doc.rect(x, y, cellWidth, cellHeight);
+      }
+      y += cellHeight + 1.5; // small vertical gap between rows
+    }
+    doc.save(
+      `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
+        discipline
+      )}_recall.pdf`
+    );
+  }
+
   // Helper function to format date as 'YYYY-MM-DD'
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -1017,105 +1106,105 @@ const CompetitionDetail = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
     // Add all logos (IAM + up to 3 custom URLs) at the top of the first page
-    let logoDrawn = false;
+    // let logoDrawn = false;
     const drawPaper = () => {
-      if (!logoDrawn) {
-        // IAM logo first
-        const logoSources = [
-          require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
-        ];
-        if (Array.isArray(competitionData.logos)) {
-          logoSources.push(...competitionData.logos.filter(Boolean));
-        }
-        // Only show up to 4 logos
-        const maxLogos = 4;
-        const logosToShow = logoSources.slice(0, maxLogos);
-        // Load all images and draw them in a row
-        let loaded = 0;
-        const logoImages = [];
-        logosToShow.forEach((src, idx) => {
-          const img = new window.Image();
-          img.crossOrigin = "anonymous";
-          img.src = src;
-          img.onload = function () {
-            logoImages[idx] = img;
-            loaded++;
-            if (loaded === logosToShow.length) {
-              // All images loaded, draw them
-              const desiredHeight = 8;
-              // Calculate logo widths and total width
-              // const logoDims = logoImages.map((img) => {
-              //   const aspect = img.width / img.height;
-              //   return { w: desiredHeight * aspect, h: desiredHeight };
-              // });
-              // let totalLogoWidth =
-              //   logoDims.reduce((sum, dim) => sum + dim.w, 0) +
-              //   (logoDims.length - 1) * 4;
-              // // Competition name left, logos right
-              // const margin = 10;
-              // IAM logo always first, top left
-              const iamImg = logoImages[0];
-              const iamAspect = iamImg.width / iamImg.height;
-              const iamW = desiredHeight * iamAspect;
-              const iamCanvas = document.createElement("canvas");
-              iamCanvas.width = iamImg.width;
-              iamCanvas.height = iamImg.height;
-              const iamCtx = iamCanvas.getContext("2d");
-              iamCtx.drawImage(iamImg, 0, 0);
-              const iamBase64 = iamCanvas.toDataURL("image/png");
-              doc.addImage(iamBase64, "PNG", 10, 8, iamW, desiredHeight);
-
-              // Other logos (if any) on top right
-              const otherDims = logoImages.slice(1).map((img) => {
-                const aspect = img.width / img.height;
-                return { w: desiredHeight * aspect, h: desiredHeight };
-              });
-              let totalOtherWidth =
-                otherDims.reduce((sum, dim) => sum + dim.w, 0) +
-                (otherDims.length - 1) * 4;
-              let x = pageWidth - 10 - totalOtherWidth;
-              logoImages.slice(1).forEach((img, i) => {
-                const dim = otherDims[i];
-                const canvas = document.createElement("canvas");
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(img, 0, 0);
-                const base64 = canvas.toDataURL("image/png");
-                doc.addImage(base64, "PNG", x, 8, dim.w, dim.h);
-                x += dim.w + 4;
-              });
-
-              logoDrawn = true;
-              y = 10;
-              // Only show title and discipline name on first page
-              if (arguments[0] !== true) {
-                doc.setFontSize(18);
-                doc.setTextColor(10, 30, 120); // dark blue
-                doc.text(
-                  competitionData.name || "Competition",
-                  pageWidth / 2,
-                  y,
-                  { align: "center" }
-                );
-                y += 10;
-                doc.setFontSize(14);
-                doc.setTextColor(10, 30, 120); // dark blue
-                doc.text(
-                  `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-                  pageWidth / 2,
-                  y,
-                  { align: "center" }
-                );
-                doc.setTextColor(0, 0, 0); // reset to black for rest
-                y += 15;
-              }
-              drawRows();
-            }
-          };
-        });
-        return;
+      //   if (!logoDrawn) {
+      // IAM logo first
+      const logoSources = [
+        require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
+      ];
+      if (Array.isArray(competitionData.logos)) {
+        logoSources.push(...competitionData.logos.filter(Boolean));
       }
+      // Only show up to 4 logos
+      const maxLogos = 4;
+      const logosToShow = logoSources.slice(0, maxLogos);
+      // Load all images and draw them in a row
+      let loaded = 0;
+      const logoImages = [];
+      logosToShow.forEach((src, idx) => {
+        const img = new window.Image();
+        img.crossOrigin = "anonymous";
+        img.src = src;
+        img.onload = function () {
+          logoImages[idx] = img;
+          loaded++;
+          if (loaded === logosToShow.length) {
+            // All images loaded, draw them
+            const desiredHeight = 8;
+            // Calculate logo widths and total width
+            // const logoDims = logoImages.map((img) => {
+            //   const aspect = img.width / img.height;
+            //   return { w: desiredHeight * aspect, h: desiredHeight };
+            // });
+            // let totalLogoWidth =
+            //   logoDims.reduce((sum, dim) => sum + dim.w, 0) +
+            //   (logoDims.length - 1) * 4;
+            // // Competition name left, logos right
+            // const margin = 10;
+            // IAM logo always first, top left
+            const iamImg = logoImages[0];
+            const iamAspect = iamImg.width / iamImg.height;
+            const iamW = desiredHeight * iamAspect;
+            const iamCanvas = document.createElement("canvas");
+            iamCanvas.width = iamImg.width;
+            iamCanvas.height = iamImg.height;
+            const iamCtx = iamCanvas.getContext("2d");
+            iamCtx.drawImage(iamImg, 0, 0);
+            const iamBase64 = iamCanvas.toDataURL("image/png");
+            doc.addImage(iamBase64, "PNG", 10, 8, iamW, desiredHeight);
+
+            // Other logos (if any) on top right
+            const otherDims = logoImages.slice(1).map((img) => {
+              const aspect = img.width / img.height;
+              return { w: desiredHeight * aspect, h: desiredHeight };
+            });
+            let totalOtherWidth =
+              otherDims.reduce((sum, dim) => sum + dim.w, 0) +
+              (otherDims.length - 1) * 4;
+            let x = pageWidth - 10 - totalOtherWidth;
+            logoImages.slice(1).forEach((img, i) => {
+              const dim = otherDims[i];
+              const canvas = document.createElement("canvas");
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(img, 0, 0);
+              const base64 = canvas.toDataURL("image/png");
+              doc.addImage(base64, "PNG", x, 8, dim.w, dim.h);
+              x += dim.w + 4;
+            });
+
+            //       logoDrawn = true;
+            y = 10;
+            // Only show title and discipline name on first page
+            if (arguments[0] !== true) {
+              doc.setFontSize(18);
+              doc.setTextColor(10, 30, 120); // dark blue
+              doc.text(
+                competitionData.name || "Competition",
+                pageWidth / 2,
+                y,
+                { align: "center" }
+              );
+              y += 10;
+              doc.setFontSize(14);
+              doc.setTextColor(10, 30, 120); // dark blue
+              doc.text(
+                `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+                pageWidth / 2,
+                y,
+                { align: "center" }
+              );
+              doc.setTextColor(0, 0, 0); // reset to black for rest
+              y += 15;
+            }
+            drawRows();
+          }
+        };
+      });
+      return;
+      //  }
       // Only draw title and discipline name on first page
       if (arguments[0] !== true) {
         doc.setFontSize(18);
@@ -1546,6 +1635,28 @@ const CompetitionDetail = () => {
                                             }}
                                           >
                                             M
+                                          </span>
+                                          <span
+                                            title="Create Recall PDF"
+                                            onClick={() =>
+                                              handleRecallPDF(discipline)
+                                            }
+                                            style={{
+                                              marginLeft: 6,
+                                              fontWeight: 700,
+                                              fontSize: "1.1em",
+                                              color: "#090",
+                                              cursor: "pointer",
+                                              fontFamily: "monospace",
+                                              border: "1px solid #090",
+                                              borderRadius: "3px",
+                                              padding: "0 0.4em",
+                                              background: "#f6fff6",
+                                              display: "inline-block",
+                                              lineHeight: 1.1,
+                                            }}
+                                          >
+                                            R
                                           </span>
                                         </>
                                       )}
