@@ -39,6 +39,7 @@ const CompetitionDetail = () => {
   // PDF options modal state
   const [showPDFOptionsModal, setShowPDFOptionsModal] = useState(false);
   const [pdfDiscipline, setPDFDiscipline] = useState(null);
+  const [largePrintPDF, setLargePrintPDF] = useState(false);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -1006,6 +1007,8 @@ const CompetitionDetail = () => {
   // Handler for creating a Memorisation PDF
   function handleMemorisationPDF(discipline) {
     const data = competitionData.discipline_data?.[discipline];
+    let largePrint = false;
+    if (typeof arguments[1] === "boolean") largePrint = arguments[1];
     if (!data || !Array.isArray(data)) {
       alert("No data available for this discipline.");
       return;
@@ -1143,25 +1146,73 @@ const CompetitionDetail = () => {
     const labelStyle = "italic";
     // Print the numbers in rows and columns
     function drawRows() {
-      for (
-        let i = 0, rowNum = 1;
-        i < data.length;
-        i += numbersPerRow, rowNum++
-      ) {
-        if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
-          doc.addPage();
-          y = 20;
+      if (!largePrint) {
+        for (
+          let i = 0, rowNum = 1;
+          i < data.length;
+          i += numbersPerRow, rowNum++
+        ) {
+          if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
+            doc.addPage();
+            y = 20;
+          }
+          const row = data.slice(i, i + numbersPerRow).join(" ");
+          doc.setFontSize(labelFontSize);
+          doc.setTextColor(...labelColor);
+          doc.setFont("helvetica", labelStyle);
+          doc.text(`row ${rowNum}`, 6, y, { baseline: "top" }); // narrower margin
+          doc.setFontSize(numberFontSize);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont("helvetica", "normal");
+          doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 }); // start numbers further left
+          y += rowHeight;
         }
-        const row = data.slice(i, i + numbersPerRow).join(" ");
-        doc.setFontSize(labelFontSize);
-        doc.setTextColor(...labelColor);
-        doc.setFont("helvetica", labelStyle);
-        doc.text(`row ${rowNum}`, 6, y, { baseline: "top" }); // narrower margin
-        doc.setFontSize(numberFontSize);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("helvetica", "normal");
-        doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 }); // start numbers further left
-        y += rowHeight;
+      } else {
+        // Large print: 16 rows per page, 40 digits per row, groups of 4, grid
+        const numbersPerRow = 40;
+        const rowsPerPage = 16;
+        const groupSize = 4;
+        const groupsPerRow = numbersPerRow / groupSize;
+        // Leave space for header, maximize number size
+        const topMargin = 35; // more space for header
+        const bottomMargin = 12;
+        const gridHeight =
+          doc.internal.pageSize.getHeight() - topMargin - bottomMargin;
+        const cellHeight = gridHeight / rowsPerPage;
+        const cellWidth = (pageWidth - 20) / groupsPerRow;
+        const numberFontSize = Math.floor(cellHeight * 1.15); // use more cell space for digits
+        let rowNum = 1;
+        y = topMargin;
+        for (let i = 0; i < data.length; i += numbersPerRow, rowNum++) {
+          if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
+            doc.addPage();
+            y = topMargin;
+          }
+          // No 'row' label, just the number
+          doc.setFontSize(labelFontSize + 6);
+          doc.setTextColor(...labelColor);
+          doc.setFont("helvetica", labelStyle);
+          doc.text(`${rowNum}`, 2, y + cellHeight / 2, { baseline: "middle" });
+          doc.setFontSize(numberFontSize);
+          doc.setTextColor(0, 0, 0);
+          doc.setFont("helvetica", "normal");
+          // Draw grid
+          for (let g = 0; g < groupsPerRow; g++) {
+            const groupDigits = data
+              .slice(i + g * groupSize, i + (g + 1) * groupSize)
+              .join("");
+            const x = 10 + g * cellWidth;
+            // Draw cell border
+            doc.rect(x, y, cellWidth, cellHeight);
+            // Center digits in cell
+            doc.text(groupDigits, x + cellWidth / 2, y + cellHeight / 2, {
+              align: "center",
+              baseline: "middle",
+              maxWidth: cellWidth - 2,
+            });
+          }
+          y += cellHeight;
+        }
       }
       doc.save(
         `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
@@ -1467,8 +1518,17 @@ const CompetitionDetail = () => {
                                           <span
                                             title="Create Memorisation PDF"
                                             onClick={() => {
-                                              setPDFDiscipline(discipline);
-                                              setShowPDFOptionsModal(true);
+                                              if (
+                                                discipline.includes("N") ||
+                                                discipline.includes("B")
+                                              ) {
+                                                setPDFDiscipline(discipline);
+                                                setShowPDFOptionsModal(true);
+                                              } else {
+                                                handleMemorisationPDF(
+                                                  discipline
+                                                );
+                                              }
                                             }}
                                             style={{
                                               marginLeft: 6,
@@ -1524,10 +1584,18 @@ const CompetitionDetail = () => {
             <strong>Discipline:</strong>{" "}
             {pdfDiscipline ? getDisciplineNameFromRef(pdfDiscipline) : ""}
           </div>
+          <Form.Group controlId="largePrintPDF" style={{ marginBottom: 16 }}>
+            <Form.Check
+              type="checkbox"
+              label="Large print PDF"
+              checked={largePrintPDF}
+              onChange={(e) => setLargePrintPDF(e.target.checked)}
+            />
+          </Form.Group>
           <Button
             variant="primary"
             onClick={() => {
-              handleMemorisationPDF(pdfDiscipline);
+              handleMemorisationPDF(pdfDiscipline, largePrintPDF);
               setShowPDFOptionsModal(false);
             }}
             disabled={!pdfDiscipline}
