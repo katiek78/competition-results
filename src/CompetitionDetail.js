@@ -36,6 +36,9 @@ const CompetitionDetail = () => {
   const [importError, setImportError] = useState("");
   const [importedCompetitors, setImportedCompetitors] = useState([]);
   const [countryFlagSummary, setCountryFlagSummary] = useState(null);
+  // PDF options modal state
+  const [showPDFOptionsModal, setShowPDFOptionsModal] = useState(false);
+  const [pdfDiscipline, setPDFDiscipline] = useState(null);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -1463,9 +1466,10 @@ const CompetitionDetail = () => {
                                           />
                                           <span
                                             title="Create Memorisation PDF"
-                                            onClick={() =>
-                                              handleMemorisationPDF(discipline)
-                                            }
+                                            onClick={() => {
+                                              setPDFDiscipline(discipline);
+                                              setShowPDFOptionsModal(true);
+                                            }}
                                             style={{
                                               marginLeft: 6,
                                               fontWeight: 700,
@@ -1508,6 +1512,30 @@ const CompetitionDetail = () => {
           </div>
         </div>
       )}
+      <Modal
+        show={showPDFOptionsModal}
+        onHide={() => setShowPDFOptionsModal(false)}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Memorisation PDF Options</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <div style={{ marginBottom: 16 }}>
+            <strong>Discipline:</strong>{" "}
+            {pdfDiscipline ? getDisciplineNameFromRef(pdfDiscipline) : ""}
+          </div>
+          <Button
+            variant="primary"
+            onClick={() => {
+              handleMemorisationPDF(pdfDiscipline);
+              setShowPDFOptionsModal(false);
+            }}
+            disabled={!pdfDiscipline}
+          >
+            Generate Memorisation PDF
+          </Button>
+        </Modal.Body>
+      </Modal>
       <Modal show={showImportModal} onHide={handleImportModalClose}>
         <Modal.Header closeButton>
           <Modal.Title>Import Competitors</Modal.Title>
