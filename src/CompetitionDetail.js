@@ -755,6 +755,20 @@ const CompetitionDetail = () => {
       deleteParticipant(id);
   };
 
+  // Handler for viewing discipline data
+  function handleViewDisciplineData(discipline) {
+    const data = competitionData.discipline_data?.[discipline];
+    if (!data) {
+      alert("No data available for this discipline.");
+      return;
+    }
+    alert(
+      `Data for ${getDisciplineNameFromRef(discipline)}: \n${JSON.stringify(
+        data
+      )}`
+    );
+  }
+
   const handleContinueImport = async () => {
     // userMatches: [{ participantFullName, matches }]
     // competitors: the original array of imported participants
@@ -1244,18 +1258,42 @@ const CompetitionDetail = () => {
                                     userData._id
                                   )
                                 ) && (
-                                  <FontAwesomeIcon
-                                    className="menuIcon"
-                                    icon={faRedoAlt}
-                                    title="Regenerate Data"
-                                    style={{
-                                      fontSize: "1em",
-                                      cursor: "pointer",
-                                    }}
-                                    onClick={() =>
-                                      handleRegenerateDisciplineData(discipline)
-                                    }
-                                  />
+                                  <>
+                                    <FontAwesomeIcon
+                                      className="menuIcon"
+                                      icon={faRedoAlt}
+                                      title="Regenerate Data"
+                                      style={{
+                                        fontSize: "1em",
+                                        cursor: "pointer",
+                                      }}
+                                      onClick={() =>
+                                        handleRegenerateDisciplineData(
+                                          discipline
+                                        )
+                                      }
+                                    />
+                                    {competitionData.discipline_data &&
+                                      competitionData.discipline_data[
+                                        discipline
+                                      ] && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline-primary"
+                                          style={{
+                                            marginLeft: 6,
+                                            padding: "0 0.5em",
+                                            fontSize: "0.95em",
+                                            lineHeight: 1,
+                                          }}
+                                          onClick={() =>
+                                            handleViewDisciplineData(discipline)
+                                          }
+                                        >
+                                          View Data
+                                        </Button>
+                                      )}
+                                  </>
                                 )}
                             </td>
                             {userData.role === "superAdmin" && <td></td>}
