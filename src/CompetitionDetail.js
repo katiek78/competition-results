@@ -1010,67 +1010,97 @@ const CompetitionDetail = () => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
-    // Header
-    doc.setFontSize(18);
-    doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-      align: "center",
-    });
-    y += 10;
-    doc.setFontSize(14);
-    doc.text(
-      `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-      pageWidth / 2,
-      y,
-      { align: "center" }
-    );
-    y += 15;
-    // Numbers in rows of 40, 25 rows per page
+    // Add association logo (top-left, first page only)
+    let logoDrawn = false;
+    const drawHeader = () => {
+      if (!logoDrawn) {
+        try {
+          const img = new window.Image();
+          img.src = require("./assets/IAM-main-Logo-transparent-bg-for-web.png");
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0);
+            const base64 = canvas.toDataURL("image/png");
+            const desiredHeight = 12;
+            const aspect = img.width / img.height;
+            const logoWidth = desiredHeight * aspect;
+            doc.addImage(base64, "PNG", 10, 8, logoWidth, desiredHeight);
+            logoDrawn = true;
+            doc.setFontSize(18);
+            doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+              align: "center",
+            });
+            y += 10;
+            doc.setFontSize(14);
+            doc.text(
+              `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+              pageWidth / 2,
+              y,
+              { align: "center" }
+            );
+            y += 15;
+            drawRows();
+          };
+          return;
+        } catch (e) {
+          // Fallback: no logo
+        }
+      }
+      doc.setFontSize(18);
+      doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+        align: "center",
+      });
+      y += 10;
+      doc.setFontSize(14);
+      doc.text(
+        `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+      y += 15;
+    };
+
     const numbersPerRow = 40;
     const rowsPerPage = 25;
-    const numberFontSize = 14; // slightly smaller for compactness
-    const rowHeight = 8; // tighter spacing to fit 25 rows
+    const numberFontSize = 14;
+    const rowHeight = 8;
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
     const labelStyle = "italic";
-    // Trebuchet MS is not a built-in font, so fallback to 'helvetica' (closest available in jsPDF)
-    for (let i = 0, rowNum = 1; i < data.length; i += numbersPerRow, rowNum++) {
-      // New page if needed
-      if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
-        doc.addPage();
-        y = 20;
-        doc.setFontSize(18);
-        doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-          align: "center",
-        });
-        y += 10;
-        doc.setFontSize(14);
-        doc.text(
-          `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-          pageWidth / 2,
-          y,
-          { align: "center" }
-        );
-        y += 15;
+    // Print the numbers in rows and columns
+    function drawRows() {
+      for (
+        let i = 0, rowNum = 1;
+        i < data.length;
+        i += numbersPerRow, rowNum++
+      ) {
+        if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
+          doc.addPage();
+          y = 20;
+          drawHeader();
+        }
+        const row = data.slice(i, i + numbersPerRow).join(" ");
+        doc.setFontSize(labelFontSize);
+        doc.setTextColor(...labelColor);
+        doc.setFont("helvetica", labelStyle);
+        doc.text(`row ${rowNum}`, 12, y, { baseline: "top" });
+        doc.setFontSize(numberFontSize);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("helvetica", "normal");
+        doc.text(row, 35, y, { baseline: "top", maxWidth: pageWidth - 45 });
+        y += rowHeight;
       }
-      const row = data.slice(i, i + numbersPerRow).join(" ");
-      // Row label
-      doc.setFontSize(labelFontSize);
-      doc.setTextColor(...labelColor);
-      doc.setFont("helvetica", labelStyle);
-      doc.text(`row ${rowNum}`, 12, y, { baseline: "top" });
-      // Row numbers
-      doc.setFontSize(numberFontSize);
-      doc.setTextColor(0, 0, 0);
-      doc.setFont("helvetica", "normal");
-      // Fit 40 digits: start at x=35, max width = pageWidth-35-10
-      doc.text(row, 35, y, { baseline: "top", maxWidth: pageWidth - 45 });
-      y += rowHeight;
+      doc.save(
+        `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
+          discipline
+        )}_memorisation.pdf`
+      );
     }
-    doc.save(
-      `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
-        discipline
-      )}_memorisation.pdf`
-    );
+    drawHeader();
   }
 
   return (
