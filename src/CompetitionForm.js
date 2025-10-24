@@ -41,6 +41,30 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
     editing ? form.championship_status || "None" : "None"
   );
 
+  // Logo URLs state (array of strings)
+  const [logos, setLogos] = useState(
+    editing && Array.isArray(form.logos) ? form.logos : []
+  );
+
+  // Handle logo URL change
+  const handleLogoUrlChange = (idx, value) => {
+    setLogos((prev) => {
+      const updated = [...prev];
+      updated[idx] = value;
+      return updated;
+    });
+  };
+
+  // Add a new logo URL input (up to 3)
+  const handleAddLogoInput = () => {
+    if (logos.length < 3) setLogos((prev) => [...prev, ""]);
+  };
+
+  // Remove a logo URL
+  const handleRemoveLogo = (idx) => {
+    setLogos((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   // Auto-generate comp_id when name or dateStart changes
   const handleNameChange = (e) => {
     const newName = e.target.value;
@@ -76,6 +100,7 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
       country,
       championship_type: championshipType,
       championship_status: championshipStatus,
+      logos, // array of logo URLs
     };
 
     // Call the onAddCompetition callback to add the competition
@@ -219,6 +244,51 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
           <option value="i">International format</option>
           <option value="w">World championship format</option>
         </select>
+
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Competition logo URLs (up to 3):
+        </label>
+        <div style={{ margin: "10px 0" }}>
+          {logos.map((logo, idx) => (
+            <div key={idx} style={{ marginBottom: 8 }}>
+              <input
+                type="text"
+                value={logo}
+                onChange={(e) => handleLogoUrlChange(idx, e.target.value)}
+                placeholder="Paste logo image URL here"
+                style={{ width: 320, marginRight: 8 }}
+              />
+              {logo && (
+                <img
+                  src={logo}
+                  alt={`Logo ${idx + 1}`}
+                  style={{
+                    height: 40,
+                    verticalAlign: "middle",
+                    border: "1px solid #ccc",
+                    background: "#fff",
+                    marginLeft: 4,
+                  }}
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              )}
+              <Button
+                variant="danger"
+                size="sm"
+                style={{ marginLeft: 4, verticalAlign: "middle" }}
+                onClick={() => handleRemoveLogo(idx)}
+              >
+                Remove
+              </Button>
+            </div>
+          ))}
+          {logos.length < 3 && (
+            <Button variant="secondary" size="sm" onClick={handleAddLogoInput}>
+              Add Logo URL
+            </Button>
+          )}
+        </div>
 
         <br />
         <Button type="submit">{editing ? "Save" : "Add"} Competition</Button>

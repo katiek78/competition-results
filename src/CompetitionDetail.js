@@ -1140,6 +1140,7 @@ const CompetitionDetail = () => {
                 country: competitionData.country,
                 championship_type: competitionData.championship_type,
                 championship_status: competitionData.championship_status,
+                logos: competitionData.logos,
               }}
               editing={true}
             />
