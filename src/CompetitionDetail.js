@@ -16,7 +16,8 @@ import {
   disciplines,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faRedoAlt } from "@fortawesome/free-solid-svg-icons";
+import { faTrash, faRedoAlt, faEye } from "@fortawesome/free-solid-svg-icons";
+import jsPDF from "jspdf";
 import stringSimilarity from "string-similarity";
 
 const CompetitionDetail = () => {
@@ -999,8 +1000,78 @@ const CompetitionDetail = () => {
     }
   }
 
-  // Handler for acknowledging country flag summary
-  // handleAcknowledgeCountryFlags removed (no longer needed)
+  // Handler for creating a Memorisation PDF
+  function handleMemorisationPDF(discipline) {
+    const data = competitionData.discipline_data?.[discipline];
+    if (!data || !Array.isArray(data)) {
+      alert("No data available for this discipline.");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+    // Header
+    doc.setFontSize(18);
+    doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+      align: "center",
+    });
+    y += 10;
+    doc.setFontSize(14);
+    doc.text(
+      `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+      pageWidth / 2,
+      y,
+      { align: "center" }
+    );
+    y += 15;
+    // Numbers in rows of 40, 25 rows per page
+    const numbersPerRow = 40;
+    const rowsPerPage = 25;
+    const numberFontSize = 14; // slightly smaller for compactness
+    const rowHeight = 8; // tighter spacing to fit 25 rows
+    const labelFontSize = 8;
+    const labelColor = [200, 0, 0];
+    const labelStyle = "italic";
+    // Trebuchet MS is not a built-in font, so fallback to 'helvetica' (closest available in jsPDF)
+    for (let i = 0, rowNum = 1; i < data.length; i += numbersPerRow, rowNum++) {
+      // New page if needed
+      if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
+        doc.addPage();
+        y = 20;
+        doc.setFontSize(18);
+        doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+          align: "center",
+        });
+        y += 10;
+        doc.setFontSize(14);
+        doc.text(
+          `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
+          pageWidth / 2,
+          y,
+          { align: "center" }
+        );
+        y += 15;
+      }
+      const row = data.slice(i, i + numbersPerRow).join(" ");
+      // Row label
+      doc.setFontSize(labelFontSize);
+      doc.setTextColor(...labelColor);
+      doc.setFont("helvetica", labelStyle);
+      doc.text(`row ${rowNum}`, 12, y, { baseline: "top" });
+      // Row numbers
+      doc.setFontSize(numberFontSize);
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("helvetica", "normal");
+      // Fit 40 digits: start at x=35, max width = pageWidth-35-10
+      doc.text(row, 35, y, { baseline: "top", maxWidth: pageWidth - 45 });
+      y += rowHeight;
+    }
+    doc.save(
+      `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
+        discipline
+      )}_memorisation.pdf`
+    );
+  }
 
   return (
     <>
@@ -1277,21 +1348,45 @@ const CompetitionDetail = () => {
                                       competitionData.discipline_data[
                                         discipline
                                       ] && (
-                                        <Button
-                                          size="sm"
-                                          variant="outline-primary"
-                                          style={{
-                                            marginLeft: 6,
-                                            padding: "0 0.5em",
-                                            fontSize: "0.95em",
-                                            lineHeight: 1,
-                                          }}
-                                          onClick={() =>
-                                            handleViewDisciplineData(discipline)
-                                          }
-                                        >
-                                          View Data
-                                        </Button>
+                                        <>
+                                          <FontAwesomeIcon
+                                            className="menuIcon"
+                                            icon={faEye}
+                                            title="View Data"
+                                            style={{
+                                              fontSize: "1em",
+                                              cursor: "pointer",
+                                              marginLeft: 6,
+                                            }}
+                                            onClick={() =>
+                                              handleViewDisciplineData(
+                                                discipline
+                                              )
+                                            }
+                                          />
+                                          <span
+                                            title="Create Memorisation PDF"
+                                            onClick={() =>
+                                              handleMemorisationPDF(discipline)
+                                            }
+                                            style={{
+                                              marginLeft: 6,
+                                              fontWeight: 700,
+                                              fontSize: "1.1em",
+                                              color: "#b00",
+                                              cursor: "pointer",
+                                              fontFamily: "monospace",
+                                              border: "1px solid #b00",
+                                              borderRadius: "3px",
+                                              padding: "0 0.4em",
+                                              background: "#fff6f6",
+                                              display: "inline-block",
+                                              lineHeight: 1.1,
+                                            }}
+                                          >
+                                            M
+                                          </span>
+                                        </>
                                       )}
                                   </>
                                 )}
