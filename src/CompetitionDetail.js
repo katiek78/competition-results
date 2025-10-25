@@ -1084,6 +1084,8 @@ const CompetitionDetail = () => {
   }
 
   function handleNumbersPDF(discipline, recall = false, largePrint = false) {
+    const isB = discipline.includes("B");
+
     let data;
     data = competitionData.discipline_data?.[discipline];
     if (!data || !Array.isArray(data)) {
@@ -1097,7 +1099,7 @@ const CompetitionDetail = () => {
 
     const numbersPerRow = discipline.includes("N") ? 40 : 30;
     const rowsPerPage = recall ? 25 : largePrint ? 16 : 25;
-    const numberFontSize = largePrint ? 22 : 15;
+    const numberFontSize = largePrint ? (isB ? 28 : 22) : 15;
     const rowHeight = 8.7;
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
@@ -1200,7 +1202,6 @@ const CompetitionDetail = () => {
     }
 
     function drawRows() {
-      const isB = discipline.includes("B");
       let headerDrawn = false;
       if (!largePrint) {
         const leftMargin = isB ? 35 : 20;
@@ -1245,7 +1246,7 @@ const CompetitionDetail = () => {
           doc.internal.pageSize.getHeight() - topMargin - bottomMargin;
         const cellHeight = gridHeight / rowsPerPage;
         const cellWidth = (pageWidth - 20) / groupsPerRow;
-        const numberFontSize = Math.floor(cellHeight * 1.15);
+        // const numberFontSize = Math.floor(cellHeight * 1.15);
         let rowNum = 1;
         y = topMargin;
         for (let i = 0; i < data.length; i += numbersPerRow, rowNum++) {
