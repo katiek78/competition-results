@@ -1025,8 +1025,7 @@ const CompetitionDetail = () => {
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
     const labelStyle = "italic";
-
-    function drawHeader(pageType = "memorisation") {
+    function drawHeader(pageType = "memorisation", onDrawComplete) {
       // IAM logo first
       const logoSources = [
         require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
@@ -1037,7 +1036,6 @@ const CompetitionDetail = () => {
       // Only show up to 4 logos
       const maxLogos = 4;
       const logosToShow = logoSources.slice(0, maxLogos);
-      // Load all images and draw them in a row
       let loaded = 0;
       const logoImages = [];
       logosToShow.forEach((src, idx) => {
@@ -1115,11 +1113,14 @@ const CompetitionDetail = () => {
             } else {
               drawRows();
             }
+            // Now call the callback to save
+            if (typeof onDrawComplete === "function") {
+              onDrawComplete();
+            }
           }
         };
       });
     }
-
     function drawRows() {
       if (!largePrint) {
         for (
@@ -1186,11 +1187,6 @@ const CompetitionDetail = () => {
           y += cellHeight;
         }
       }
-      doc.save(
-        `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
-          discipline
-        )}_memorisation.pdf`
-      );
     }
 
     function drawRecallRows() {
@@ -1216,15 +1212,16 @@ const CompetitionDetail = () => {
         }
         y += cellHeight + 1.5;
       }
+    }
+
+    // Start by drawing header and rows, then save only after drawing is complete
+    drawHeader(recall ? "recall" : "memorisation", () => {
       doc.save(
         `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
           discipline
-        )}_recall.pdf`
+        )}_${recall ? "recall" : "memorisation"}.pdf`
       );
-    }
-
-    // Start by drawing header and rows
-    drawHeader(recall ? "recall" : "memorisation");
+    });
   }
 
   const handleMemorisationPDF = (discipline, largePrint = false) => {
