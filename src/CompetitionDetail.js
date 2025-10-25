@@ -117,9 +117,14 @@ const CompetitionDetail = () => {
 
   const handleEditCompetition = (modifiedCompetition) => {
     // Edit the competition
-    setCompetitionData(modifiedCompetition);
-    saveCompetition(modifiedCompetition);
-    setShowForm(false);
+    saveCompetition(modifiedCompetition).then((response) => {
+      // Merge updated fields into existing competitionData
+      setCompetitionData((prev) => ({
+        ...prev,
+        ...modifiedCompetition,
+      }));
+      setShowForm(false);
+    });
   };
 
   const handleCancelEdit = () => {
@@ -1096,20 +1101,24 @@ const CompetitionDetail = () => {
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
     const labelStyle = "italic";
+    const leftMargin = 20;
+    const cellWidth = (pageWidth - leftMargin - 10) / numbersPerRow;
+    const cellHeight = 8.7;
 
-    function drawHeader(pageType = "memorisation", onDrawComplete) {
-      // IAM logo first
-      const logoSources = [
-        require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
-      ];
-      if (Array.isArray(competitionData.logos)) {
-        logoSources.push(...competitionData.logos.filter(Boolean));
-      }
-      // Only show up to 4 logos
-      const maxLogos = 4;
-      const logosToShow = logoSources.slice(0, maxLogos);
+    // Load logos once
+    const logoSources = [
+      require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
+    ];
+    if (Array.isArray(competitionData.logos)) {
+      logoSources.push(...competitionData.logos.filter(Boolean));
+    }
+    const maxLogos = 4;
+    const logosToShow = logoSources.slice(0, maxLogos);
+    let logoImages = [];
+
+    function loadLogos(callback) {
       let loaded = 0;
-      const logoImages = [];
+      logoImages = [];
       logosToShow.forEach((src, idx) => {
         const img = new window.Image();
         img.crossOrigin = "anonymous";
@@ -1118,85 +1127,81 @@ const CompetitionDetail = () => {
           logoImages[idx] = img;
           loaded++;
           if (loaded === logosToShow.length) {
-            // All images loaded, draw them
-            const desiredHeight = 8;
-            const iamImg = logoImages[0];
-            const iamAspect = iamImg.width / iamImg.height;
-            const iamW = desiredHeight * iamAspect;
-            const iamCanvas = document.createElement("canvas");
-            iamCanvas.width = iamImg.width;
-            iamCanvas.height = iamImg.height;
-            const iamCtx = iamCanvas.getContext("2d");
-            iamCtx.drawImage(iamImg, 0, 0);
-            const iamBase64 = iamCanvas.toDataURL("image/png");
-            doc.addImage(iamBase64, "PNG", 10, 8, iamW, desiredHeight);
-
-            // Other logos (if any) on top right
-            const otherDims = logoImages.slice(1).map((img) => {
-              const aspect = img.width / img.height;
-              return { w: desiredHeight * aspect, h: desiredHeight };
-            });
-            let totalOtherWidth =
-              otherDims.reduce((sum, dim) => sum + dim.w, 0) +
-              (otherDims.length - 1) * 4;
-            let x = pageWidth - 10 - totalOtherWidth;
-            logoImages.slice(1).forEach((img, i) => {
-              const dim = otherDims[i];
-              const canvas = document.createElement("canvas");
-              canvas.width = img.width;
-              canvas.height = img.height;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(img, 0, 0);
-              const base64 = canvas.toDataURL("image/png");
-              doc.addImage(base64, "PNG", x, 8, dim.w, dim.h);
-              x += dim.w + 4;
-            });
-
-            y = 10;
-            doc.setFontSize(18);
-            doc.setTextColor(10, 30, 120); // dark blue
-            doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-              align: "center",
-            });
-            y += 10;
-            doc.setFontSize(14);
-            doc.setTextColor(10, 30, 120); // dark blue
-            doc.text(
-              `${getDisciplineNameFromRef(discipline)}  –  ${
-                pageType === "recall" ? "Recall" : "Memorisation"
-              }`,
-              pageWidth / 2,
-              y,
-              { align: "center" }
-            );
-            doc.setTextColor(0, 0, 0); // reset to black for rest
-            if (pageType === "recall") {
-              y += 12;
-              doc.setFontSize(9);
-              doc.text("Name: ____________________________", 10, y);
-              doc.text("ID: ____________________________", pageWidth - 70, y);
-              y += 7;
-            } else {
-              y += 15;
-            }
-            // After header, draw rows
-            if (pageType === "recall") {
-              drawRecallRows();
-            } else {
-              drawRows();
-            }
-            // Now call the callback to save
-            if (typeof onDrawComplete === "function") {
-              onDrawComplete();
-            }
+            console.log("images loaded");
+            callback();
           }
         };
       });
     }
+
+    function drawHeader(pageType = "memorisation") {
+      // IAM logo first
+      const desiredHeight = 8;
+      const iamImg = logoImages[0];
+      const iamAspect = iamImg.width / iamImg.height;
+      const iamW = desiredHeight * iamAspect;
+      const iamCanvas = document.createElement("canvas");
+      iamCanvas.width = iamImg.width;
+      iamCanvas.height = iamImg.height;
+      const iamCtx = iamCanvas.getContext("2d");
+      iamCtx.drawImage(iamImg, 0, 0);
+      const iamBase64 = iamCanvas.toDataURL("image/png");
+      doc.addImage(iamBase64, "PNG", 10, 8, iamW, desiredHeight);
+
+      // Other logos (if any) on top right
+      const otherDims = logoImages.slice(1).map((img) => {
+        const aspect = img.width / img.height;
+        return { w: desiredHeight * aspect, h: desiredHeight };
+      });
+      let totalOtherWidth =
+        otherDims.reduce((sum, dim) => sum + dim.w, 0) +
+        (otherDims.length - 1) * 4;
+      let x = pageWidth - 10 - totalOtherWidth;
+      logoImages.slice(1).forEach((img, i) => {
+        const dim = otherDims[i];
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        const base64 = canvas.toDataURL("image/png");
+        doc.addImage(base64, "PNG", x, 8, dim.w, dim.h);
+        x += dim.w + 4;
+      });
+
+      y = 10;
+      doc.setFontSize(18);
+      doc.setTextColor(10, 30, 120); // dark blue
+      doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+        align: "center",
+      });
+      y += 10;
+      doc.setFontSize(14);
+      doc.setTextColor(10, 30, 120); // dark blue
+      doc.text(
+        `${getDisciplineNameFromRef(discipline)}  –  ${
+          recall ? "Recall" : "Memorisation"
+        }`,
+        pageWidth / 2,
+        y,
+        { align: "center" }
+      );
+      doc.setTextColor(0, 0, 0); // reset to black for rest
+      if (recall) {
+        y += 12;
+        doc.setFontSize(9);
+        doc.text("Name: ____________________________", 10, y);
+        doc.text("ID: ____________________________", pageWidth - 70, y);
+        y += 7;
+      } else {
+        y += 15;
+      }
+    }
+
     function drawRows() {
+      const isB = discipline.includes("B");
+      let headerDrawn = false;
       if (!largePrint) {
-        // Adjust centering for discipline 'B' in memorisation
-        const isB = discipline.includes("B");
         const leftMargin = isB ? 35 : 20;
         const rowMaxWidth = isB ? pageWidth - 2 * leftMargin : pageWidth - 28;
         for (
@@ -1204,10 +1209,14 @@ const CompetitionDetail = () => {
           i < data.length;
           i += numbersPerRow, rowNum++
         ) {
-          if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
-            doc.addPage();
-            y = 20;
-            drawHeader();
+          if ((rowNum - 1) % rowsPerPage === 0) {
+            if (!headerDrawn) {
+              // Only draw header on first page
+              headerDrawn = true;
+            } else {
+              doc.addPage();
+              y = 20;
+            }
           }
           const row = data.slice(i, i + numbersPerRow).join(" ");
           doc.setFontSize(labelFontSize);
@@ -1225,9 +1234,9 @@ const CompetitionDetail = () => {
         }
       } else {
         // Large print: 16 rows per page, 40 digits per row, groups of 4, grid
-        const numbersPerRow = 40;
+        const numbersPerRow = isB ? 30 : 40;
         const rowsPerPage = 16;
-        const groupSize = 4;
+        const groupSize = isB ? 6 : 4;
         const groupsPerRow = numbersPerRow / groupSize;
         const topMargin = 35;
         const bottomMargin = 12;
@@ -1242,7 +1251,6 @@ const CompetitionDetail = () => {
           if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
             doc.addPage();
             y = topMargin;
-            drawHeader();
           }
           doc.setFontSize(labelFontSize + 6);
           doc.setTextColor(...labelColor);
@@ -1269,16 +1277,13 @@ const CompetitionDetail = () => {
     }
 
     function drawRecallRows() {
-      const leftMargin = 20;
-      const cellWidth = (pageWidth - leftMargin - 10) / numbersPerRow;
-      const cellHeight = 8.7;
       const totalRows = Math.ceil(data.length / numbersPerRow);
       let rowNum = 1;
+      y = 20;
       for (let r = 0; r < totalRows; r++, rowNum++) {
         if (r !== 0 && r % rowsPerPage === 0) {
           doc.addPage();
           y = 20;
-          drawHeader("recall");
         }
         doc.setFontSize(8);
         doc.setTextColor(200, 0, 0);
@@ -1287,15 +1292,21 @@ const CompetitionDetail = () => {
           baseline: "middle",
         });
         for (let c = 0; c < numbersPerRow; c++) {
-          const x = leftMargin + c * cellWidth;
-          doc.rect(x, y, cellWidth, cellHeight);
+          const cellX = leftMargin + c * cellWidth;
+          doc.rect(cellX, y, cellWidth, cellHeight);
         }
         y += cellHeight + 1.5;
       }
     }
 
-    // Start by drawing header and rows, then save only after drawing is complete
-    drawHeader(recall ? "recall" : "memorisation", () => {
+    // Load logos once, then draw header and rows for all pages
+    loadLogos(() => {
+      drawHeader(recall ? "recall" : "memorisation");
+      if (recall) {
+        drawRecallRows();
+      } else {
+        drawRows();
+      }
       doc.save(
         `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
           discipline
