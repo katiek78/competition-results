@@ -1312,7 +1312,9 @@ const CompetitionDetail = () => {
       doc.save(
         `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
           discipline
-        )}_${recall ? "recall" : "memorisation"}.pdf`
+        )}_${recall ? "recall" : "memorisation"}${
+          largePrint ? " (LARGE)" : ""
+        }.pdf`
       );
     });
   }
