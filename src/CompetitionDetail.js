@@ -48,7 +48,7 @@ const CompetitionDetail = () => {
   const [showPDFOptionsModal, setShowPDFOptionsModal] = useState(false);
   const [pdfDiscipline, setPDFDiscipline] = useState(null);
   const [largePrintPDF, setLargePrintPDF] = useState(false);
-  const [lineDrawingOption, setLineDrawingOption] = useState("");
+  // Removed unused lineDrawingOption state
   const [customLineDrawing, setCustomLineDrawing] = useState("");
   const [noWrapOption, setNoWrapOption] = useState(false);
 
@@ -1209,6 +1209,18 @@ const CompetitionDetail = () => {
       if (!largePrint) {
         const leftMargin = isB ? 35 : 20;
         const rowMaxWidth = isB ? pageWidth - 2 * leftMargin : pageWidth - 28;
+        // Parse custom grouping from modal
+        let groupings = [];
+        if (customLineDrawing) {
+          // Accept formats like "2-2-2-2" or "4-4-4" or "2,3,3"
+          groupings = customLineDrawing
+            .replace(/,/g, "-")
+            .split("-")
+            .map((g) => parseInt(g.trim(), 10))
+            .filter((g) => !isNaN(g) && g > 0);
+        }
+        // Reduce cell height for more space between rows
+        const borderHeight = rowHeight * 0.7;
         for (
           let i = 0, rowNum = 1;
           i < data.length;
@@ -1216,14 +1228,12 @@ const CompetitionDetail = () => {
         ) {
           if ((rowNum - 1) % rowsPerPage === 0) {
             if (!headerDrawn) {
-              // Only draw header on first page
               headerDrawn = true;
             } else {
               doc.addPage();
               y = 20;
             }
           }
-          const row = data.slice(i, i + numbersPerRow).join(" ");
           doc.setFontSize(labelFontSize);
           doc.setTextColor(...labelColor);
           doc.setFont("helvetica", labelStyle);
@@ -1231,14 +1241,42 @@ const CompetitionDetail = () => {
           doc.setFontSize(numberFontSize);
           doc.setTextColor(0, 0, 0);
           doc.setFont("helvetica", "normal");
-          doc.text(row, leftMargin, y, {
-            baseline: "top",
-            maxWidth: rowMaxWidth,
-          });
+          let x = leftMargin;
+          const rowDigits = data.slice(i, i + numbersPerRow);
+          const digitSpacing = rowMaxWidth / numbersPerRow;
+          let groupIdx = 0;
+          let digitIdx = 0;
+          let grouping = groupings.length > 0 ? groupings : null;
+          while (digitIdx < rowDigits.length) {
+            let groupSize = grouping ? grouping[groupIdx % grouping.length] : 1;
+            if (!grouping) groupSize = 1;
+            const borderShift = 0.7; // mm, small left offset for border
+            const groupStartX = x - borderShift;
+            // Draw digits in group
+            for (let g = 0; g < groupSize && digitIdx < rowDigits.length; g++) {
+              doc.text(rowDigits[digitIdx].toString(), x, y, {
+                baseline: "top",
+              });
+              x += digitSpacing;
+              digitIdx++;
+            }
+            const groupEndX = x - borderShift;
+            // Draw border around group (width = groupSize * digitSpacing + padding)
+            doc.line(groupStartX, y - 1, groupEndX, y - 1); // Top
+            doc.line(
+              groupStartX,
+              y + borderHeight,
+              groupEndX,
+              y + borderHeight
+            ); // Bottom
+            doc.line(groupStartX, y - 1, groupStartX, y + borderHeight); // Left
+            doc.line(groupEndX, y - 1, groupEndX, y + borderHeight); // Right
+            groupIdx++;
+          }
           y += rowHeight;
         }
       } else {
-        // Large print: 16 rows per page, 40 digits per row, groups of 4, grid
+        // Large print
         const numbersPerRow = isB ? 30 : 40;
         const rowsPerPage = 16;
         const groupSize = isB ? 6 : 4;
@@ -1249,7 +1287,6 @@ const CompetitionDetail = () => {
           doc.internal.pageSize.getHeight() - topMargin - bottomMargin;
         const cellHeight = gridHeight / rowsPerPage;
         const cellWidth = (pageWidth - 20) / groupsPerRow;
-        // const numberFontSize = Math.floor(cellHeight * 1.15);
         let rowNum = 1;
         y = topMargin;
         for (let i = 0; i < data.length; i += numbersPerRow, rowNum++) {
