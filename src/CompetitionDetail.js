@@ -18,7 +18,12 @@ import {
   NUMBER_OF_PNGS,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faTrash, faRedoAlt, faEye } from "@fortawesome/free-solid-svg-icons";
+import {
+  faTrash,
+  faRedoAlt,
+  faEye,
+  faFile,
+} from "@fortawesome/free-solid-svg-icons";
 import jsPDF from "jspdf";
 import stringSimilarity from "string-similarity";
 
@@ -949,6 +954,48 @@ const CompetitionDetail = () => {
     }
   };
 
+  const handleDownloadFile = (discipline) => {
+    if (discipline.includes("N") || discipline.includes("B")) {
+      //download a text file with all the digits for this discipline
+      const data = competitionData.discipline_data?.[discipline];
+      if (!data) {
+        alert("No data available for this discipline.");
+        return;
+      }
+      const convertedData = data.join("");
+      const blob = new Blob([convertedData], {
+        type: "text/plain;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${discipline}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+    if (discipline.includes("I")) {
+      //download a text file with all the image URLs and shuffle order
+      const data = competitionData.discipline_data?.[discipline];
+      if (!data) {
+        alert("No data available for this discipline.");
+        return;
+      }
+      // const shuffledData = data.sort(() => Math.random() - 0.5);
+      // const convertedData = shuffledData.join("");
+      const convertedData = data;
+
+      const blob = new Blob([convertedData], {
+        type: "text/plain;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${discipline}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
   // Handler for regenerating discipline data
   function handleRegenerateDisciplineData(discipline) {
     if (
@@ -974,7 +1021,6 @@ const CompetitionDetail = () => {
       data = Array.from({ length: amount }, () =>
         Math.floor(Math.random() * 10)
       );
-      return;
     } else if (discipline.includes("B")) {
       //generate array of random digits (amount is number of digits)
       data = Array.from({ length: amount }, () =>
@@ -1573,6 +1619,21 @@ const CompetitionDetail = () => {
                                                 discipline
                                               )
                                             }
+                                          />
+                                          {/* File icon only for disciplines with generated data */}
+                                          <FontAwesomeIcon
+                                            className="menuIcon"
+                                            icon={faFile}
+                                            title="Software File"
+                                            style={{
+                                              fontSize: "1em",
+                                              cursor: "pointer",
+                                              marginLeft: 6,
+                                              color: "#007bff",
+                                            }}
+                                            onClick={() => {
+                                              handleDownloadFile(discipline);
+                                            }}
                                           />
                                           <span
                                             title="Create Memorisation PDF"
