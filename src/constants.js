@@ -69,7 +69,7 @@ export const formatNames = {
 };
 
 export const NUMBER_OF_JPGS = 466;
-export const NUMBER_OF_PNGS = 5399;
+export const NUMBER_OF_PNGS = 5894;
 
 export const disciplines = [
   {
