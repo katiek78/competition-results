@@ -100,95 +100,6 @@ const CompetitionDetail = () => {
       .filter(Boolean); // Remove nulls (participants with no matches)
   }
 
-  // Handler for creating a Recall PDF (empty for now)
-  function handleRecallPDF(discipline) {
-    // Generate Recall PDF: header, logos, and blank grid
-    const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageWidth = doc.internal.pageSize.getWidth();
-    let y = 20;
-
-    // Draw logos (IAM left, others right)
-    const logoSources = [
-      require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
-    ];
-    if (Array.isArray(competitionData.logos)) {
-      logoSources.push(...competitionData.logos.filter(Boolean));
-    }
-    const maxLogos = 4;
-    const logosToShow = logoSources.slice(0, maxLogos);
-    // IAM logo left
-    // For jsPDF, images must be base64 or URLs; here we assume base64 or public URLs
-    // If you have base64, use doc.addImage(base64, ...)
-    // If not, skip image drawing (jsPDF in browser can use URLs)
-    // IAM logo
-    try {
-      doc.addImage(logoSources[0], "PNG", 10, 8, 18, 8);
-    } catch (e) {}
-    // Other logos (up to 3) on right
-    let xLogo = pageWidth - 10 - 18 * (logosToShow.length - 1);
-    for (let i = 1; i < logosToShow.length; i++) {
-      try {
-        doc.addImage(logosToShow[i], "PNG", xLogo, 8, 18, 8);
-      } catch (e) {}
-      xLogo += 18;
-    }
-    y = 20;
-
-    // Header: dark blue
-    doc.setFontSize(18);
-    doc.setTextColor(10, 30, 120); // dark blue
-    doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-      align: "center",
-    });
-    y += 10;
-    doc.setFontSize(14);
-    doc.setTextColor(10, 30, 120);
-    doc.text(
-      `${getDisciplineNameFromRef(discipline)}  –  Recall`,
-      pageWidth / 2,
-      y,
-      { align: "center" }
-    );
-    doc.setTextColor(0, 0, 0);
-    y += 12;
-    doc.setFontSize(12);
-    doc.text("Name: ____________________________", 10, y);
-    doc.text("ID: ____________________________", pageWidth - 70, y);
-    y += 10;
-
-    // Draw blank grid: 40 cells per row, 25 rows per page
-    const numbersPerRow = 40;
-    const rowsPerPage = 25;
-    const cellWidth = (pageWidth - 20) / numbersPerRow;
-    const cellHeight = 8.7;
-    let rowNum = 1;
-    for (let r = 0; r < rowsPerPage; r++, rowNum++) {
-      if (r !== 0 && r % rowsPerPage === 0) {
-        doc.addPage();
-        y = 20;
-      }
-      // Row label (red, wrap if needed)
-      doc.setFontSize(8);
-      doc.setTextColor(200, 0, 0); // red
-      doc.setFont("helvetica", "italic");
-      // If label overlaps, allow wrapping
-      doc.text([`row`, `${rowNum}`], 6, y + cellHeight / 2, {
-        baseline: "middle",
-      });
-      // Draw cells
-      for (let c = 0; c < numbersPerRow; c++) {
-        const x = 10 + c * cellWidth;
-        doc.rect(x, y, cellWidth, cellHeight);
-      }
-      y += cellHeight + 1.5; // small vertical gap between rows
-    }
-    doc.save(
-      `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
-        discipline
-      )}_recall.pdf`
-    );
-  }
-
   // Helper function to format date as 'YYYY-MM-DD'
   const formatDate = (date) => {
     const year = date.getFullYear();
@@ -1093,22 +1004,29 @@ const CompetitionDetail = () => {
     }
   }
 
-  // Handler for creating a Memorisation PDF
-  function handleMemorisationPDF(discipline) {
-    const data = competitionData.discipline_data?.[discipline];
-    let largePrint = false;
-    if (typeof arguments[1] === "boolean") largePrint = arguments[1];
-    if (!data || !Array.isArray(data)) {
-      alert("No data available for this discipline.");
-      return;
+  function handleNumbersPDF(discipline, recall = false, largePrint = false) {
+    let data;
+    if (!recall) {
+      data = competitionData.discipline_data?.[discipline];
+      if (!data || !Array.isArray(data)) {
+        alert("No data available for this discipline.");
+        return;
+      }
     }
+
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
-    // Add all logos (IAM + up to 3 custom URLs) at the top of the first page
-    // let logoDrawn = false;
-    const drawPaper = () => {
-      //   if (!logoDrawn) {
+
+    const numbersPerRow = 40;
+    const rowsPerPage = recall ? 25 : largePrint ? 16 : 25;
+    const numberFontSize = largePrint ? 22 : 15;
+    const rowHeight = 8.7;
+    const labelFontSize = 8;
+    const labelColor = [200, 0, 0];
+    const labelStyle = "italic";
+
+    function drawHeader(pageType = "memorisation") {
       // IAM logo first
       const logoSources = [
         require("./assets/IAM-main-Logo-transparent-bg-for-web.png"),
@@ -1132,17 +1050,6 @@ const CompetitionDetail = () => {
           if (loaded === logosToShow.length) {
             // All images loaded, draw them
             const desiredHeight = 8;
-            // Calculate logo widths and total width
-            // const logoDims = logoImages.map((img) => {
-            //   const aspect = img.width / img.height;
-            //   return { w: desiredHeight * aspect, h: desiredHeight };
-            // });
-            // let totalLogoWidth =
-            //   logoDims.reduce((sum, dim) => sum + dim.w, 0) +
-            //   (logoDims.length - 1) * 4;
-            // // Competition name left, logos right
-            // const margin = 10;
-            // IAM logo always first, top left
             const iamImg = logoImages[0];
             const iamAspect = iamImg.width / iamImg.height;
             const iamW = desiredHeight * iamAspect;
@@ -1175,65 +1082,44 @@ const CompetitionDetail = () => {
               x += dim.w + 4;
             });
 
-            //       logoDrawn = true;
             y = 10;
-            // Only show title and discipline name on first page
-            if (arguments[0] !== true) {
-              doc.setFontSize(18);
-              doc.setTextColor(10, 30, 120); // dark blue
-              doc.text(
-                competitionData.name || "Competition",
-                pageWidth / 2,
-                y,
-                { align: "center" }
-              );
+            doc.setFontSize(18);
+            doc.setTextColor(10, 30, 120); // dark blue
+            doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
+              align: "center",
+            });
+            y += 10;
+            doc.setFontSize(14);
+            doc.setTextColor(10, 30, 120); // dark blue
+            doc.text(
+              `${getDisciplineNameFromRef(discipline)}  –  ${
+                pageType === "recall" ? "Recall" : "Memorisation"
+              }`,
+              pageWidth / 2,
+              y,
+              { align: "center" }
+            );
+            doc.setTextColor(0, 0, 0); // reset to black for rest
+            if (pageType === "recall") {
+              y += 12;
+              doc.setFontSize(12);
+              doc.text("Name: ____________________________", 10, y);
+              doc.text("ID: ____________________________", pageWidth - 70, y);
               y += 10;
-              doc.setFontSize(14);
-              doc.setTextColor(10, 30, 120); // dark blue
-              doc.text(
-                `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-                pageWidth / 2,
-                y,
-                { align: "center" }
-              );
-              doc.setTextColor(0, 0, 0); // reset to black for rest
+            } else {
               y += 15;
             }
-            drawRows();
+            // After header, draw rows
+            if (pageType === "recall") {
+              drawRecallRows();
+            } else {
+              drawRows();
+            }
           }
         };
       });
-      return;
-      //  }
-      // Only draw title and discipline name on first page
-      if (arguments[0] !== true) {
-        doc.setFontSize(18);
-        doc.setTextColor(10, 30, 120); // dark blue
-        doc.text(competitionData.name || "Competition", pageWidth / 2, y, {
-          align: "center",
-        });
-        y += 10;
-        doc.setFontSize(14);
-        doc.setTextColor(10, 30, 120); // dark blue
-        doc.text(
-          `${getDisciplineNameFromRef(discipline)}  –  Memorisation`,
-          pageWidth / 2,
-          y,
-          { align: "center" }
-        );
-        doc.setTextColor(0, 0, 0); // reset to black for rest
-        y += 15;
-      }
-    };
+    }
 
-    const numbersPerRow = 40;
-    const rowsPerPage = 25;
-    const numberFontSize = 15; // larger digits
-    const rowHeight = 8.7; // slightly tighter spacing
-    const labelFontSize = 8;
-    const labelColor = [200, 0, 0];
-    const labelStyle = "italic";
-    // Print the numbers in rows and columns
     function drawRows() {
       if (!largePrint) {
         for (
@@ -1244,16 +1130,17 @@ const CompetitionDetail = () => {
           if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
             doc.addPage();
             y = 20;
+            drawHeader();
           }
           const row = data.slice(i, i + numbersPerRow).join(" ");
           doc.setFontSize(labelFontSize);
           doc.setTextColor(...labelColor);
           doc.setFont("helvetica", labelStyle);
-          doc.text(`row ${rowNum}`, 6, y, { baseline: "top" }); // narrower margin
+          doc.text(`row ${rowNum}`, 6, y, { baseline: "top" });
           doc.setFontSize(numberFontSize);
           doc.setTextColor(0, 0, 0);
           doc.setFont("helvetica", "normal");
-          doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 }); // start numbers further left
+          doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 });
           y += rowHeight;
         }
       } else {
@@ -1262,22 +1149,21 @@ const CompetitionDetail = () => {
         const rowsPerPage = 16;
         const groupSize = 4;
         const groupsPerRow = numbersPerRow / groupSize;
-        // Leave space for header, maximize number size
-        const topMargin = 35; // more space for header
+        const topMargin = 35;
         const bottomMargin = 12;
         const gridHeight =
           doc.internal.pageSize.getHeight() - topMargin - bottomMargin;
         const cellHeight = gridHeight / rowsPerPage;
         const cellWidth = (pageWidth - 20) / groupsPerRow;
-        const numberFontSize = Math.floor(cellHeight * 1.15); // use more cell space for digits
+        const numberFontSize = Math.floor(cellHeight * 1.15);
         let rowNum = 1;
         y = topMargin;
         for (let i = 0; i < data.length; i += numbersPerRow, rowNum++) {
           if ((rowNum - 1) % rowsPerPage === 0 && rowNum !== 1) {
             doc.addPage();
             y = topMargin;
+            drawHeader();
           }
-          // No 'row' label, just the number
           doc.setFontSize(labelFontSize + 6);
           doc.setTextColor(...labelColor);
           doc.setFont("helvetica", labelStyle);
@@ -1285,15 +1171,12 @@ const CompetitionDetail = () => {
           doc.setFontSize(numberFontSize);
           doc.setTextColor(0, 0, 0);
           doc.setFont("helvetica", "normal");
-          // Draw grid
           for (let g = 0; g < groupsPerRow; g++) {
             const groupDigits = data
               .slice(i + g * groupSize, i + (g + 1) * groupSize)
               .join("");
             const x = 10 + g * cellWidth;
-            // Draw cell border
             doc.rect(x, y, cellWidth, cellHeight);
-            // Center digits in cell
             doc.text(groupDigits, x + cellWidth / 2, y + cellHeight / 2, {
               align: "center",
               baseline: "middle",
@@ -1309,8 +1192,53 @@ const CompetitionDetail = () => {
         )}_memorisation.pdf`
       );
     }
-    drawPaper();
+
+    function drawRecallRows() {
+      const cellWidth = (pageWidth - 20) / numbersPerRow;
+      const cellHeight = 8.7;
+      let rowNum = 1;
+      for (let r = 0; r < rowsPerPage; r++, rowNum++) {
+        if (r !== 0 && r % rowsPerPage === 0) {
+          doc.addPage();
+          y = 20;
+          drawHeader("recall");
+        }
+        doc.setFontSize(8);
+        doc.setTextColor(200, 0, 0);
+        doc.setFont("helvetica", "italic");
+        doc.text([`row`, `${rowNum}`], 6, y + cellHeight / 2, {
+          baseline: "middle",
+        });
+        for (let c = 0; c < numbersPerRow; c++) {
+          const x = 10 + c * cellWidth;
+          doc.rect(x, y, cellWidth, cellHeight);
+        }
+        y += cellHeight + 1.5;
+      }
+      doc.save(
+        `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
+          discipline
+        )}_recall.pdf`
+      );
+    }
+
+    // Start by drawing header and rows
+    drawHeader(recall ? "recall" : "memorisation");
   }
+
+  const handleMemorisationPDF = (discipline, largePrint = false) => {
+    console.log("memorisation pdf for", discipline, "largePrint:", largePrint);
+    if (discipline.includes("N")) {
+      handleNumbersPDF(discipline, false, largePrint);
+    }
+  };
+
+  const handleRecallPDF = (discipline) => {
+    console.log("recall pdf for", discipline);
+    if (discipline.includes("N")) {
+      handleNumbersPDF(discipline, true);
+    }
+  };
 
   return (
     <>
