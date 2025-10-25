@@ -14,6 +14,8 @@ import {
   worldEvents,
   getDisciplineNameFromRef,
   disciplines,
+  NUMBER_OF_JPGS,
+  NUMBER_OF_PNGS,
 } from "./constants";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faRedoAlt, faEye } from "@fortawesome/free-solid-svg-icons";
@@ -965,7 +967,7 @@ const CompetitionDetail = () => {
       return;
     }
 
-    let data;
+    let data = [];
 
     if (discipline.includes("N")) {
       //generate array of random digits (amount is number of digits)
@@ -978,9 +980,28 @@ const CompetitionDetail = () => {
       data = Array.from({ length: amount }, () =>
         Math.floor(Math.random() * 2)
       );
+    } else if (discipline.includes("I")) {
+      const usedImageNums = [];
+      let num;
+      let ext;
+      for (let i = 0; i < amount; i++) {
+        num = Math.floor(Math.random() * (NUMBER_OF_PNGS + NUMBER_OF_JPGS)) + 1;
+        while (usedImageNums.indexOf(num) > -1) {
+          num =
+            Math.floor(Math.random() * (NUMBER_OF_PNGS + NUMBER_OF_JPGS)) + 1;
+        }
+        usedImageNums.push(num);
+        if (num > NUMBER_OF_PNGS) {
+          ext = "jpg";
+          num -= NUMBER_OF_PNGS;
+        } else {
+          ext = "png";
+        }
+        const imageURL = "Image (" + num + ")." + ext;
+        data.push(imageURL);
+      }
     } else {
       alert("not implemented");
-      return;
     }
 
     //save the data
@@ -1241,6 +1262,11 @@ const CompetitionDetail = () => {
     console.log("memorisation pdf for", discipline, "largePrint:", largePrint);
     if (discipline.includes("N") || discipline.includes("B")) {
       handleNumbersPDF(discipline, false, largePrint);
+      return;
+    }
+    if (discipline.includes("I")) {
+      alert("Memorisation PDF for Images not yet implemented.");
+      return;
     }
   };
 
@@ -1248,6 +1274,11 @@ const CompetitionDetail = () => {
     console.log("recall pdf for", discipline);
     if (discipline.includes("N") || discipline.includes("B")) {
       handleNumbersPDF(discipline, true);
+      return;
+    }
+    if (discipline.includes("I")) {
+      alert("Memorisation PDF for Images not yet implemented.");
+      return;
     }
   };
 

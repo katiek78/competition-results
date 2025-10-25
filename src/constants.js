@@ -68,6 +68,9 @@ export const formatNames = {
   w: "World Championship",
 };
 
+export const NUMBER_OF_JPGS = 466;
+export const NUMBER_OF_PNGS = 5399;
+
 export const disciplines = [
   {
     ref: "5N1",
