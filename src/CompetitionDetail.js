@@ -48,6 +48,9 @@ const CompetitionDetail = () => {
   const [showPDFOptionsModal, setShowPDFOptionsModal] = useState(false);
   const [pdfDiscipline, setPDFDiscipline] = useState(null);
   const [largePrintPDF, setLargePrintPDF] = useState(false);
+  const [lineDrawingOption, setLineDrawingOption] = useState("");
+  const [customLineDrawing, setCustomLineDrawing] = useState("");
+  const [noWrapOption, setNoWrapOption] = useState(false);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -1747,6 +1750,36 @@ const CompetitionDetail = () => {
               label="Large print PDF"
               checked={largePrintPDF}
               onChange={(e) => setLargePrintPDF(e.target.checked)}
+            />
+          </Form.Group>
+          <Form.Group
+            controlId="lineDrawingOptions"
+            style={{ marginBottom: 16 }}
+          >
+            <Form.Label>Line Drawing Options</Form.Label>
+            <div
+              style={{
+                fontSize: "0.95em",
+                color: "#555",
+                marginBottom: 4,
+              }}
+            >
+              Enter groupings as numbers separated by dashes (e.g. 2, 3, 3-2-3,
+              2-2-2-2). Leave blank for default.
+            </div>
+            <Form.Control
+              type="text"
+              placeholder="e.g. 2, 3, 3-2-3, 2-2-2-2"
+              value={customLineDrawing || ""}
+              onChange={(e) => setCustomLineDrawing(e.target.value)}
+              style={{ marginBottom: 8 }}
+            />
+            <Form.Check
+              type="checkbox"
+              label="No wrap (restart groupings each line)"
+              checked={noWrapOption || false}
+              onChange={(e) => setNoWrapOption(e.target.checked)}
+              style={{ marginTop: 8 }}
             />
           </Form.Group>
           <Button
