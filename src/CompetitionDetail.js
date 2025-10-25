@@ -1102,10 +1102,10 @@ const CompetitionDetail = () => {
             doc.setTextColor(0, 0, 0); // reset to black for rest
             if (pageType === "recall") {
               y += 12;
-              doc.setFontSize(12);
+              doc.setFontSize(9);
               doc.text("Name: ____________________________", 10, y);
               doc.text("ID: ____________________________", pageWidth - 70, y);
-              y += 10;
+              y += 7;
             } else {
               y += 15;
             }
@@ -1194,7 +1194,8 @@ const CompetitionDetail = () => {
     }
 
     function drawRecallRows() {
-      const cellWidth = (pageWidth - 20) / numbersPerRow;
+      const leftMargin = 20;
+      const cellWidth = (pageWidth - leftMargin - 10) / numbersPerRow;
       const cellHeight = 8.7;
       let rowNum = 1;
       for (let r = 0; r < rowsPerPage; r++, rowNum++) {
@@ -1210,7 +1211,7 @@ const CompetitionDetail = () => {
           baseline: "middle",
         });
         for (let c = 0; c < numbersPerRow; c++) {
-          const x = 10 + c * cellWidth;
+          const x = leftMargin + c * cellWidth;
           doc.rect(x, y, cellWidth, cellHeight);
         }
         y += cellHeight + 1.5;
