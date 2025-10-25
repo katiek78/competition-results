@@ -26,6 +26,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import jsPDF from "jspdf";
 import stringSimilarity from "string-similarity";
+import "./assets/fonts/calibri-normal.js";
 
 const CompetitionDetail = () => {
   const token = useMemo(() => getToken(), []);
@@ -1258,7 +1259,7 @@ const CompetitionDetail = () => {
           doc.text(`${rowNum}`, 2, y + cellHeight / 2, { baseline: "middle" });
           doc.setFontSize(numberFontSize);
           doc.setTextColor(0, 0, 0);
-          doc.setFont("helvetica", "normal");
+          doc.setFont("calibri", "normal");
           for (let g = 0; g < groupsPerRow; g++) {
             const groupDigits = data
               .slice(i + g * groupSize, i + (g + 1) * groupSize)
