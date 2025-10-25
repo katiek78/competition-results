@@ -972,6 +972,12 @@ const CompetitionDetail = () => {
       data = Array.from({ length: amount }, () =>
         Math.floor(Math.random() * 10)
       );
+      return;
+    } else if (discipline.includes("B")) {
+      //generate array of random digits (amount is number of digits)
+      data = Array.from({ length: amount }, () =>
+        Math.floor(Math.random() * 2)
+      );
     } else {
       alert("not implemented");
       return;
@@ -1016,13 +1022,14 @@ const CompetitionDetail = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     let y = 20;
 
-    const numbersPerRow = 40;
+    const numbersPerRow = discipline.includes("N") ? 40 : 30;
     const rowsPerPage = recall ? 25 : largePrint ? 16 : 25;
     const numberFontSize = largePrint ? 22 : 15;
     const rowHeight = 8.7;
     const labelFontSize = 8;
     const labelColor = [200, 0, 0];
     const labelStyle = "italic";
+
     function drawHeader(pageType = "memorisation", onDrawComplete) {
       // IAM logo first
       const logoSources = [
@@ -1121,6 +1128,10 @@ const CompetitionDetail = () => {
     }
     function drawRows() {
       if (!largePrint) {
+        // Adjust centering for discipline 'B' in memorisation
+        const isB = discipline.includes("B");
+        const leftMargin = isB ? 35 : 20;
+        const rowMaxWidth = isB ? pageWidth - 2 * leftMargin : pageWidth - 28;
         for (
           let i = 0, rowNum = 1;
           i < data.length;
@@ -1135,11 +1146,14 @@ const CompetitionDetail = () => {
           doc.setFontSize(labelFontSize);
           doc.setTextColor(...labelColor);
           doc.setFont("helvetica", labelStyle);
-          doc.text(`row ${rowNum}`, 6, y, { baseline: "top" });
+          doc.text(`row ${rowNum}`, leftMargin - 14, y, { baseline: "top" });
           doc.setFontSize(numberFontSize);
           doc.setTextColor(0, 0, 0);
           doc.setFont("helvetica", "normal");
-          doc.text(row, 20, y, { baseline: "top", maxWidth: pageWidth - 28 });
+          doc.text(row, leftMargin, y, {
+            baseline: "top",
+            maxWidth: rowMaxWidth,
+          });
           y += rowHeight;
         }
       } else {
@@ -1225,14 +1239,14 @@ const CompetitionDetail = () => {
 
   const handleMemorisationPDF = (discipline, largePrint = false) => {
     console.log("memorisation pdf for", discipline, "largePrint:", largePrint);
-    if (discipline.includes("N")) {
+    if (discipline.includes("N") || discipline.includes("B")) {
       handleNumbersPDF(discipline, false, largePrint);
     }
   };
 
   const handleRecallPDF = (discipline) => {
     console.log("recall pdf for", discipline);
-    if (discipline.includes("N")) {
+    if (discipline.includes("N") || discipline.includes("B")) {
       handleNumbersPDF(discipline, true);
     }
   };
