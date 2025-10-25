@@ -85,7 +85,7 @@ export const disciplines = [
     ref: "15N",
     label: "15-minute Numbers",
     standard: 1385,
-    amount: 1360,
+    amount: 1560,
   },
   {
     ref: "30N",

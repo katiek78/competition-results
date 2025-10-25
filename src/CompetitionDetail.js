@@ -1006,12 +1006,10 @@ const CompetitionDetail = () => {
 
   function handleNumbersPDF(discipline, recall = false, largePrint = false) {
     let data;
-    if (!recall) {
-      data = competitionData.discipline_data?.[discipline];
-      if (!data || !Array.isArray(data)) {
-        alert("No data available for this discipline.");
-        return;
-      }
+    data = competitionData.discipline_data?.[discipline];
+    if (!data || !Array.isArray(data)) {
+      alert("No data available for this discipline.");
+      return;
     }
 
     const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -1193,8 +1191,9 @@ const CompetitionDetail = () => {
       const leftMargin = 20;
       const cellWidth = (pageWidth - leftMargin - 10) / numbersPerRow;
       const cellHeight = 8.7;
+      const totalRows = Math.ceil(data.length / numbersPerRow);
       let rowNum = 1;
-      for (let r = 0; r < rowsPerPage; r++, rowNum++) {
+      for (let r = 0; r < totalRows; r++, rowNum++) {
         if (r !== 0 && r % rowsPerPage === 0) {
           doc.addPage();
           y = 20;
