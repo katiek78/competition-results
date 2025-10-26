@@ -1530,9 +1530,7 @@ const CompetitionDetail = () => {
       for (let r = 0; r < totalRows; r++, rowNum++) {
         if (r !== 0 && r % rowsPerPage === 0) {
           doc.addPage();
-          // Redraw header and get new y
-          drawHeader("recall");
-          startY = y;
+          // Do not redraw header for recall pages
           y = startY;
         }
         doc.setFontSize(8);
