@@ -1209,6 +1209,10 @@ const CompetitionDetail = () => {
     function drawRows() {
       let headerDrawn = false;
       if (!largePrint) {
+        console.log("Entered non-large print branch:", {
+          customLineDrawing,
+          binaryBlockHeight,
+        });
         const leftMargin = isB ? 35 : 20;
         const rowMaxWidth = isB ? pageWidth - 2 * leftMargin : pageWidth - 28;
         let groupings = [];
@@ -1234,6 +1238,11 @@ const CompetitionDetail = () => {
             digitsLeftInGroup = 0;
           }
           if (isB && blockHeight > 1) {
+            console.log("Entered Binary blockHeight > 1 branch:", {
+              customLineDrawing,
+              blockHeight,
+              isB,
+            });
             if (rowsDrawn % rowsPerPage === 0) {
               if (!headerDrawn) {
                 headerDrawn = true;
@@ -1267,11 +1276,80 @@ const CompetitionDetail = () => {
               doc.setTextColor(0, 0, 0);
               doc.setFont("helvetica", "normal");
               let blockX = leftMargin;
-              for (let d = 0; d < blockRowDigits.length; d++) {
-                doc.text(blockRowDigits[d].toString(), blockX, blockY, {
-                  baseline: "top",
-                });
-                blockX += digitSpacing;
+              let digitIdx = 0;
+              let grouping = groupings.length > 0 ? groupings : null;
+              let groupIdx = 0;
+              let digitsLeftInGroup = 0;
+              const borderHeight = rowHeight * 0.7;
+              while (digitIdx < blockRowDigits.length) {
+                let groupSize = grouping
+                  ? grouping[groupIdx % grouping.length]
+                  : 1;
+                if (!grouping) groupSize = 1;
+                let digitsInThisGroup =
+                  digitsLeftInGroup > 0 ? digitsLeftInGroup : groupSize;
+                const borderShift = 0.7;
+                const groupStartX = blockX - borderShift;
+                let digitsToDraw = Math.min(
+                  digitsInThisGroup,
+                  blockRowDigits.length - digitIdx
+                );
+                for (let g = 0; g < digitsToDraw; g++) {
+                  doc.text(
+                    blockRowDigits[digitIdx].toString(),
+                    blockX,
+                    blockY,
+                    {
+                      baseline: "top",
+                    }
+                  );
+                  blockX += digitSpacing;
+                  digitIdx++;
+                }
+                const groupEndX = blockX - borderShift;
+                // Only draw borders if customLineDrawing is not empty, not zero, and not just whitespace
+                if (
+                  customLineDrawing &&
+                  customLineDrawing !== "0" &&
+                  customLineDrawing.trim() !== ""
+                ) {
+                  // Only draw top border for each group in the first row of a block
+                  if (blockRow === 0) {
+                    doc.line(groupStartX, blockY - 1, groupEndX, blockY - 1);
+                  }
+                  // Only draw bottom border for last row in block
+                  if (
+                    blockRow === blockHeight - 1 ||
+                    i + (blockRow + 1) * numbersPerRow >= data.length
+                  ) {
+                    doc.line(
+                      groupStartX,
+                      blockY + borderHeight,
+                      groupEndX,
+                      blockY + borderHeight
+                    );
+                  }
+                  // Left border for every group
+                  doc.line(
+                    groupStartX,
+                    blockY - 1,
+                    groupStartX,
+                    blockY + borderHeight
+                  );
+                  // Right border for every group
+                  doc.line(
+                    groupEndX,
+                    blockY - 1,
+                    groupEndX,
+                    blockY + borderHeight
+                  );
+                }
+                if (digitsToDraw < digitsInThisGroup) {
+                  digitsLeftInGroup = digitsInThisGroup - digitsToDraw;
+                } else {
+                  digitsLeftInGroup = 0;
+                  groupIdx++;
+                }
               }
               y += rowHeight;
               rowsDrawn++;
@@ -1281,11 +1359,19 @@ const CompetitionDetail = () => {
                 y = 20;
               }
             }
-            // Draw only the outer rectangle around the block
+            // Draw only the outer vertical borders around the block (no top border)
             const borderGap = 2.5; // visual gap between block borders
             const topY = blockTopY;
             const bottomY = y - borderGap; // rectangle ends above last digit row
-            doc.rect(leftMargin - 0.7, topY, rowMaxWidth, bottomY - topY);
+            // Left vertical border
+            doc.line(leftMargin - 0.7, topY, leftMargin - 0.7, bottomY);
+            // Right vertical border
+            doc.line(
+              leftMargin - 0.7 + rowMaxWidth,
+              topY,
+              leftMargin - 0.7 + rowMaxWidth,
+              bottomY
+            );
             // Do NOT increment y by borderGap; keep rows evenly spaced
             i += numbersPerRow * (blockHeight - 1);
             rowNum += blockHeight - 1;
@@ -1312,7 +1398,14 @@ const CompetitionDetail = () => {
             let grouping = groupings.length > 0 ? groupings : null;
             let groupIdx = 0;
             let digitsLeftInGroup = 0;
+            if (noWrapOption) {
+              groupIdx = 0;
+              digitsLeftInGroup = 0;
+            }
             const borderHeight = rowHeight * 0.7;
+            console.log("Entering group-drawing loop:", {
+              rowDigitsLength: rowDigits.length,
+            });
             while (digitIdx < rowDigits.length) {
               let groupSize = grouping
                 ? grouping[groupIdx % grouping.length]
@@ -1334,20 +1427,35 @@ const CompetitionDetail = () => {
                 digitIdx++;
               }
               const groupEndX = x - borderShift;
-              // Only draw borders if customLineDrawing is not empty, not zero, and not just whitespace
+              // Log for every group, regardless of border logic
+              console.log("Group iteration:", {
+                customLineDrawing,
+                groupSize,
+                groupStartX,
+                groupEndX,
+                y,
+                borderHeight,
+                digitsToDraw,
+                digitIdx,
+                rowDigitsLength: rowDigits.length,
+              });
               if (
                 customLineDrawing &&
                 customLineDrawing !== "0" &&
                 customLineDrawing.trim() !== ""
               ) {
+                // Top border for the group
                 doc.line(groupStartX, y - 1, groupEndX, y - 1);
+                // Bottom border for the group
                 doc.line(
                   groupStartX,
                   y + borderHeight,
                   groupEndX,
                   y + borderHeight
                 );
+                // Left border for every group
                 doc.line(groupStartX, y - 1, groupStartX, y + borderHeight);
+                // Right border for every group
                 doc.line(groupEndX, y - 1, groupEndX, y + borderHeight);
               }
               if (digitsToDraw < digitsInThisGroup) {
@@ -1928,7 +2036,6 @@ const CompetitionDetail = () => {
           <Button
             variant="primary"
             onClick={() => {
-              console.log(pdfDiscipline);
               handleMemorisationPDF(pdfDiscipline, largePrintPDF);
               setShowPDFOptionsModal(false);
             }}
