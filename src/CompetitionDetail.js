@@ -1243,6 +1243,7 @@ const CompetitionDetail = () => {
               }
             }
             const digitSpacing = rowMaxWidth / numbersPerRow;
+            let blockTopY = y;
             for (
               let blockRow = 0;
               blockRow < blockHeight &&
@@ -1280,32 +1281,12 @@ const CompetitionDetail = () => {
                 y = 20;
               }
             }
-            // Draw border around the block
-            const borderHeight = rowHeight * 0.7 * blockHeight;
-            doc.line(
-              leftMargin - 0.7,
-              y - rowHeight * blockHeight - 1,
-              leftMargin + rowMaxWidth - 0.7,
-              y - rowHeight * blockHeight - 1
-            ); // Top
-            doc.line(
-              leftMargin - 0.7,
-              y - rowHeight * blockHeight + borderHeight,
-              leftMargin + rowMaxWidth - 0.7,
-              y - rowHeight * blockHeight + borderHeight
-            ); // Bottom
-            doc.line(
-              leftMargin - 0.7,
-              y - rowHeight * blockHeight - 1,
-              leftMargin - 0.7,
-              y - rowHeight * blockHeight + borderHeight
-            ); // Left
-            doc.line(
-              leftMargin + rowMaxWidth - 0.7,
-              y - rowHeight * blockHeight - 1,
-              leftMargin + rowMaxWidth - 0.7,
-              y - rowHeight * blockHeight + borderHeight
-            ); // Right
+            // Draw only the outer rectangle around the block
+            const borderGap = 2.5; // visual gap between block borders
+            const topY = blockTopY;
+            const bottomY = y - borderGap; // rectangle ends above last digit row
+            doc.rect(leftMargin - 0.7, topY, rowMaxWidth, bottomY - topY);
+            // Do NOT increment y by borderGap; keep rows evenly spaced
             i += numbersPerRow * (blockHeight - 1);
             rowNum += blockHeight - 1;
           } else {
