@@ -1339,11 +1339,16 @@ const CompetitionDetail = () => {
     function drawRecallRows() {
       const totalRows = Math.ceil(data.length / numbersPerRow);
       let rowNum = 1;
-      y = 20;
+      // Start y at the value after header is drawn
+      let startY = y;
+      y = startY;
       for (let r = 0; r < totalRows; r++, rowNum++) {
         if (r !== 0 && r % rowsPerPage === 0) {
           doc.addPage();
-          y = 20;
+          // Redraw header and get new y
+          drawHeader("recall");
+          startY = y;
+          y = startY;
         }
         doc.setFontSize(8);
         doc.setTextColor(200, 0, 0);
