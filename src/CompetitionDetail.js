@@ -1253,6 +1253,8 @@ const CompetitionDetail = () => {
             }
             const digitSpacing = rowMaxWidth / numbersPerRow;
             let blockTopY = y;
+            // Step 1: Record right border x-positions for each group in the first row of the block
+            let rightBorderXs = [];
             for (
               let blockRow = 0;
               blockRow < blockHeight &&
@@ -1264,14 +1266,14 @@ const CompetitionDetail = () => {
                 i + blockRow * numbersPerRow,
                 i + (blockRow + 1) * numbersPerRow
               );
-              // Draw row number for each row in block
+              // Restore row numbering for each row in block
               doc.setFontSize(labelFontSize);
               doc.setTextColor(...labelColor);
               doc.setFont("helvetica", labelStyle);
               doc.text(`row ${rowNum + blockRow}`, leftMargin - 14, blockY, {
                 baseline: "top",
               });
-              // Draw digits
+              // Restore font for digits after drawing row number
               doc.setFontSize(numberFontSize);
               doc.setTextColor(0, 0, 0);
               doc.setFont("helvetica", "normal");
@@ -1316,6 +1318,8 @@ const CompetitionDetail = () => {
                   // Only draw top border for each group in the first row of a block
                   if (blockRow === 0) {
                     doc.line(groupStartX, blockY - 1, groupEndX, blockY - 1);
+                    // Record right border x-position for this group
+                    rightBorderXs.push(groupEndX);
                   }
                   // Only draw bottom border for last row in block
                   if (
@@ -1359,6 +1363,8 @@ const CompetitionDetail = () => {
                 y = 20;
               }
             }
+            // Log the recorded right border x-positions after the block row loop
+            console.log("Right border x-positions for block:", rightBorderXs);
             // Draw only the outer vertical borders around the block (no top border)
             const borderGap = 2.5; // visual gap between block borders
             const topY = blockTopY;
@@ -1372,6 +1378,10 @@ const CompetitionDetail = () => {
               leftMargin - 0.7 + rowMaxWidth,
               bottomY
             );
+            // Draw vertical lines for each recorded right border x-position
+            rightBorderXs.forEach((x) => {
+              doc.line(x, topY, x, bottomY);
+            });
             // Do NOT increment y by borderGap; keep rows evenly spaced
             i += numbersPerRow * (blockHeight - 1);
             rowNum += blockHeight - 1;
