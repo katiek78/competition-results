@@ -1221,11 +1221,17 @@ const CompetitionDetail = () => {
         }
         // Reduce cell height for more space between rows
         const borderHeight = rowHeight * 0.7;
+        let groupIdx = 0;
+        let digitsLeftInGroup = 0;
         for (
           let i = 0, rowNum = 1;
           i < data.length;
           i += numbersPerRow, rowNum++
         ) {
+          if (noWrapOption) {
+            groupIdx = 0;
+            digitsLeftInGroup = 0;
+          }
           if ((rowNum - 1) % rowsPerPage === 0) {
             if (!headerDrawn) {
               headerDrawn = true;
@@ -1244,16 +1250,21 @@ const CompetitionDetail = () => {
           let x = leftMargin;
           const rowDigits = data.slice(i, i + numbersPerRow);
           const digitSpacing = rowMaxWidth / numbersPerRow;
-          let groupIdx = 0;
           let digitIdx = 0;
           let grouping = groupings.length > 0 ? groupings : null;
           while (digitIdx < rowDigits.length) {
             let groupSize = grouping ? grouping[groupIdx % grouping.length] : 1;
             if (!grouping) groupSize = 1;
+            let digitsInThisGroup =
+              digitsLeftInGroup > 0 ? digitsLeftInGroup : groupSize;
             const borderShift = 0.7; // mm, small left offset for border
             const groupStartX = x - borderShift;
+            let digitsToDraw = Math.min(
+              digitsInThisGroup,
+              rowDigits.length - digitIdx
+            );
             // Draw digits in group
-            for (let g = 0; g < groupSize && digitIdx < rowDigits.length; g++) {
+            for (let g = 0; g < digitsToDraw; g++) {
               doc.text(rowDigits[digitIdx].toString(), x, y, {
                 baseline: "top",
               });
@@ -1271,7 +1282,14 @@ const CompetitionDetail = () => {
             ); // Bottom
             doc.line(groupStartX, y - 1, groupStartX, y + borderHeight); // Left
             doc.line(groupEndX, y - 1, groupEndX, y + borderHeight); // Right
-            groupIdx++;
+            if (digitsToDraw < digitsInThisGroup) {
+              // Group not finished, continue in next row
+              digitsLeftInGroup = digitsInThisGroup - digitsToDraw;
+            } else {
+              // Group finished, move to next group
+              digitsLeftInGroup = 0;
+              groupIdx++;
+            }
           }
           y += rowHeight;
         }
