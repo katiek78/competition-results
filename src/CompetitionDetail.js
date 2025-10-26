@@ -1334,7 +1334,12 @@ const CompetitionDetail = () => {
                 digitIdx++;
               }
               const groupEndX = x - borderShift;
-              if (customLineDrawing) {
+              // Only draw borders if customLineDrawing is not empty, not zero, and not just whitespace
+              if (
+                customLineDrawing &&
+                customLineDrawing !== "0" &&
+                customLineDrawing.trim() !== ""
+              ) {
                 doc.line(groupStartX, y - 1, groupEndX, y - 1);
                 doc.line(
                   groupStartX,
