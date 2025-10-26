@@ -51,6 +51,8 @@ const CompetitionDetail = () => {
   // Removed unused lineDrawingOption state
   const [customLineDrawing, setCustomLineDrawing] = useState("");
   const [noWrapOption, setNoWrapOption] = useState(false);
+  // Binary block height option
+  const [binaryBlockHeight, setBinaryBlockHeight] = useState(1);
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -1101,7 +1103,7 @@ const CompetitionDetail = () => {
     let y = 20;
 
     const numbersPerRow = discipline.includes("N") ? 40 : 30;
-    const rowsPerPage = recall ? 25 : largePrint ? 16 : 25;
+    const rowsPerPage = largePrint ? (isB ? 20 : 16) : isB ? 30 : 25;
     const numberFontSize = largePrint ? (isB ? 28 : 22) : 15;
     const rowHeight = 8.7;
     const labelFontSize = 8;
@@ -1209,20 +1211,19 @@ const CompetitionDetail = () => {
       if (!largePrint) {
         const leftMargin = isB ? 35 : 20;
         const rowMaxWidth = isB ? pageWidth - 2 * leftMargin : pageWidth - 28;
-        // Parse custom grouping from modal
         let groupings = [];
         if (customLineDrawing) {
-          // Accept formats like "2-2-2-2" or "4-4-4" or "2,3,3"
           groupings = customLineDrawing
             .replace(/,/g, "-")
             .split("-")
             .map((g) => parseInt(g.trim(), 10))
             .filter((g) => !isNaN(g) && g > 0);
         }
-        // Reduce cell height for more space between rows
-        const borderHeight = rowHeight * 0.7;
+        // Only use block height for Binary and non-large print
+        const blockHeight = isB ? binaryBlockHeight : 1;
         let groupIdx = 0;
         let digitsLeftInGroup = 0;
+        let rowsDrawn = 0;
         for (
           let i = 0, rowNum = 1;
           i < data.length;
@@ -1232,66 +1233,146 @@ const CompetitionDetail = () => {
             groupIdx = 0;
             digitsLeftInGroup = 0;
           }
-          if ((rowNum - 1) % rowsPerPage === 0) {
-            if (!headerDrawn) {
-              headerDrawn = true;
-            } else {
-              doc.addPage();
-              y = 20;
+          if (isB && blockHeight > 1) {
+            if (rowsDrawn % rowsPerPage === 0) {
+              if (!headerDrawn) {
+                headerDrawn = true;
+              } else {
+                doc.addPage();
+                y = 20;
+              }
             }
-          }
-          doc.setFontSize(labelFontSize);
-          doc.setTextColor(...labelColor);
-          doc.setFont("helvetica", labelStyle);
-          doc.text(`row ${rowNum}`, leftMargin - 14, y, { baseline: "top" });
-          doc.setFontSize(numberFontSize);
-          doc.setTextColor(0, 0, 0);
-          doc.setFont("helvetica", "normal");
-          let x = leftMargin;
-          const rowDigits = data.slice(i, i + numbersPerRow);
-          const digitSpacing = rowMaxWidth / numbersPerRow;
-          let digitIdx = 0;
-          let grouping = groupings.length > 0 ? groupings : null;
-          while (digitIdx < rowDigits.length) {
-            let groupSize = grouping ? grouping[groupIdx % grouping.length] : 1;
-            if (!grouping) groupSize = 1;
-            let digitsInThisGroup =
-              digitsLeftInGroup > 0 ? digitsLeftInGroup : groupSize;
-            const borderShift = 0.7; // mm, small left offset for border
-            const groupStartX = x - borderShift;
-            let digitsToDraw = Math.min(
-              digitsInThisGroup,
-              rowDigits.length - digitIdx
-            );
-            // Draw digits in group
-            for (let g = 0; g < digitsToDraw; g++) {
-              doc.text(rowDigits[digitIdx].toString(), x, y, {
+            const digitSpacing = rowMaxWidth / numbersPerRow;
+            for (
+              let blockRow = 0;
+              blockRow < blockHeight &&
+              i + blockRow * numbersPerRow < data.length;
+              blockRow++
+            ) {
+              let blockY = y;
+              let blockRowDigits = data.slice(
+                i + blockRow * numbersPerRow,
+                i + (blockRow + 1) * numbersPerRow
+              );
+              // Draw row number for each row in block
+              doc.setFontSize(labelFontSize);
+              doc.setTextColor(...labelColor);
+              doc.setFont("helvetica", labelStyle);
+              doc.text(`row ${rowNum + blockRow}`, leftMargin - 14, blockY, {
                 baseline: "top",
               });
-              x += digitSpacing;
-              digitIdx++;
+              // Draw digits
+              doc.setFontSize(numberFontSize);
+              doc.setTextColor(0, 0, 0);
+              doc.setFont("helvetica", "normal");
+              let blockX = leftMargin;
+              for (let d = 0; d < blockRowDigits.length; d++) {
+                doc.text(blockRowDigits[d].toString(), blockX, blockY, {
+                  baseline: "top",
+                });
+                blockX += digitSpacing;
+              }
+              y += rowHeight;
+              rowsDrawn++;
+              // Page break if needed after this row
+              if (rowsDrawn % rowsPerPage === 0 && blockRow < blockHeight - 1) {
+                doc.addPage();
+                y = 20;
+              }
             }
-            const groupEndX = x - borderShift;
-            // Draw border around group (width = groupSize * digitSpacing + padding)
-            doc.line(groupStartX, y - 1, groupEndX, y - 1); // Top
+            // Draw border around the block
+            const borderHeight = rowHeight * 0.7 * blockHeight;
             doc.line(
-              groupStartX,
-              y + borderHeight,
-              groupEndX,
-              y + borderHeight
+              leftMargin - 0.7,
+              y - rowHeight * blockHeight - 1,
+              leftMargin + rowMaxWidth - 0.7,
+              y - rowHeight * blockHeight - 1
+            ); // Top
+            doc.line(
+              leftMargin - 0.7,
+              y - rowHeight * blockHeight + borderHeight,
+              leftMargin + rowMaxWidth - 0.7,
+              y - rowHeight * blockHeight + borderHeight
             ); // Bottom
-            doc.line(groupStartX, y - 1, groupStartX, y + borderHeight); // Left
-            doc.line(groupEndX, y - 1, groupEndX, y + borderHeight); // Right
-            if (digitsToDraw < digitsInThisGroup) {
-              // Group not finished, continue in next row
-              digitsLeftInGroup = digitsInThisGroup - digitsToDraw;
-            } else {
-              // Group finished, move to next group
-              digitsLeftInGroup = 0;
-              groupIdx++;
+            doc.line(
+              leftMargin - 0.7,
+              y - rowHeight * blockHeight - 1,
+              leftMargin - 0.7,
+              y - rowHeight * blockHeight + borderHeight
+            ); // Left
+            doc.line(
+              leftMargin + rowMaxWidth - 0.7,
+              y - rowHeight * blockHeight - 1,
+              leftMargin + rowMaxWidth - 0.7,
+              y - rowHeight * blockHeight + borderHeight
+            ); // Right
+            i += numbersPerRow * (blockHeight - 1);
+            rowNum += blockHeight - 1;
+          } else {
+            if ((rowNum - 1) % rowsPerPage === 0) {
+              if (!headerDrawn) {
+                headerDrawn = true;
+              } else {
+                doc.addPage();
+                y = 20;
+              }
             }
+            doc.setFontSize(labelFontSize);
+            doc.setTextColor(...labelColor);
+            doc.setFont("helvetica", labelStyle);
+            doc.text(`row ${rowNum}`, leftMargin - 14, y, { baseline: "top" });
+            doc.setFontSize(numberFontSize);
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("helvetica", "normal");
+            let x = leftMargin;
+            const rowDigits = data.slice(i, i + numbersPerRow);
+            const digitSpacing = rowMaxWidth / numbersPerRow;
+            let digitIdx = 0;
+            let grouping = groupings.length > 0 ? groupings : null;
+            let groupIdx = 0;
+            let digitsLeftInGroup = 0;
+            const borderHeight = rowHeight * 0.7;
+            while (digitIdx < rowDigits.length) {
+              let groupSize = grouping
+                ? grouping[groupIdx % grouping.length]
+                : 1;
+              if (!grouping) groupSize = 1;
+              let digitsInThisGroup =
+                digitsLeftInGroup > 0 ? digitsLeftInGroup : groupSize;
+              const borderShift = 0.7;
+              const groupStartX = x - borderShift;
+              let digitsToDraw = Math.min(
+                digitsInThisGroup,
+                rowDigits.length - digitIdx
+              );
+              for (let g = 0; g < digitsToDraw; g++) {
+                doc.text(rowDigits[digitIdx].toString(), x, y, {
+                  baseline: "top",
+                });
+                x += digitSpacing;
+                digitIdx++;
+              }
+              const groupEndX = x - borderShift;
+              if (customLineDrawing) {
+                doc.line(groupStartX, y - 1, groupEndX, y - 1);
+                doc.line(
+                  groupStartX,
+                  y + borderHeight,
+                  groupEndX,
+                  y + borderHeight
+                );
+                doc.line(groupStartX, y - 1, groupStartX, y + borderHeight);
+                doc.line(groupEndX, y - 1, groupEndX, y + borderHeight);
+              }
+              if (digitsToDraw < digitsInThisGroup) {
+                digitsLeftInGroup = digitsInThisGroup - digitsToDraw;
+              } else {
+                digitsLeftInGroup = 0;
+                groupIdx++;
+              }
+            }
+            y += rowHeight;
           }
-          y += rowHeight;
         }
       } else {
         // Large print
@@ -1716,8 +1797,10 @@ const CompetitionDetail = () => {
                                           <span
                                             title="Create Memorisation PDF"
                                             onClick={() => {
-                                              if (
-                                                discipline.includes("N") ||
+                                              if (discipline.includes("N")) {
+                                                setPDFDiscipline(discipline);
+                                                setShowPDFOptionsModal(true);
+                                              } else if (
                                                 discipline.includes("B")
                                               ) {
                                                 setPDFDiscipline(discipline);
@@ -1841,10 +1924,25 @@ const CompetitionDetail = () => {
               onChange={(e) => setNoWrapOption(e.target.checked)}
               style={{ marginTop: 8 }}
             />
+            {pdfDiscipline && pdfDiscipline.includes("B") && (
+              <Form.Group
+                controlId="binaryBlockHeight"
+                style={{ marginTop: 12 }}
+              >
+                <Form.Label>Binary Block Height (rows per block)</Form.Label>
+                <Form.Control
+                  type="number"
+                  min={1}
+                  value={binaryBlockHeight}
+                  onChange={(e) => setBinaryBlockHeight(Number(e.target.value))}
+                />
+              </Form.Group>
+            )}
           </Form.Group>
           <Button
             variant="primary"
             onClick={() => {
+              console.log(pdfDiscipline);
               handleMemorisationPDF(pdfDiscipline, largePrintPDF);
               setShowPDFOptionsModal(false);
             }}
