@@ -905,7 +905,7 @@ const CompetitionResults = () => {
   };
 
   const handleExportStats = () => {
-    // 1. Export competition.csv
+    // 1. Export competition.csv (unchanged)
     const compFields = [
       "id",
       "title",
@@ -938,14 +938,14 @@ const CompetitionResults = () => {
         ? competitionData.rankable
         : competitionData?.Rankable !== undefined
         ? competitionData.Rankable
-        : false, // Default to false instead of "N/A"
+        : false,
       competitionData?.adult_rankable !== undefined
         ? competitionData.adult_rankable
         : competitionData?.Adult_rankable !== undefined
         ? competitionData.Adult_rankable
         : competitionData?.adultRankable !== undefined
         ? competitionData.adultRankable
-        : false, // Default to false instead of "N/A"
+        : false,
       competitionData?.country || "N/A",
       competitionData?.championship_type || "N/A",
       competitionData?.championship_status || "N/A",
@@ -963,15 +963,54 @@ const CompetitionResults = () => {
     URL.revokeObjectURL(compUrl);
 
     // 2. Export score.csv
-    // Build scoreFields: replace 5-min Numbers and Spoken Numbers with NUM5 and SPOKEN1
+    // Build scoreFields: combine trials/attempts as required, but respect custom order
     const statsDisciplineFields = [];
-    // Add NUM5 and SPOKEN1 first
-    statsDisciplineFields.push("NUM5");
-    statsDisciplineFields.push("SPOKEN1");
-    // Add all other mapped disciplines except the trials/attempts and Speed Cards
-    (competitionData?.disciplines || []).forEach((d) => {
+    const disciplineOrder = competitionData?.disciplines || [];
+    let insertedNum5 = false;
+    let insertedSpoken1 = false;
+    let insertedSpeedCards = false;
+
+    for (let i = 0; i < disciplineOrder.length; i++) {
+      const d = disciplineOrder[i];
       const name = getDisciplineNameFromRef(d);
-      // Skip 5-min Numbers trials, Spoken Numbers attempts, and Speed Cards
+      // 5-min Numbers Trials
+      if (
+        !insertedNum5 &&
+        (name === "5-minute Numbers Trial 1" ||
+          name === "5-minute Numbers Trial 2")
+      ) {
+        statsDisciplineFields.push("NUM5");
+        insertedNum5 = true;
+        continue;
+      }
+      // Spoken Numbers Attempts
+      if (
+        !insertedSpoken1 &&
+        [
+          "Spoken Numbers Attempt 1",
+          "Spoken Numbers Attempt 2",
+          "Spoken Numbers Attempt 3",
+        ].includes(name)
+      ) {
+        statsDisciplineFields.push("SPOKEN1");
+        insertedSpoken1 = true;
+        continue;
+      }
+      // Speed Cards Trials
+      if (
+        !insertedSpeedCards &&
+        (name === "Speed Cards Trial 1" || name === "Speed Cards Trial 2")
+      ) {
+        statsDisciplineFields.push(
+          "spdcards1_cards",
+          "spdcards1_time",
+          "spdcards2_cards",
+          "spdcards2_time"
+        );
+        insertedSpeedCards = true;
+        continue;
+      }
+      // Skip all trials/attempts (they are handled above)
       if (
         [
           "5-minute Numbers Trial 1",
@@ -982,18 +1021,14 @@ const CompetitionResults = () => {
           "Speed Cards Trial 1",
           "Speed Cards Trial 2",
         ].includes(name)
-      )
-        return;
+      ) {
+        continue;
+      }
+      // Add mapped discipline or ref
       const statsId = disciplineNameToStatsId[name];
       if (statsId) statsDisciplineFields.push(statsId);
       else statsDisciplineFields.push(d);
-    });
-    statsDisciplineFields.push(
-      "spdcards1_cards",
-      "spdcards1_time",
-      "spdcards2_cards",
-      "spdcards2_time"
-    );
+    }
 
     const scoreFields = [
       "first name",
