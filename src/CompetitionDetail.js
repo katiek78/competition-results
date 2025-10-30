@@ -1365,23 +1365,30 @@ const CompetitionDetail = () => {
             }
             // Log the recorded right border x-positions after the block row loop
             console.log("Right border x-positions for block:", rightBorderXs);
-            // Draw only the outer vertical borders around the block (no top border)
-            const borderGap = 2.5; // visual gap between block borders
-            const topY = blockTopY;
-            const bottomY = y - borderGap; // rectangle ends above last digit row
-            // Left vertical border
-            doc.line(leftMargin - 0.7, topY, leftMargin - 0.7, bottomY);
-            // Right vertical border
-            doc.line(
-              leftMargin - 0.7 + rowMaxWidth,
-              topY,
-              leftMargin - 0.7 + rowMaxWidth,
-              bottomY
-            );
-            // Draw vertical lines for each recorded right border x-position
-            rightBorderXs.forEach((x) => {
-              doc.line(x, topY, x, bottomY);
-            });
+            // Only draw vertical borders if customLineDrawing is not empty, not zero, and not just whitespace
+            if (
+              customLineDrawing &&
+              customLineDrawing !== "0" &&
+              customLineDrawing.trim() !== ""
+            ) {
+              // Draw only the outer vertical borders around the block (no top border)
+              const borderGap = 2.5; // visual gap between block borders
+              const topY = blockTopY;
+              const bottomY = y - borderGap; // rectangle ends above last digit row
+              // Left vertical border
+              doc.line(leftMargin - 0.7, topY, leftMargin - 0.7, bottomY);
+              // Right vertical border
+              doc.line(
+                leftMargin - 0.7 + rowMaxWidth,
+                topY,
+                leftMargin - 0.7 + rowMaxWidth,
+                bottomY
+              );
+              // Draw vertical lines for each recorded right border x-position
+              rightBorderXs.forEach((x) => {
+                doc.line(x, topY, x, bottomY);
+              });
+            }
             // Do NOT increment y by borderGap; keep rows evenly spaced
             i += numbersPerRow * (blockHeight - 1);
             rowNum += blockHeight - 1;
@@ -1524,11 +1531,16 @@ const CompetitionDetail = () => {
     function drawRecallRows() {
       const totalRows = Math.ceil(data.length / numbersPerRow);
       let rowNum = 1;
+      // Set rowsPerPage for binary recall (not large print)
+      let recallRowsPerPage = 25;
+      if (isB && !largePrint) {
+        recallRowsPerPage = 30;
+      }
       // Start y at the value after header is drawn
       let startY = y;
       y = startY;
       for (let r = 0; r < totalRows; r++, rowNum++) {
-        if (r !== 0 && r % rowsPerPage === 0) {
+        if (r !== 0 && r % recallRowsPerPage === 0) {
           doc.addPage();
           // Do not redraw header for recall pages
           y = startY;
@@ -1833,9 +1845,8 @@ const CompetitionDetail = () => {
                               }}
                             >
                               {getDisciplineNameFromRef(discipline)}
-                              {/* Regenerate button for superAdmin, admin or comp admin (not participant) */}
+                              {/* Functionality for superAdmin or comp admin (not participant) */}
                               {(userData.role === "superAdmin" ||
-                                userData.role === "admin" ||
                                 (competitionData.compAdmins &&
                                   competitionData.compAdmins.includes(
                                     userData._id
