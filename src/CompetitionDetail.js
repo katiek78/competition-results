@@ -1601,6 +1601,35 @@ const CompetitionDetail = () => {
     }
   };
 
+  // Move discipline handler
+  const handleMoveDiscipline = async (idx, direction) => {
+    // direction: -1 for up, +1 for down
+    const newIdx = idx + direction;
+    if (newIdx < 0 || newIdx >= competitionData.disciplines.length) return;
+    const newDisciplines = [...competitionData.disciplines];
+    // Swap
+    [newDisciplines[idx], newDisciplines[newIdx]] = [
+      newDisciplines[newIdx],
+      newDisciplines[idx],
+    ];
+    setCompetitionData((prev) => ({ ...prev, disciplines: newDisciplines }));
+    // Persist to backend
+    try {
+      await axios.put(
+        `${backendUrl}/competition/${competitionData._id}`,
+        {
+          disciplines: newDisciplines,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+    } catch (err) {
+      alert("Error saving discipline order");
+      console.error(err);
+    }
+  };
+
   return (
     <>
       {competitionData && (
@@ -1834,7 +1863,17 @@ const CompetitionDetail = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {competitionData.disciplines?.map((discipline) => {
+                      {competitionData.disciplines?.map((discipline, idx) => {
+                        // Permission: superAdmin OR compAdmin (not participant)
+                        const canMove =
+                          userData.role === "superAdmin" ||
+                          (competitionData.compAdmins &&
+                            competitionData.compAdmins.includes(userData._id) &&
+                            !(
+                              competitionData.compUsers &&
+                              competitionData.compUsers.includes(userData._id)
+                            ));
+
                         return (
                           <tr key={discipline}>
                             <td
@@ -1845,128 +1884,145 @@ const CompetitionDetail = () => {
                               }}
                             >
                               {getDisciplineNameFromRef(discipline)}
-                              {/* Functionality for superAdmin or comp admin (not participant) */}
-                              {(userData.role === "superAdmin" ||
-                                (competitionData.compAdmins &&
-                                  competitionData.compAdmins.includes(
-                                    userData._id
-                                  ))) &&
-                                !(
-                                  competitionData.compUsers &&
-                                  competitionData.compUsers.includes(
-                                    userData._id
-                                  )
-                                ) && (
-                                  <>
-                                    <FontAwesomeIcon
-                                      className="menuIcon"
-                                      icon={faRedoAlt}
-                                      title="Regenerate Data"
-                                      style={{
-                                        fontSize: "1em",
-                                        cursor: "pointer",
-                                      }}
-                                      onClick={() =>
-                                        handleRegenerateDisciplineData(
-                                          discipline
-                                        )
-                                      }
-                                    />
-                                    {competitionData.discipline_data &&
-                                      competitionData.discipline_data[
-                                        discipline
-                                      ] && (
-                                        <>
-                                          <FontAwesomeIcon
-                                            className="menuIcon"
-                                            icon={faEye}
-                                            title="View Data"
-                                            style={{
-                                              fontSize: "1em",
-                                              cursor: "pointer",
-                                              marginLeft: 6,
-                                            }}
-                                            onClick={() =>
-                                              handleViewDisciplineData(
-                                                discipline
-                                              )
+                              {/* Move handles */}
+                              {canMove && (
+                                <>
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    style={{
+                                      padding: "2px 6px",
+                                      marginLeft: 4,
+                                    }}
+                                    title="Move Up"
+                                    disabled={idx === 0}
+                                    onClick={() =>
+                                      handleMoveDiscipline(idx, -1)
+                                    }
+                                  >
+                                    ↑
+                                  </Button>
+                                  <Button
+                                    variant="outline-secondary"
+                                    size="sm"
+                                    style={{
+                                      padding: "2px 6px",
+                                      marginLeft: 2,
+                                    }}
+                                    title="Move Down"
+                                    disabled={
+                                      idx ===
+                                      competitionData.disciplines.length - 1
+                                    }
+                                    onClick={() => handleMoveDiscipline(idx, 1)}
+                                  >
+                                    ↓
+                                  </Button>
+                                </>
+                              )}
+                              {/* Existing discipline admin features */}
+                              {canMove && (
+                                <>
+                                  <FontAwesomeIcon
+                                    className="menuIcon"
+                                    icon={faRedoAlt}
+                                    title="Regenerate Data"
+                                    style={{
+                                      fontSize: "1em",
+                                      cursor: "pointer",
+                                    }}
+                                    onClick={() =>
+                                      handleRegenerateDisciplineData(discipline)
+                                    }
+                                  />
+                                  {competitionData.discipline_data &&
+                                    competitionData.discipline_data[
+                                      discipline
+                                    ] && (
+                                      <>
+                                        <FontAwesomeIcon
+                                          className="menuIcon"
+                                          icon={faEye}
+                                          title="View Data"
+                                          style={{
+                                            fontSize: "1em",
+                                            cursor: "pointer",
+                                            marginLeft: 6,
+                                          }}
+                                          onClick={() =>
+                                            handleViewDisciplineData(discipline)
+                                          }
+                                        />
+                                        <FontAwesomeIcon
+                                          className="menuIcon"
+                                          icon={faFile}
+                                          title="Software File"
+                                          style={{
+                                            fontSize: "1em",
+                                            cursor: "pointer",
+                                            marginLeft: 6,
+                                            color: "#007bff",
+                                          }}
+                                          onClick={() => {
+                                            handleDownloadFile(discipline);
+                                          }}
+                                        />
+                                        <span
+                                          title="Create Memorisation PDF"
+                                          onClick={() => {
+                                            if (
+                                              discipline.includes("N") ||
+                                              discipline.includes("B")
+                                            ) {
+                                              setPDFDiscipline(discipline);
+                                              setShowPDFOptionsModal(true);
+                                            } else {
+                                              handleMemorisationPDF(discipline);
                                             }
-                                          />
-                                          {/* File icon only for disciplines with generated data */}
-                                          <FontAwesomeIcon
-                                            className="menuIcon"
-                                            icon={faFile}
-                                            title="Software File"
-                                            style={{
-                                              fontSize: "1em",
-                                              cursor: "pointer",
-                                              marginLeft: 6,
-                                              color: "#007bff",
-                                            }}
-                                            onClick={() => {
-                                              handleDownloadFile(discipline);
-                                            }}
-                                          />
-                                          <span
-                                            title="Create Memorisation PDF"
-                                            onClick={() => {
-                                              if (discipline.includes("N")) {
-                                                setPDFDiscipline(discipline);
-                                                setShowPDFOptionsModal(true);
-                                              } else if (
-                                                discipline.includes("B")
-                                              ) {
-                                                setPDFDiscipline(discipline);
-                                                setShowPDFOptionsModal(true);
-                                              } else {
-                                                handleMemorisationPDF(
-                                                  discipline
-                                                );
-                                              }
-                                            }}
-                                            style={{
-                                              marginLeft: 6,
-                                              fontWeight: 700,
-                                              fontSize: "1.1em",
-                                              color: "#b00",
-                                              cursor: "pointer",
-                                              fontFamily: "monospace",
-                                              border: "1px solid #b00",
-                                              borderRadius: "3px",
-                                              padding: "0 0.4em",
-                                              background: "#fff6f6",
-                                              display: "inline-block",
-                                              lineHeight: 1.1,
-                                            }}
-                                          >
-                                            M
-                                          </span>
-                                          <span
-                                            title="Create Recall PDF"
-                                            onClick={() =>
-                                              handleRecallPDF(discipline)
-                                            }
-                                            style={{
-                                              marginLeft: 6,
-                                              fontWeight: 700,
-                                              fontSize: "1.1em",
-                                              color: "#090",
-                                              cursor: "pointer",
-                                              fontFamily: "monospace",
-                                              border: "1px solid #090",
-                                              borderRadius: "3px",
-                                              padding: "0 0.4em",
-                                              background: "#f6fff6",
-                                              display: "inline-block",
-                                              lineHeight: 1.1,
-                                            }}
-                                          >
-                                            R
-                                          </span>
-                                        </>
-                                      )}
-                                  </>
-                                )}
+                                          }}
+                                          style={{
+                                            marginLeft: 6,
+                                            fontWeight: 700,
+                                            fontSize: "1.1em",
+                                            color: "#b00",
+                                            cursor: "pointer",
+                                            fontFamily: "monospace",
+                                            border: "1px solid #b00",
+                                            borderRadius: "3px",
+                                            padding: "0 0.4em",
+                                            background: "#fff6f6",
+                                            display: "inline-block",
+                                            lineHeight: 1.1,
+                                          }}
+                                        >
+                                          M
+                                        </span>
+                                        <span
+                                          title="Create Recall PDF"
+                                          onClick={() =>
+                                            handleRecallPDF(discipline)
+                                          }
+                                          style={{
+                                            marginLeft: 6,
+                                            fontWeight: 700,
+                                            fontSize: "1.1em",
+                                            color: "#090",
+                                            cursor: "pointer",
+                                            fontFamily: "monospace",
+                                            border: "1px solid #090",
+                                            borderRadius: "3px",
+                                            padding: "0 0.4em",
+                                            background: "#f6fff6",
+                                            display: "inline-block",
+                                            lineHeight: 1.1,
+                                          }}
+                                        >
+                                          R
+                                        </span>
+                                      </>
+                                    )}
+                                </>
+                              )}
                             </td>
                             {userData.role === "superAdmin" && <td></td>}
                             <td
