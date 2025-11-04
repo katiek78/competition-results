@@ -42,6 +42,21 @@ export function getFlagEmoji(countryName) {
     return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
   }
 
+  // Special case for Wales - return Wales flag emoji
+  if (countryName === "Wales") {
+    return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
+  }
+
+  // Special case for Scotland - return Scotland flag emoji
+  if (countryName === "Scotland") {
+    return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
+  }
+
+  // Special case for Northern Ireland - return Northern Ireland flag emoji
+  if (countryName === "Northern Ireland") {
+    return "🇬🇧";
+  }
+
   let code = countryNameToCode[countryName];
   if (!code && countryName.length === 2) code = countryName.toUpperCase();
   if (!code) return "(" + countryName + ")";
