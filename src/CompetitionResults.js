@@ -864,17 +864,21 @@ const CompetitionResults = () => {
         // Primary sort: by total championship points
         const totalDiff = b.total - a.total;
         if (totalDiff !== 0) return totalDiff;
-        
+
         // Secondary sort: by name (extract lastName from full name)
-        const nameA = a.name.split(' ');
-        const nameB = b.name.split(' ');
+        const nameA = a.name.split(" ");
+        const nameB = b.name.split(" ");
         const lastNameA = nameA.length > 1 ? nameA[nameA.length - 1] : nameA[0];
         const lastNameB = nameB.length > 1 ? nameB[nameB.length - 1] : nameB[0];
-        const firstNameA = nameA.length > 1 ? nameA.slice(0, -1).join(' ') : nameA[0];
-        const firstNameB = nameB.length > 1 ? nameB.slice(0, -1).join(' ') : nameB[0];
-        
+        const firstNameA =
+          nameA.length > 1 ? nameA.slice(0, -1).join(" ") : nameA[0];
+        const firstNameB =
+          nameB.length > 1 ? nameB.slice(0, -1).join(" ") : nameB[0];
+
         const lastNameCompare = lastNameA.localeCompare(lastNameB);
-        return lastNameCompare !== 0 ? lastNameCompare : firstNameA.localeCompare(firstNameB);
+        return lastNameCompare !== 0
+          ? lastNameCompare
+          : firstNameA.localeCompare(firstNameB);
       })
     );
   };
