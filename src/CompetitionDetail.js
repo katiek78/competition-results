@@ -424,6 +424,23 @@ const CompetitionDetail = () => {
           birthYear = birthYearRaw;
         } else if (/\d{4}$/.test(birthYearRaw)) {
           birthYear = birthYearRaw.slice(-4);
+        } else if (/\d{2}$/.test(birthYearRaw)) {
+          // Handle formats like '19-May-12' - extract last 2 digits and determine century
+          // based on assumption that all competitors are at least 3 years old
+          const twoDigitYear = parseInt(birthYearRaw.slice(-2), 10);
+          const currentYear = new Date().getFullYear();
+          const minAge = 3;
+
+          // Calculate the cutoff: if current year is 2025, cutoff is 22 (2025-3=2022)
+          const cutoff = (currentYear - minAge) % 100;
+
+          if (twoDigitYear <= cutoff) {
+            // 2000s: 00-22 (in 2025) would be 2000-2022
+            birthYear = "20" + String(twoDigitYear).padStart(2, "0");
+          } else {
+            // 1900s: 23-99 (in 2025) would be 1923-1999
+            birthYear = "19" + String(twoDigitYear).padStart(2, "0");
+          }
         } else {
           birthYear = birthYearRaw.match(/\d{4}/)?.[0] || "";
         }
@@ -2178,6 +2195,10 @@ const CompetitionDetail = () => {
             <Form.Group className="mb-3">
               <Form.Label>
                 Paste CSV data below (columns: Name, Country, DOB/Birth Year)
+                <br />
+                <small style={{ color: "#666", fontWeight: "normal" }}>
+                  Birth year formats: 2012, 19-May-12, 12/05/2012, etc.
+                </small>
               </Form.Label>
               <Form.Control
                 as="textarea"
