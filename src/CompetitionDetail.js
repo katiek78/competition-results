@@ -450,7 +450,7 @@ const CompetitionDetail = () => {
         const nameParts = nameRaw.split(" ").filter(Boolean);
         if (nameParts.length === 1) {
           firstName = nameParts[0];
-          lastName = "";
+          lastName = nameParts[0]; // Repeat first name if no surname
         } else if (nameParts.length > 1) {
           lastName = nameParts[nameParts.length - 1];
           firstName = nameParts.slice(0, -1).join(" ");
@@ -520,6 +520,11 @@ const CompetitionDetail = () => {
 
     // Save competitors to DB and add to competition
     const saveCompetitors = async () => {
+      // Store original state for rollback
+      const originalCompUsers = competitionData.compUsers || [];
+      const originalUsers = [...users];
+      let createdUserIds = [];
+
       try {
         // 1. Create competitors in bulk using new endpoint
         const response = await axios.post(
@@ -540,13 +545,14 @@ const CompetitionDetail = () => {
             },
           }
         );
-        const createdIds = response.data.userIds || [];
-        console.log(createdIds);
+        createdUserIds = response.data.userIds || [];
+        console.log(createdUserIds);
+
         // 2. Add all created competitor IDs to the competition
         const updatedCompetition = {
           compUsers: competitionData.compUsers
-            ? [...competitionData.compUsers, ...createdIds]
-            : [...createdIds],
+            ? [...competitionData.compUsers, ...createdUserIds]
+            : [...createdUserIds],
         };
         await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
           headers: {
@@ -557,8 +563,9 @@ const CompetitionDetail = () => {
           ...competitionData,
           compUsers: updatedCompetition.compUsers,
         });
+
         // Optimistically add new competitors to users state
-        const newUsers = createdIds.map((id, idx) => ({
+        const newUsers = createdUserIds.map((id, idx) => ({
           _id: id,
           firstName: competitors[idx].firstName,
           lastName: competitors[idx].lastName,
@@ -568,13 +575,51 @@ const CompetitionDetail = () => {
           role: "user",
         }));
         setUsers((prevUsers) => [...prevUsers, ...newUsers]);
-        alert(`Imported and saved ${createdIds.length} competitors.`);
+        alert(`Imported and saved ${createdUserIds.length} competitors.`);
         setShowImportModal(false);
       } catch (err) {
-        setImportError(
-          "Error saving competitors. Please check your data and try again."
-        );
-        console.error(err);
+        // Rollback: Remove any created users and restore competition state
+        console.error("Import failed, rolling back:", err);
+
+        try {
+          // 1. Delete any users that were created during this import
+          if (createdUserIds.length > 0) {
+            await Promise.all(
+              createdUserIds.map((userId) =>
+                axios.delete(`${backendUrl}/users/${userId}`, {
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+              )
+            );
+          }
+
+          // 2. Restore original competition users list
+          await axios.put(
+            `${backendUrl}/competition/${id}`,
+            {
+              compUsers: originalCompUsers,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setCompetitionData({
+            ...competitionData,
+            compUsers: originalCompUsers,
+          });
+
+          // 3. Restore original users state
+          setUsers(originalUsers);
+
+          setImportError(
+            "Import failed. All changes have been rolled back. Please check your data and try again."
+          );
+        } catch (rollbackErr) {
+          console.error("Rollback failed:", rollbackErr);
+          setImportError(
+            "Import failed and rollback was unsuccessful. Please refresh the page and try again."
+          );
+        }
       }
     };
     saveCompetitors();
@@ -820,6 +865,12 @@ const CompetitionDetail = () => {
       selections[idx] = selectElem ? selectElem.value : "new";
     });
 
+    // Store original state for rollback
+    const originalCompUsers = competitionData.compUsers || [];
+    const originalUsers = [...users];
+    let createdUserIds = [];
+    let addedToCompetition = [];
+
     try {
       // 1. Prepare arrays for linking and creating
       const toLink = []; // { participantIdx, userId }
@@ -850,16 +901,24 @@ const CompetitionDetail = () => {
         const newUserIds = userIds.filter(
           (id) => !existingCompUsers.includes(id)
         );
-        const updatedCompetition = {
-          compUsers: [...existingCompUsers, ...newUserIds],
-        };
-        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCompetitionData((prev) => ({
-          ...prev,
-          compUsers: updatedCompetition.compUsers,
-        }));
+
+        if (newUserIds.length > 0) {
+          const updatedCompetition = {
+            compUsers: [...existingCompUsers, ...newUserIds],
+          };
+          await axios.put(
+            `${backendUrl}/competition/${id}`,
+            updatedCompetition,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setCompetitionData((prev) => ({
+            ...prev,
+            compUsers: updatedCompetition.compUsers,
+          }));
+          addedToCompetition = [...addedToCompetition, ...newUserIds];
+        }
       }
 
       // 3. Create new users for remaining participants (from userMatches)
@@ -881,6 +940,8 @@ const CompetitionDetail = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const createdIds = response.data.userIds || [];
+        createdUserIds = [...createdUserIds, ...createdIds];
+
         const updatedCompetition = {
           compUsers: competitionData.compUsers
             ? [...competitionData.compUsers, ...createdIds]
@@ -893,6 +954,8 @@ const CompetitionDetail = () => {
           ...prev,
           compUsers: updatedCompetition.compUsers,
         }));
+        addedToCompetition = [...addedToCompetition, ...createdIds];
+
         newUsers = createdIds.map((id, idx) => ({
           _id: id,
           ...newUsersData[idx],
@@ -919,6 +982,8 @@ const CompetitionDetail = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         const createdIds = response.data.userIds || [];
+        createdUserIds = [...createdUserIds, ...createdIds];
+
         const updatedCompetition = {
           compUsers: competitionData.compUsers
             ? [...competitionData.compUsers, ...createdIds]
@@ -931,6 +996,8 @@ const CompetitionDetail = () => {
           ...prev,
           compUsers: updatedCompetition.compUsers,
         }));
+        addedToCompetition = [...addedToCompetition, ...createdIds];
+
         const newUsers = createdIds.map((id, idx) => ({
           _id: id,
           ...unmatchedCompetitors[idx],
@@ -943,13 +1010,52 @@ const CompetitionDetail = () => {
       alert("Import complete!");
       setShowImportModal(false);
     } catch (err) {
-      setImportError(
-        "Error during import. Please check your data and try again."
-      );
-      console.error(err);
+      // Rollback: Remove any created users and restore competition state
+      console.error("Import failed, rolling back:", err);
+
+      try {
+        // 1. Delete any users that were created during this import
+        if (createdUserIds.length > 0) {
+          await Promise.all(
+            createdUserIds.map((userId) =>
+              axios.delete(`${backendUrl}/users/${userId}`, {
+                headers: { Authorization: `Bearer ${token}` },
+              })
+            )
+          );
+        }
+
+        // 2. Restore original competition users list
+        if (addedToCompetition.length > 0) {
+          await axios.put(
+            `${backendUrl}/competition/${id}`,
+            {
+              compUsers: originalCompUsers,
+            },
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            }
+          );
+          setCompetitionData((prev) => ({
+            ...prev,
+            compUsers: originalCompUsers,
+          }));
+        }
+
+        // 3. Restore original users state
+        setUsers(originalUsers);
+
+        setImportError(
+          "Import failed. All changes have been rolled back. Please check your data and try again."
+        );
+      } catch (rollbackErr) {
+        console.error("Rollback failed:", rollbackErr);
+        setImportError(
+          "Import failed and rollback was unsuccessful. Please refresh the page and try again."
+        );
+      }
     }
   };
-
   const handleDeleteDiscipline = (discipline) => {
     if (window.confirm("Are you sure you wish to delete this discipline?"))
       deleteDiscipline(discipline);
