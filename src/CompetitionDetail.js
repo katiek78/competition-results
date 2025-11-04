@@ -1893,84 +1893,109 @@ const CompetitionDetail = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {competitionData.compUsers?.map((userId) => {
-                        // Find the user with the matching ID in the users array
-                        const user = users.find((user) => user._id === userId);
-                        return (
-                          <tr key={userId}>
-                            <td>
-                              {!user && "<Deleted User>"}
-                              {user?.firstName} {user?.lastName}
-                              {user?.country && user?.country !== "(none)" && (
-                                <span style={{ marginLeft: "6px" }}>
-                                  {getFlagEmoji(user.country)}
-                                </span>
-                              )}
-                              {user?.country === "(none)" && (
-                                <span
-                                  style={{
-                                    marginLeft: "6px",
-                                    fontStyle: "italic",
-                                    color: "#888",
-                                  }}
-                                >
-                                  (no affiliation)
-                                </span>
-                              )}
-                              {/* Flag if imported with a close or unrecognized country match */}
-                              {importedCompetitors &&
-                                importedCompetitors.length > 0 &&
-                                (() => {
-                                  const imported = importedCompetitors.find(
-                                    (c) =>
-                                      c.firstName === user?.firstName &&
-                                      c.lastName === user?.lastName &&
-                                      c.birthYear === user?.birthYear
-                                  );
-                                  if (
-                                    imported &&
-                                    imported.countryFlag === "close"
-                                  ) {
-                                    return (
-                                      <span
-                                        style={{
-                                          color: "#b8860b",
-                                          marginLeft: 8,
-                                          fontWeight: 600,
-                                        }}
-                                      >
-                                        (imported: matched country)
-                                      </span>
+                      {competitionData.compUsers
+                        ?.map((userId) => {
+                          // Find the user with the matching ID in the users array
+                          const user = users.find(
+                            (user) => user._id === userId
+                          );
+                          return { userId, user };
+                        })
+                        .sort((a, b) => {
+                          // Handle deleted users - put them at the end
+                          if (!a.user && !b.user) return 0;
+                          if (!a.user) return 1;
+                          if (!b.user) return -1;
+
+                          // Sort by lastName, then firstName
+                          return (
+                            (a.user.lastName || "").localeCompare(
+                              b.user.lastName || ""
+                            ) ||
+                            (a.user.firstName || "").localeCompare(
+                              b.user.firstName || ""
+                            )
+                          );
+                        })
+                        .map(({ userId, user }) => {
+                          return (
+                            <tr key={userId}>
+                              <td>
+                                {!user && "<Deleted User>"}
+                                {user?.firstName} {user?.lastName}
+                                {user?.country &&
+                                  user?.country !== "(none)" && (
+                                    <span style={{ marginLeft: "6px" }}>
+                                      {getFlagEmoji(user.country)}
+                                    </span>
+                                  )}
+                                {user?.country === "(none)" && (
+                                  <span
+                                    style={{
+                                      marginLeft: "6px",
+                                      fontStyle: "italic",
+                                      color: "#888",
+                                    }}
+                                  >
+                                    (no affiliation)
+                                  </span>
+                                )}
+                                {/* Flag if imported with a close or unrecognized country match */}
+                                {importedCompetitors &&
+                                  importedCompetitors.length > 0 &&
+                                  (() => {
+                                    const imported = importedCompetitors.find(
+                                      (c) =>
+                                        c.firstName === user?.firstName &&
+                                        c.lastName === user?.lastName &&
+                                        c.birthYear === user?.birthYear
                                     );
-                                  }
-                                  if (
-                                    imported &&
-                                    imported.countryFlag === "none"
-                                  ) {
-                                    return (
-                                      <span
-                                        style={{
-                                          color: "#b00",
-                                          marginLeft: 8,
-                                          fontWeight: 600,
-                                        }}
-                                      >
-                                        (imported: country not recognized)
-                                      </span>
-                                    );
-                                  }
-                                  return null;
-                                })()}
-                            </td>
-                            <td onClick={() => handleDeleteParticipant(userId)}>
-                              <FontAwesomeIcon
-                                className="menuIcon"
-                                icon={faTrash}
-                              />
-                            </td>
-                          </tr>
-                        );
-                      })}
+                                    if (
+                                      imported &&
+                                      imported.countryFlag === "close"
+                                    ) {
+                                      return (
+                                        <span
+                                          style={{
+                                            color: "#b8860b",
+                                            marginLeft: 8,
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          (imported: matched country)
+                                        </span>
+                                      );
+                                    }
+                                    if (
+                                      imported &&
+                                      imported.countryFlag === "none"
+                                    ) {
+                                      return (
+                                        <span
+                                          style={{
+                                            color: "#b00",
+                                            marginLeft: 8,
+                                            fontWeight: 600,
+                                          }}
+                                        >
+                                          (imported: country not recognized)
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                              </td>
+                              <td
+                                onClick={() => handleDeleteParticipant(userId)}
+                              >
+                                <FontAwesomeIcon
+                                  className="menuIcon"
+                                  icon={faTrash}
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </Col>

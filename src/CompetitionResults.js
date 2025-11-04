@@ -860,7 +860,22 @@ const CompetitionResults = () => {
     exportCompetitionToExcel(
       competitionData.name,
       competitionData.disciplines,
-      exportData.sort((a, b) => b.total - a.total)
+      exportData.sort((a, b) => {
+        // Primary sort: by total championship points
+        const totalDiff = b.total - a.total;
+        if (totalDiff !== 0) return totalDiff;
+        
+        // Secondary sort: by name (extract lastName from full name)
+        const nameA = a.name.split(' ');
+        const nameB = b.name.split(' ');
+        const lastNameA = nameA.length > 1 ? nameA[nameA.length - 1] : nameA[0];
+        const lastNameB = nameB.length > 1 ? nameB[nameB.length - 1] : nameB[0];
+        const firstNameA = nameA.length > 1 ? nameA.slice(0, -1).join(' ') : nameA[0];
+        const firstNameB = nameB.length > 1 ? nameB.slice(0, -1).join(' ') : nameB[0];
+        
+        const lastNameCompare = lastNameA.localeCompare(lastNameB);
+        return lastNameCompare !== 0 ? lastNameCompare : firstNameA.localeCompare(firstNameB);
+      })
     );
   };
 
@@ -1353,13 +1368,34 @@ const CompetitionResults = () => {
                           const group = getUserAgeGroup(thisUser);
                           return selectedAgeGroups.includes(group);
                         })
-                        .sort((a, b) =>
-                          selectedDiscipline.includes("SC")
-                            ? a.rawScore === 52 && b.rawScore === 52
-                              ? a.time - b.time
-                              : b.rawScore - a.rawScore
-                            : b.rawScore - a.rawScore
-                        )
+                        .sort((a, b) => {
+                          if (selectedDiscipline.includes("SC")) {
+                            // Speed Cards: sort by score, then by time for perfect scores
+                            if (a.rawScore === 52 && b.rawScore === 52) {
+                              const timeDiff = a.time - b.time;
+                              if (timeDiff !== 0) return timeDiff;
+                            } else {
+                              const scoreDiff = b.rawScore - a.rawScore;
+                              if (scoreDiff !== 0) return scoreDiff;
+                            }
+                          } else {
+                            // Other disciplines: sort by score
+                            const scoreDiff = b.rawScore - a.rawScore;
+                            if (scoreDiff !== 0) return scoreDiff;
+                          }
+
+                          // Secondary sort: by name (lastName, then firstName)
+                          const userA = users.find((u) => u._id === a.compUser);
+                          const userB = users.find((u) => u._id === b.compUser);
+                          const lastNameCompare = (
+                            userA?.lastName || ""
+                          ).localeCompare(userB?.lastName || "");
+                          return lastNameCompare !== 0
+                            ? lastNameCompare
+                            : (userA?.firstName || "").localeCompare(
+                                userB?.firstName || ""
+                              );
+                        })
                         .map((result, i) => {
                           // Find the user with the matching ID in the users array
                           const thisUser = users.find(
@@ -1556,11 +1592,23 @@ const CompetitionResults = () => {
                           .filter(({ group }) =>
                             selectedAgeGroups.includes(group)
                           )
-                          .sort(
-                            (a, b) =>
+                          .sort((a, b) => {
+                            // Primary sort: by total championship points
+                            const totalDiff =
                               b.competitor.unroundedTotal -
-                              a.competitor.unroundedTotal
-                          )
+                              a.competitor.unroundedTotal;
+                            if (totalDiff !== 0) return totalDiff;
+
+                            // Secondary sort: by name (lastName, then firstName)
+                            const lastNameCompare = (
+                              a.thisUser?.lastName || ""
+                            ).localeCompare(b.thisUser?.lastName || "");
+                            return lastNameCompare !== 0
+                              ? lastNameCompare
+                              : (a.thisUser?.firstName || "").localeCompare(
+                                  b.thisUser?.firstName || ""
+                                );
+                          })
                           .map(({ competitor, thisUser }, i) => (
                             <tr key={i}>
                               <td>{i + 1}</td>
