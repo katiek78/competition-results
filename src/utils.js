@@ -31,12 +31,17 @@ export const countryNameToCode = {
   Switzerland: "CH",
   Mongolia: "MN",
   Austria: "AT",
-  England: "EN",
   // ...add more as needed
 };
 
 export function getFlagEmoji(countryName) {
   if (!countryName || countryName === "(none)") return null;
+
+  // Special case for England - return England flag emoji
+  if (countryName === "England") {
+    return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+  }
+
   let code = countryNameToCode[countryName];
   if (!code && countryName.length === 2) code = countryName.toUpperCase();
   if (!code) return "(" + countryName + ")";
