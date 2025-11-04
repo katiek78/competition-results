@@ -29,6 +29,9 @@ export const countryNameToCode = {
   Netherlands: "NL",
   Belgium: "BE",
   Switzerland: "CH",
+  Mongolia: "MN",
+  Austria: "AT",
+  England: "EN",
   // ...add more as needed
 };
 
