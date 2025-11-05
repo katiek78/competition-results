@@ -1234,7 +1234,7 @@ const CompetitionDetail = () => {
     const labelStyle = "italic";
     const leftMargin = 20;
     const cellWidth = (pageWidth - leftMargin - 10) / numbersPerRow;
-    const cellHeight = 8.7;
+    const cellHeight = isB ? 7.8 : 8.7; // Slightly smaller cells for binary to fit 30 rows
 
     // Load logos once
     const logoSources = [
@@ -1678,7 +1678,8 @@ const CompetitionDetail = () => {
           const cellX = leftMargin + c * cellWidth;
           doc.rect(cellX, y, cellWidth, cellHeight);
         }
-        y += cellHeight + 1.5;
+        // Reduce spacing for binary recall to fit 30 rows on page
+        y += cellHeight + (isB ? 0.3 : 1.5);
       }
     }
 
