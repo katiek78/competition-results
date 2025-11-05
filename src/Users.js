@@ -25,6 +25,8 @@ const Users = () => {
   const [userData, setUserData] = useState({});
   const [editingCountryUserId, setEditingCountryUserId] = useState(null);
   const [editingCountryValue, setEditingCountryValue] = useState("");
+  const [editingBirthYearUserId, setEditingBirthYearUserId] = useState(null);
+  const [editingBirthYearValue, setEditingBirthYearValue] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Modal state for add user
@@ -245,6 +247,11 @@ const Users = () => {
     setEditingCountryValue(currentCountry || "");
   };
 
+  const handleEditBirthYear = (userId, currentBirthYear) => {
+    setEditingBirthYearUserId(userId);
+    setEditingBirthYearValue(currentBirthYear || "");
+  };
+
   // Helper to generate a strong password
   function generateStrongPassword(length = 12) {
     const chars =
@@ -297,6 +304,53 @@ const Users = () => {
   const handleCancelCountryEdit = () => {
     setEditingCountryUserId(null);
     setEditingCountryValue("");
+  };
+
+  const handleSaveBirthYear = async (userId) => {
+    try {
+      // set configurations
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/user-update/${userId}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          birthYear: editingBirthYearValue
+            ? parseInt(editingBirthYearValue)
+            : null,
+        },
+      };
+      const response = await axios(configuration);
+      console.log("User birth year updated:", response.data);
+
+      // Update the local state
+      setUsers((prevUsers) => {
+        const newUsers = prevUsers.map((user) => {
+          if (user._id === userId) {
+            return {
+              ...user,
+              birthYear: editingBirthYearValue
+                ? parseInt(editingBirthYearValue)
+                : null,
+            };
+          }
+          return user;
+        });
+        return newUsers;
+      });
+
+      // Reset editing state
+      setEditingBirthYearUserId(null);
+      setEditingBirthYearValue("");
+    } catch (error) {
+      console.error("Error updating user birth year:", error);
+    }
+  };
+
+  const handleCancelBirthYearEdit = () => {
+    setEditingBirthYearUserId(null);
+    setEditingBirthYearValue("");
   };
 
   const handleRefreshUsers = () => {
@@ -507,6 +561,7 @@ const Users = () => {
               <tr>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Birth Year</th>
                 <th>Role</th>
                 <th>Actions</th>
               </tr>
@@ -593,6 +648,51 @@ const Users = () => {
                       )}
                     </td>
                     <td>{usr.email}</td>
+                    <td>
+                      {editingBirthYearUserId === usr._id ? (
+                        <div>
+                          <input
+                            type="number"
+                            value={editingBirthYearValue}
+                            onChange={(e) =>
+                              setEditingBirthYearValue(e.target.value)
+                            }
+                            style={{ width: "80px", display: "inline" }}
+                            min={1950}
+                            max={2015}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveBirthYear(usr._id)}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelBirthYearEdit}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <span>{usr.birthYear || "Not set"}</span>
+                          {(userData.role === "superAdmin" ||
+                            userData.role === "admin") && (
+                            <FontAwesomeIcon
+                              title="Edit Birth Year"
+                              className="actionIcon"
+                              icon={faEdit}
+                              onClick={() =>
+                                handleEditBirthYear(usr._id, usr.birthYear)
+                              }
+                              style={{ marginLeft: "10px", cursor: "pointer" }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td>{getRoleIcon(usr.role)}</td>
                     <td>
                       {" "}
