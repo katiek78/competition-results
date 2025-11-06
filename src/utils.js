@@ -31,6 +31,7 @@ export const countryNameToCode = {
   Switzerland: "CH",
   Mongolia: "MN",
   Austria: "AT",
+  Uzbekistan: "UZ",
   // ...add more as needed
 };
 
