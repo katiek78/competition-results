@@ -164,11 +164,31 @@ const CompetitionResults = () => {
     ageGroups.map((g) => g.key)
   );
 
+  const allAgeGroupsSelected = selectedAgeGroups.length === ageGroups.length;
+
   // Toggle age group selection
   const handleToggleAgeGroup = (key) => {
-    setSelectedAgeGroups((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
-    );
+    if (key === "all-ages") {
+      // When "all-ages" is clicked, always select all age groups
+      setSelectedAgeGroups(ageGroups.map((g) => g.key));
+      return;
+    }
+
+    setSelectedAgeGroups((prev) => {
+      let newSelection;
+      if (prev.includes(key)) {
+        // Removing this age group
+        newSelection = prev.filter((k) => k !== key);
+      } else {
+        // Adding this age group
+        newSelection = [...prev, key];
+        // If all age groups are now selected, keep them all selected
+        if (newSelection.length === ageGroups.length) {
+          return ageGroups.map((g) => g.key);
+        }
+      }
+      return newSelection;
+    });
   };
 
   // Helper: get age group for a user (by birthYear)
@@ -1252,6 +1272,29 @@ const CompetitionResults = () => {
                 justifyContent: "center",
               }}
             >
+              <button
+                key={"all-ages"}
+                type="button"
+                onClick={() => handleToggleAgeGroup("all-ages")}
+                style={{
+                  background: "darkorange",
+                  color: "white",
+                  border: allAgeGroupsSelected ? "3px solid #222" : "none",
+                  borderRadius: "6px",
+                  padding: "0.5em 1.2em",
+                  fontWeight: 600,
+                  fontSize: "1em",
+                  cursor: "pointer",
+                  boxShadow: allAgeGroupsSelected
+                    ? "0 0 0 2px #fff, 0 0 0 4px #222"
+                    : "none",
+                  opacity: allAgeGroupsSelected ? 1 : 0.6,
+                  outline: allAgeGroupsSelected ? "2px solid #222" : "none",
+                  transition: "all 0.15s",
+                }}
+              >
+                All ages
+              </button>
               {ageGroups.map((group) => {
                 const selected = selectedAgeGroups.includes(group.key);
                 return (
