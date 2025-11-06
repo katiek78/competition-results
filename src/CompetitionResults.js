@@ -223,38 +223,41 @@ const CompetitionResults = () => {
 
   const handleImportSubmit = () => {
     // Parse imported scores
-    const namesAndScores = importText.split("\n").map((line) => {
-      const parts = line.split("\t").map((item) => item.trim());
+    const namesAndScores = importText
+      .split("\n")
+      .map((line) => {
+        const parts = line.split("\t").map((item) => item.trim());
 
-      let name, category, score;
+        let name, category, score;
 
-      if (parts.length === 2) {
-        // Two columns: name, score
-        [name, score] = parts;
-        category = "";
-      } else if (parts.length >= 3) {
-        // Three or more columns: check if second column is numeric (age group to ignore)
-        const secondColumn = parts[1];
-        const isNumeric =
-          !isNaN(parseFloat(secondColumn)) && isFinite(secondColumn);
-
-        if (isNumeric) {
-          // Second column is numeric (age group), ignore it: name, age_group, score
-          [name, , score] = parts;
+        if (parts.length === 2) {
+          // Two columns: name, score
+          [name, score] = parts;
           category = "";
-        } else {
-          // Second column is text (category), keep it: name, category, score
-          [name, category, score] = parts;
-        }
-      } else {
-        // Only one column or invalid format
-        name = parts[0] || "";
-        category = "";
-        score = "";
-      }
+        } else if (parts.length >= 3) {
+          // Three or more columns: check if second column is numeric (age group to ignore)
+          const secondColumn = parts[1];
+          const isNumeric =
+            !isNaN(parseFloat(secondColumn)) && isFinite(secondColumn);
 
-      return { name, category, score };
-    });
+          if (isNumeric) {
+            // Second column is numeric (age group), ignore it: name, age_group, score
+            [name, , score] = parts;
+            category = "";
+          } else {
+            // Second column is text (category), keep it: name, category, score
+            [name, category, score] = parts;
+          }
+        } else {
+          // Only one column or invalid format
+          name = parts[0] || "";
+          category = "";
+          score = "";
+        }
+
+        return { name, category, score };
+      })
+      .filter((entry) => entry.name.trim() !== ""); // Filter out rows with empty names
 
     console.log("[Import Debug] Parsed names and scores:", namesAndScores);
 
