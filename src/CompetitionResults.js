@@ -158,6 +158,7 @@ const CompetitionResults = () => {
     { key: "kids", label: "Kids", color: "#87cefa", textColor: "#222" },
     { key: "juniors", label: "Juniors", color: "#4682b4", textColor: "#fff" },
     { key: "adults", label: "Adults", color: "#274472", textColor: "#fff" },
+    { key: "seniors", label: "Seniors", color: "#3a8a16ff", textColor: "#fff" },
   ];
   const [selectedAgeGroups, setSelectedAgeGroups] = useState(
     ageGroups.map((g) => g.key)
@@ -180,6 +181,7 @@ const CompetitionResults = () => {
       return "kids";
     if (age >= AGE_GROUPS.juniors.minAge && age <= AGE_GROUPS.juniors.maxAge)
       return "juniors";
+    if (age >= AGE_GROUPS.seniors.minAge) return "seniors";
     return "adults";
   }
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs

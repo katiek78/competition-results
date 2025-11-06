@@ -2,7 +2,8 @@
 export const AGE_GROUPS = {
   kids: { minAge: 0, maxAge: 12 },
   juniors: { minAge: 13, maxAge: 17 },
-  adults: { minAge: 18, maxAge: 150 },
+  adults: { minAge: 18, maxAge: 59 },
+  seniors: { minAge: 60, maxAge: 150 },
 };
 
 export const backendUrl = process.env.REACT_APP_BACKEND_URL;
