@@ -207,7 +207,6 @@ const CompetitionResults = () => {
   //const [isMobile, setIsMobile] = useState(window.innerWidth < 768); // adjust this value to your needs
 
   const handleDisciplineToggle = () => {
-    console.log(isMobile, showDisciplineMenu);
     if (isMobile) {
       setShowDisciplineMenu(!showDisciplineMenu);
     }
@@ -257,9 +256,7 @@ const CompetitionResults = () => {
 
         return { name, category, score };
       })
-      .filter((entry) => entry.name.trim() !== ""); // Filter out rows with empty names
-
-    console.log("[Import Debug] Parsed names and scores:", namesAndScores);
+      .filter((entry) => entry.name.trim() !== "" && entry.score.trim() !== ""); // Filter out rows with empty names or scores
 
     // Prepare competitor lookup (firstName + lastName)
     const competitors = competitionData.compUsers.map((cuId) => {
@@ -269,7 +266,6 @@ const CompetitionResults = () => {
         name: user ? `${user.firstName} ${user.lastName}`.trim() : "",
       };
     });
-    console.log("[Import Debug] Competitors:", competitors);
 
     const disciplineLabel = importDiscipline
       ? getDisciplineNameFromRef(importDiscipline)
@@ -286,9 +282,6 @@ const CompetitionResults = () => {
       );
       if (!competitor) {
         issues.push(`Row ${idx + 1}: Name not matched: '${entry.name}'`);
-        console.log(
-          `[Import Debug] Row ${idx + 1}: Name not matched: '${entry.name}'`
-        );
         return;
       }
       // Check for duplicate score for this discipline
@@ -314,20 +307,13 @@ const CompetitionResults = () => {
           }' in ${disciplineLabel}`
         );
         duplicates.push(importObj);
-        console.log(
-          `[Import Debug] Row ${idx + 1}: Duplicate score for '${
-            entry.name
-          }' in ${disciplineLabel}`
-        );
       } else {
         valid.push(importObj);
-        console.log(`[Import Debug] Row ${idx + 1}: Valid import:`, importObj);
       }
     });
 
     // If there are issues (unmatched names or duplicates), show error and options
     if (issues.length > 0) {
-      console.log("[Import Debug] Issues found:", issues);
       setImportError(issues.join("\n"));
       setPendingImports(duplicates);
       setValidImports(valid);
@@ -336,7 +322,6 @@ const CompetitionResults = () => {
 
     // If no valid imports, show message
     if (valid.length === 0) {
-      console.log("[Import Debug] No valid scores to import.");
       alert("No valid scores to import.");
       setValidImports([]);
       setPendingImports([]);
@@ -344,6 +329,10 @@ const CompetitionResults = () => {
     }
 
     // If no issues, import all valid scores
+    console.log(
+      `[Import Debug] About to import ${valid.length} valid scores:`,
+      valid
+    );
     Promise.all(
       valid.map((importObj) => {
         // Use the 'add' URL for new results (no existing score), else use the 'edit' URL
@@ -351,6 +340,9 @@ const CompetitionResults = () => {
           (r) =>
             r.compUser === importObj.compUser &&
             r.discipline === importObj.discipline
+        );
+        console.log(
+          `[Import Debug] Processing import for ${importObj.name}, discipline: ${importObj.discipline}, score: ${importObj.rawScore}`
         );
         const configuration = {
           method: "put",
@@ -376,16 +368,41 @@ const CompetitionResults = () => {
         };
         axios(configuration)
           .then((result) => {
+            console.log(
+              `[Import Success] Updated competition data:`,
+              result.data
+            );
+            console.log(
+              `[Import Success] Total compResults after import:`,
+              result.data.compResults?.length
+            );
+            console.log(
+              `[Import Success] Results for discipline ${importDiscipline}:`,
+              result.data.compResults?.filter(
+                (r) => r.discipline === importDiscipline
+              )
+            );
             setCompetitionData(result.data);
+
+            // Debug info for the user
+            const disciplineResults =
+              result.data.compResults?.filter(
+                (r) => r.discipline === importDiscipline
+              ) || [];
             alert(
               `${valid.length} new score${
                 valid.length !== 1 ? "s" : ""
-              } imported.`
+              } imported.\n\n`
             );
             setShowImportModal(false);
             setImportError("");
             setPendingImports([]);
             setImportText("");
+
+            // Refresh current discipline standings if we're on a discipline
+            if (selectedDiscipline) {
+              handleSelectDiscipline(selectedDiscipline);
+            }
           })
           .catch((error) => {
             alert("Scores imported, but failed to refresh data.");
@@ -619,7 +636,6 @@ const CompetitionResults = () => {
                   ? newResult // Replace with the new result
                   : result // Keep the existing result
             );
-        console.log(updatedResults); //correct
         return {
           ...prevCompetitionData,
           compResults: updatedResults,
@@ -779,7 +795,7 @@ const CompetitionResults = () => {
               console.error("Error fetching competition data:", error);
             });
         } else {
-          console.log("Failed to fetch user data");
+          // Failed to fetch user data - handling silently for security
         }
       } catch (error) {
         console.error("Error in useEffect:", error);
@@ -831,13 +847,22 @@ const CompetitionResults = () => {
       })
       .catch((error) => {
         error = new Error();
-        console.log(error);
+        // Error handled silently for security
       });
   }, [token]);
 
   // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
 
   const handleSelectDiscipline = (discipline) => {
+    if (competitionData?.compResults) {
+      const resultsForDiscipline = competitionData.compResults.filter(
+        (r) => r.discipline === discipline
+      );
+      console.log(
+        `[Discipline Selection] Results for ${discipline}:`,
+        resultsForDiscipline
+      );
+    }
     setSelectedDiscipline(discipline);
     if (isMobile) setShowDisciplineMenu(false);
   };
@@ -1187,6 +1212,35 @@ const CompetitionResults = () => {
     URL.revokeObjectURL(scoreUrl);
   };
 
+  // Log current state immediately when component renders
+  if (competitionData) {
+    // console.log("=== CURRENT DATA ANALYSIS ===");
+    // console.log("Competition name:", competitionData.name);
+    // console.log(
+    //   "Total results in system:",
+    //   competitionData.compResults?.length || 0
+    // );
+    // console.log("All disciplines:", competitionData.disciplines);
+    // console.log("All results:", competitionData.compResults);
+    // // Check for 15-minute Words specifically
+    // const wordsResults = competitionData.compResults?.filter(
+    //   (r) =>
+    //     r.discipline?.toLowerCase().includes("word") ||
+    //     r.discipline?.includes("W") ||
+    //     r.discipline?.includes("15W")
+    // );
+    // console.log("Results containing 'word' or 'W':", wordsResults);
+    // // Check exact discipline matches
+    // competitionData.disciplines?.forEach((discipline) => {
+    //   const results = competitionData.compResults?.filter(
+    //     (r) => r.discipline === discipline
+    //   );
+    //   console.log(`Results for discipline "${discipline}":`, results);
+    // });
+    // console.log("Selected discipline:", selectedDiscipline);
+    // console.log("========================");
+  }
+
   return (
     <>
       {competitionData && (
@@ -1435,10 +1489,13 @@ const CompetitionResults = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {competitionData.compResults
-                        .filter(
-                          (result) => result.discipline === selectedDiscipline
-                        )
+                      {(() => {
+                        const disciplineResults =
+                          competitionData.compResults.filter(
+                            (result) => result.discipline === selectedDiscipline
+                          );
+                        return disciplineResults;
+                      })()
                         .filter((result) => {
                           const thisUser = users.find(
                             (u) => u._id === result.compUser
@@ -1806,22 +1863,42 @@ const CompetitionResults = () => {
                     variant={"outline-primary"}
                     type="button"
                     onClick={() => {
-                      // Overwrite all old scores (import all, including duplicates)
+                      // Update existing scores (import all, using appropriate endpoint)
                       const allImports = [...validImports, ...pendingImports];
+                      console.log(
+                        `[Update Existing] About to process ${allImports.length} scores (${validImports.length} new + ${pendingImports.length} updates)`
+                      );
                       Promise.all(
                         allImports.map((importObj) => {
+                          // Use the 'add' URL for new results (no existing score), else use the 'edit' URL
+                          const alreadyHasScore =
+                            competitionData.compResults.some(
+                              (r) =>
+                                r.compUser === importObj.compUser &&
+                                r.discipline === importObj.discipline
+                            );
                           const configuration = {
                             method: "put",
-                            url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+                            url: !alreadyHasScore
+                              ? `${backendUrl}/competition/${id}/results` // Add new result
+                              : `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`, // Edit existing result
                             headers: {
                               Authorization: `Bearer ${token}`,
                             },
                             data: importObj,
                           };
+                          console.log(
+                            `[Update Existing] ${importObj.name}: ${
+                              alreadyHasScore ? "UPDATE" : "ADD"
+                            } - ${configuration.url}`
+                          );
                           return axios(configuration);
                         })
                       )
                         .then(() => {
+                          console.log(
+                            `[Update Existing] Successfully processed ${allImports.length} scores`
+                          );
                           alert(
                             `${allImports.length} score${
                               allImports.length !== 1 ? "s" : ""
@@ -1831,33 +1908,108 @@ const CompetitionResults = () => {
                           setImportError("");
                           setPendingImports([]);
                           setImportText("");
+                          // Refresh competition data
+                          const configuration = {
+                            method: "get",
+                            url: `${backendUrl}/competition/${id}`,
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                          };
+                          axios(configuration)
+                            .then((result) => {
+                              setCompetitionData(result.data);
+                              console.log(
+                                `[Update Existing] Competition data refreshed`
+                              );
+                              
+                              // Refresh current discipline standings if we're on a discipline
+                              if (selectedDiscipline) {
+                                handleSelectDiscipline(selectedDiscipline);
+                              }
+                            })
+                            .catch((error) => {
+                              console.error(
+                                "[Update Existing] Error refreshing data:",
+                                error
+                              );
+                            });
                         })
                         .catch((error) => {
+                          console.error(
+                            "[Update Existing] Error importing scores:",
+                            error
+                          );
                           alert("Error importing scores. Please try again.");
                         });
                     }}
                   >
-                    Overwrite all old scores
+                    Update existing scores
                   </Button>
                   <Button
                     variant={"outline-primary"}
                     type="button"
                     onClick={() => {
-                      // Import only new scores
+                      // Import only new scores - ONLY use ADD endpoint, skip duplicates entirely
+                      console.log(
+                        `[Import New Only] About to import ${validImports.length} new scores (using ADD endpoint only):`,
+                        validImports
+                      );
+                      console.log(
+                        `[Import New Only] Completely skipping ${pendingImports.length} duplicate scores:`,
+                        pendingImports
+                      );
+
+                      if (validImports.length === 0) {
+                        alert("No new scores to import (all were duplicates).");
+                        setShowImportModal(false);
+                        setImportError("");
+                        setPendingImports([]);
+                        setImportText("");
+                        return;
+                      }
+
                       Promise.all(
                         validImports.map((importObj) => {
+                          console.log(
+                            `[Import New Only] ADD: ${importObj.name} - ${importObj.discipline} - ${importObj.rawScore}`
+                          );
                           const configuration = {
                             method: "put",
-                            url: `${backendUrl}/competition/${id}/results/${importObj.compUser}/${importObj.discipline}`,
+                            url: `${backendUrl}/competition/${id}/results`, // ALWAYS use ADD endpoint
                             headers: {
                               Authorization: `Bearer ${token}`,
                             },
                             data: importObj,
                           };
-                          return axios(configuration);
+                          console.log(
+                            `[Import New Only] API call (ADD only):`,
+                            configuration
+                          );
+                          return axios(configuration)
+                            .then((response) => {
+                              console.log(
+                                `[Import New Only] API response for ${importObj.name}:`,
+                                response.status,
+                                response.data
+                              );
+                              return response;
+                            })
+                            .catch((error) => {
+                              console.error(
+                                `[Import New Only] API error for ${importObj.name}:`,
+                                error.response?.status,
+                                error.response?.data,
+                                error.message
+                              );
+                              throw error;
+                            });
                         })
                       )
                         .then(() => {
+                          console.log(
+                            `[Import New Only] Successfully imported ${validImports.length} new scores`
+                          );
                           alert(
                             `${validImports.length} new score${
                               validImports.length !== 1 ? "s" : ""
@@ -1867,8 +2019,39 @@ const CompetitionResults = () => {
                           setImportError("");
                           setPendingImports([]);
                           setImportText("");
+                          
+                          // Refresh current discipline standings if we're on a discipline
+                          if (selectedDiscipline) {
+                            handleSelectDiscipline(selectedDiscipline);
+                          }
+                          
+                          // Refresh competition data
+                          const configuration = {
+                            method: "get",
+                            url: `${backendUrl}/competition/${id}`,
+                            headers: {
+                              Authorization: `Bearer ${token}`,
+                            },
+                          };
+                          axios(configuration)
+                            .then((result) => {
+                              setCompetitionData(result.data);
+                              console.log(
+                                `[Import New Only] Competition data refreshed`
+                              );
+                            })
+                            .catch((error) => {
+                              console.error(
+                                "[Import New Only] Error refreshing data:",
+                                error
+                              );
+                            });
                         })
                         .catch((error) => {
+                          console.error(
+                            "[Import New Only] Error importing scores:",
+                            error
+                          );
                           alert("Error importing scores. Please try again.");
                         });
                     }}

@@ -707,7 +707,6 @@ const CompetitionDetail = () => {
 
   const deleteParticipant = async (id) => {
     try {
-      console.log(competitionData.compUsers);
       // Convert id to string for comparison
       // const stringId = id.toString();
 

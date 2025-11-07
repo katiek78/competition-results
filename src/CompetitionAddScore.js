@@ -38,7 +38,6 @@ const CompetitionAddScore = () => {
   }
 
   function findMatchingDiscipline(d) {
-    console.log(disciplines);
     // Find the discipline in the array based on label (case-insensitive)
     return disciplines.find(
       (discipline) => discipline.label.toLowerCase() === d.toLowerCase()
@@ -87,8 +86,6 @@ const CompetitionAddScore = () => {
       console.log("setting status to submitted");
       newResult.status = "submitted";
     }
-
-    console.log(newResult);
 
     //check for duplicate result and alert user if they already submitted one for this discipline
     if (
@@ -237,8 +234,6 @@ const CompetitionAddScore = () => {
     //   return;
     // }
 
-    console.log(decryptedDisciplineName);
-    console.log(timestamp.toISOString());
     // Check if disciplineName can be matched to a discipline and if not, alert user
     if (findMatchingDiscipline(decryptedDisciplineName)) {
       saveScore(

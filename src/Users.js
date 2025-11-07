@@ -464,9 +464,6 @@ const Users = () => {
           // make the API call
           axios(configuration)
             .then((result) => {
-              console.log(`Fetched ${result.data.users.length} users from API`);
-              console.log("Raw API response:", result.data.users);
-
               // Check if any users have verified field
               const usersWithVerified = result.data.users.filter((user) =>
                 user.hasOwnProperty("verified")
