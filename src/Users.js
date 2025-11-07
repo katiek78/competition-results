@@ -27,6 +27,9 @@ const Users = () => {
   const [editingCountryValue, setEditingCountryValue] = useState("");
   const [editingBirthYearUserId, setEditingBirthYearUserId] = useState(null);
   const [editingBirthYearValue, setEditingBirthYearValue] = useState("");
+  const [editingNameUserId, setEditingNameUserId] = useState(null);
+  const [editingFirstNameValue, setEditingFirstNameValue] = useState("");
+  const [editingLastNameValue, setEditingLastNameValue] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Modal state for add user
@@ -252,6 +255,12 @@ const Users = () => {
     setEditingBirthYearValue(currentBirthYear || "");
   };
 
+  const handleEditName = (userId, currentFirstName, currentLastName) => {
+    setEditingNameUserId(userId);
+    setEditingFirstNameValue(currentFirstName || "");
+    setEditingLastNameValue(currentLastName || "");
+  };
+
   // Helper to generate a strong password
   function generateStrongPassword(length = 12) {
     const chars =
@@ -351,6 +360,53 @@ const Users = () => {
   const handleCancelBirthYearEdit = () => {
     setEditingBirthYearUserId(null);
     setEditingBirthYearValue("");
+  };
+
+  const handleSaveName = async (userId) => {
+    try {
+      // set configurations
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/user-update/${userId}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          firstName: editingFirstNameValue,
+          lastName: editingLastNameValue,
+        },
+      };
+      const response = await axios(configuration);
+      console.log("User name updated:", response.data);
+
+      // Update the local state
+      setUsers((prevUsers) => {
+        const newUsers = prevUsers.map((user) => {
+          if (user._id === userId) {
+            return {
+              ...user,
+              firstName: editingFirstNameValue,
+              lastName: editingLastNameValue,
+            };
+          }
+          return user;
+        });
+        return newUsers;
+      });
+
+      // Reset editing state
+      setEditingNameUserId(null);
+      setEditingFirstNameValue("");
+      setEditingLastNameValue("");
+    } catch (error) {
+      console.error("Error updating user name:", error);
+    }
+  };
+
+  const handleCancelNameEdit = () => {
+    setEditingNameUserId(null);
+    setEditingFirstNameValue("");
+    setEditingLastNameValue("");
   };
 
   const handleRefreshUsers = () => {
@@ -576,7 +632,49 @@ const Users = () => {
                 .map((usr) => (
                   <tr key={usr._id}>
                     <td>
-                      {editingCountryUserId === usr._id ? (
+                      {editingNameUserId === usr._id ? (
+                        <div>
+                          <input
+                            type="text"
+                            value={editingFirstNameValue}
+                            onChange={(e) =>
+                              setEditingFirstNameValue(e.target.value)
+                            }
+                            style={{
+                              width: "80px",
+                              display: "inline",
+                              marginRight: "5px",
+                            }}
+                            placeholder="First name"
+                            autoFocus
+                          />
+                          <input
+                            type="text"
+                            value={editingLastNameValue}
+                            onChange={(e) =>
+                              setEditingLastNameValue(e.target.value)
+                            }
+                            style={{
+                              width: "80px",
+                              display: "inline",
+                              marginRight: "5px",
+                            }}
+                            placeholder="Last name"
+                          />
+                          <button
+                            onClick={() => handleSaveName(usr._id)}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelNameEdit}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : editingCountryUserId === usr._id ? (
                         <div>
                           <span>{`${usr.firstName} ${usr.lastName} (`}</span>
                           <select
@@ -632,6 +730,21 @@ const Users = () => {
                               </span>
                             )}
                           </span>
+                          {userData.role === "superAdmin" && (
+                            <FontAwesomeIcon
+                              title="Edit Name"
+                              className="actionIcon"
+                              icon={faEdit}
+                              onClick={() =>
+                                handleEditName(
+                                  usr._id,
+                                  usr.firstName,
+                                  usr.lastName
+                                )
+                              }
+                              style={{ marginLeft: "10px", cursor: "pointer" }}
+                            />
+                          )}
                           {(userData.role === "superAdmin" ||
                             userData.role === "admin") && (
                             <FontAwesomeIcon

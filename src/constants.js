@@ -220,7 +220,8 @@ export function getDisciplineStandardFromRef(disciplineRef) {
 
 export function getDisciplineRefFromName(disciplineName) {
   const matchingDiscipline = disciplines.find(
-    (discipline) => discipline.label === disciplineName
+    (discipline) =>
+      discipline.label.toLowerCase() === disciplineName.toLowerCase()
   );
 
   return matchingDiscipline ? matchingDiscipline.ref : "Unknown Discipline";

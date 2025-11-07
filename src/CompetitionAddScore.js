@@ -39,14 +39,19 @@ const CompetitionAddScore = () => {
 
   function findMatchingDiscipline(d) {
     console.log(disciplines);
-    // Find the discipline in the array based on label
-    return disciplines.find((discipline) => discipline.label === d);
+    // Find the discipline in the array based on label (case-insensitive)
+    return disciplines.find(
+      (discipline) => discipline.label.toLowerCase() === d.toLowerCase()
+    );
   }
 
   function isDuplicateResult(compResults, compUser, discipline) {
-    return compResults.some(
-      (result) =>
-        result.compUser === compUser && result.discipline === discipline
+    return (
+      compResults &&
+      compResults.some(
+        (result) =>
+          result.compUser === compUser && result.discipline === discipline
+      )
     );
   }
 
