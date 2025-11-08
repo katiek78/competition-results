@@ -37,34 +37,42 @@ export const countryNameToCode = {
 };
 
 export function getFlagEmoji(countryName) {
-  if (!countryName || countryName === "(none)") return null;
+  try {
+    if (!countryName || countryName === "(none)") return null;
 
-  // Special case for England - return England flag emoji
-  if (countryName === "England") {
-    return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+    // Special case for England - return England flag emoji
+    if (countryName === "England") {
+      return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+    }
+
+    // Special case for Wales - return Wales flag emoji
+    if (countryName === "Wales") {
+      return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
+    }
+
+    // Special case for Scotland - return Scotland flag emoji
+    if (countryName === "Scotland") {
+      return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
+    }
+
+    // Special case for Northern Ireland - return Northern Ireland flag emoji
+    if (countryName === "Northern Ireland") {
+      return "🇬🇧";
+    }
+
+    let code = countryNameToCode[countryName];
+    if (!code && countryName.length === 2) code = countryName.toUpperCase();
+    if (!code) return "(" + countryName + ")";
+
+    // Add error handling for mobile Safari Unicode issues
+    return code
+      .toUpperCase()
+      .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+  } catch (error) {
+    // Fallback for mobile browsers with Unicode issues
+    console.warn("Error generating flag emoji for", countryName, ":", error);
+    return countryName ? `(${countryName})` : null;
   }
-
-  // Special case for Wales - return Wales flag emoji
-  if (countryName === "Wales") {
-    return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
-  }
-
-  // Special case for Scotland - return Scotland flag emoji
-  if (countryName === "Scotland") {
-    return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
-  }
-
-  // Special case for Northern Ireland - return Northern Ireland flag emoji
-  if (countryName === "Northern Ireland") {
-    return "🇬🇧";
-  }
-
-  let code = countryNameToCode[countryName];
-  if (!code && countryName.length === 2) code = countryName.toUpperCase();
-  if (!code) return "(" + countryName + ")";
-  return code
-    .toUpperCase()
-    .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
 }
 
 export const getToken = () => {

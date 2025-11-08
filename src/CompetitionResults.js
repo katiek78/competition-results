@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CompetitorModal from "./CompetitorModal";
+import ErrorBoundary from "./ErrorBoundary";
 import { Modal, Form, Button } from "react-bootstrap";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
@@ -32,9 +33,33 @@ const CompetitionResults = () => {
   const [showCompetitorModal, setShowCompetitorModal] = useState(false);
   const [selectedCompetitor, setSelectedCompetitor] = useState(null);
 
+  // Loading and error states for better mobile UX
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Mobile-friendly confirmation dialog
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    show: false,
+    user: null,
+    discipline: null,
+  });
+
   const handleCompetitorClick = (user) => {
-    setSelectedCompetitor(user);
-    setShowCompetitorModal(true);
+    try {
+      // Add null checks for mobile safety
+      if (!user || !user._id) {
+        console.warn(
+          "Invalid user data passed to handleCompetitorClick:",
+          user
+        );
+        return;
+      }
+      setSelectedCompetitor(user);
+      setShowCompetitorModal(true);
+    } catch (error) {
+      console.error("Error in handleCompetitorClick:", error);
+      // alert("Unable to display competitor information. Please try again.");
+    }
   };
   // Show competitors who haven't submitted a result for selectedDiscipline
   function showCompUsersNotSubmitted() {
@@ -151,7 +176,15 @@ const CompetitionResults = () => {
   const [importError, setImportError] = useState("");
   const [importDiscipline, setImportDiscipline] = useState("");
 
-  const isMobile = window.innerWidth < 769;
+  // Safe mobile detection using useState and useEffect to prevent render issues
+  const [isMobile, setIsMobile] = useState(() => {
+    try {
+      return typeof window !== "undefined" && window.innerWidth < 769;
+    } catch (error) {
+      console.warn("Error detecting mobile viewport:", error);
+      return false; // Default to desktop view if detection fails
+    }
+  });
 
   // Age group filter state: all selected by default
   const ageGroups = [
@@ -384,15 +417,10 @@ const CompetitionResults = () => {
             );
             setCompetitionData(result.data);
 
-            // Debug info for the user
-            const disciplineResults =
-              result.data.compResults?.filter(
-                (r) => r.discipline === importDiscipline
-              ) || [];
             alert(
               `${valid.length} new score${
                 valid.length !== 1 ? "s" : ""
-              } imported.\n\n`
+              } imported.`
             );
             setShowImportModal(false);
             setImportError("");
@@ -432,12 +460,21 @@ const CompetitionResults = () => {
   };
 
   const handleDeleteScore = (user, discipline) => {
-    if (window.confirm("Are you sure you wish to delete this result?")) {
-      const resultIndex = competitionData.compResults.findIndex(
-        (result) => result.compUser === user && result.discipline === discipline
-      );
-      deleteResult(resultIndex);
-    }
+    // Use mobile-friendly confirmation dialog instead of window.confirm
+    setDeleteConfirm({ show: true, user, discipline });
+  };
+
+  const confirmDelete = () => {
+    const { user, discipline } = deleteConfirm;
+    const resultIndex = competitionData.compResults.findIndex(
+      (result) => result.compUser === user && result.discipline === discipline
+    );
+    deleteResult(resultIndex);
+    setDeleteConfirm({ show: false, user: null, discipline: null });
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, user: null, discipline: null });
   };
 
   const handleMarkCorrected = (usr) => {
@@ -691,14 +728,27 @@ const CompetitionResults = () => {
     }
   };
 
-  // useEffect(() => {
-  //   const handleResize = () => {
-  //     const isMobileNow = window.innerWidth < 768;
-  //     setShowDisciplineMenu(!isMobileNow);
-  //   };
-  //   window.addEventListener("resize", handleResize);
-  //   return () => window.removeEventListener("resize", handleResize);
-  // }, []);
+  // Handle mobile detection and resize events safely
+  useEffect(() => {
+    const handleResize = () => {
+      try {
+        const isMobileNow = window.innerWidth < 769;
+        setIsMobile(isMobileNow);
+        // Auto-hide discipline menu on mobile after resize
+        if (isMobileNow) {
+          setShowDisciplineMenu(false);
+        }
+      } catch (error) {
+        console.warn("Error in resize handler:", error);
+      }
+    };
+
+    // Add resize listener with error handling
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", handleResize);
+      return () => window.removeEventListener("resize", handleResize);
+    }
+  }, []);
 
   useEffect(() => {
     if (!competitionData) return;
@@ -770,88 +820,62 @@ const CompetitionResults = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!user) return;
-        const fetchedData = await fetchCurrentUserData(user.userId);
+        setLoading(true);
+        setError(null);
 
-        if (fetchedData) {
-          // Do something with the userData
-          setUserData(fetchedData);
-
-          //Then get competition data
-          // set configurations
-          const configuration = {
-            method: "get",
-            url: `${backendUrl}/competition/${id}`,
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          };
-          // make the API call
-          axios(configuration)
-            .then((result) => {
-              setCompetitionData(result.data);
-            })
-            .catch((error) => {
-              console.error("Error fetching competition data:", error);
-            });
-        } else {
-          // Failed to fetch user data - handling silently for security
+        // Fetch user data if user is logged in (optional)
+        if (user) {
+          const fetchedData = await fetchCurrentUserData(user.userId);
+          if (fetchedData) {
+            setUserData(fetchedData);
+          }
         }
+
+        // Always fetch competition data (public access)
+        const configuration = {
+          method: "get",
+          url: `${backendUrl}/competition/${id}`,
+          headers: token
+            ? {
+                Authorization: `Bearer ${token}`,
+              }
+            : {},
+        };
+
+        // Make the API call
+        const result = await axios(configuration);
+        setCompetitionData(result.data);
+        setLoading(false);
       } catch (error) {
-        console.error("Error in useEffect:", error);
+        console.error("Error fetching competition data:", error);
+        setError("Failed to load competition data. Please refresh the page.");
+        setLoading(false);
       }
     };
     fetchData();
-  }, [user, id, token, selectedDiscipline]);
+  }, [user, id, token]);
 
   useEffect(() => {
-    // set configurations
-    const configuration = {
-      method: "get",
-      url: `${backendUrl}/competition/${id}`,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Fetch competition participants using the public endpoint
+    // This is used for everyone (authenticated and public users) for better security
+    const fetchUsers = async () => {
+      try {
+        if (competitionData && competitionData.compUsers) {
+          const configuration = {
+            method: "get",
+            url: `${backendUrl}/users/public/${id}`,
+          };
+          const result = await axios(configuration);
+          setUsers(result.data.users || []);
+        }
+      } catch (error) {
+        console.error("Error fetching competition participants:", error);
+        setUsers([]);
+      }
     };
-    // make the API call
-    axios(configuration)
-      .then((result) => {
-        setCompetitionData(result.data);
-      })
-      .catch((error) => {
-        console.error("Error fetching competition data:", error);
-      });
-  }, [id, token, selectedDiscipline]);
 
-  useEffect(() => {
-    // set configurations
-    const configuration = {
-      method: "get",
-      url: `${backendUrl}/users`,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
-    // make the API call
-    axios(configuration)
-      .then((result) => {
-        // Filter out unverified users (treat undefined as verified for legacy users)
-        const verifiedUsers = result.data.users.filter(
-          (user) => user.verified !== false
-        );
-        setUsers(verifiedUsers);
-
-        //get logged-in user details
-        // console.log(result.data.userId);
-        // console.log(result.data.userEmail);
-      })
-      .catch((error) => {
-        error = new Error();
-        // Error handled silently for security
-      });
-  }, [token]);
-
-  // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
+    fetchUsers();
+  }, [competitionData, id]); // Col 1: 11111111111X1111111X micrascope (12), cabbige (20)
 
   const handleSelectDiscipline = (discipline) => {
     if (competitionData?.compResults) {
@@ -1241,9 +1265,42 @@ const CompetitionResults = () => {
     // console.log("========================");
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <h3>Loading competition results...</h3>
+        <p>Please wait while we load the data.</p>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem", color: "#dc3545" }}>
+        <h3>Unable to Load Results</h3>
+        <p>{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          style={{
+            padding: "0.5rem 1rem",
+            backgroundColor: "#007bff",
+            color: "white",
+            border: "none",
+            borderRadius: "4px",
+            cursor: "pointer",
+          }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
-      {competitionData && (
+      {competitionData ? (
         <div>
           <h1 className="text-center">
             Competition results: {competitionData.name}
@@ -1797,15 +1854,44 @@ const CompetitionResults = () => {
             </div>
           )}
         </div>
+      ) : (
+        !loading &&
+        !error && (
+          <div style={{ textAlign: "center", padding: "2rem" }}>
+            <h3>No competition data available</h3>
+            <p>Please check the competition ID and try again.</p>
+          </div>
+        )
       )}
-      <CompetitorModal
-        show={showCompetitorModal}
-        onHide={() => setShowCompetitorModal(false)}
-        competitor={selectedCompetitor}
-        results={competitionData ? competitionData.compResults : []}
-        disciplines={competitionData ? competitionData.disciplines : []}
-        getDisciplineNameFromRef={getDisciplineNameFromRef}
-      />
+      <ErrorBoundary>
+        <CompetitorModal
+          show={showCompetitorModal}
+          onHide={() => setShowCompetitorModal(false)}
+          competitor={selectedCompetitor}
+          results={competitionData ? competitionData.compResults : []}
+          disciplines={competitionData ? competitionData.disciplines : []}
+          getDisciplineNameFromRef={getDisciplineNameFromRef}
+        />
+      </ErrorBoundary>
+
+      {/* Mobile-friendly delete confirmation modal */}
+      <Modal show={deleteConfirm.show} onHide={cancelDelete} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this result? This action cannot be
+          undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={cancelDelete}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={confirmDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       <Modal show={showImportModal} onHide={handleImportModalClose}>
         <Modal.Header closeButton>
@@ -1922,7 +2008,7 @@ const CompetitionResults = () => {
                               console.log(
                                 `[Update Existing] Competition data refreshed`
                               );
-                              
+
                               // Refresh current discipline standings if we're on a discipline
                               if (selectedDiscipline) {
                                 handleSelectDiscipline(selectedDiscipline);
@@ -2019,12 +2105,12 @@ const CompetitionResults = () => {
                           setImportError("");
                           setPendingImports([]);
                           setImportText("");
-                          
+
                           // Refresh current discipline standings if we're on a discipline
                           if (selectedDiscipline) {
                             handleSelectDiscipline(selectedDiscipline);
                           }
-                          
+
                           // Refresh competition data
                           const configuration = {
                             method: "get",
