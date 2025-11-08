@@ -49,9 +49,6 @@ const CompetitorModal = ({
                 <tr>
                   <th>Discipline</th>
                   <th>Score</th>
-                  {competitorResults.some((r) => r.time !== undefined) && (
-                    <th>Time</th>
-                  )}
                 </tr>
               </thead>
               <tbody>
@@ -68,11 +65,12 @@ const CompetitorModal = ({
                             ? getDisciplineNameFromRef(discipline)
                             : discipline}
                         </td>
-                        <td>{res.rawScore}</td>
-                        {competitorResults.some(
-                          (r) => r.time !== undefined
-                        ) && <td>{res.time !== undefined ? res.time : ""}</td>}
-                        {/* <td>{res.status || ""}</td> */}
+                        <td>
+                          {res.rawScore}
+                          {res.time !== undefined &&
+                            res.time !== 0 &&
+                            ` (${res.time})`}
+                        </td>
                       </tr>
                     );
                   })}
