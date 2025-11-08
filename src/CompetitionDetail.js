@@ -707,37 +707,36 @@ const CompetitionDetail = () => {
 
   const deleteParticipant = async (id) => {
     try {
-      // Convert id to string for comparison
-      // const stringId = id.toString();
-
-      const updatedCompUsers = competitionData.compUsers.filter(
-        (userId) => userId !== id
-      );
-      console.log(updatedCompUsers);
-      const updatedCompResults = competitionData.compResults.filter(
-        (r) => r.compUser !== id
-      );
-      const response = await axios.put(
-        `${backendUrl}/competition/${competitionData._id}`,
-        {
-          compUsers: updatedCompUsers,
-          compResults: updatedCompResults,
-        },
+      // Send a targeted delete request with just the participant ID
+      const response = await axios.delete(
+        `${backendUrl}/competition/${competitionData._id}/participant/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      console.log("Competition saved:", response.data);
+
+      console.log("Participant deleted:", response.data);
+
+      // Update local state after successful deletion
+      const updatedCompUsers = competitionData.compUsers.filter(
+        (userId) => userId !== id
+      );
+      const updatedCompResults = competitionData.compResults.filter(
+        (r) => r.compUser !== id
+      );
+
       setCompetitionData((prevData) => ({
         ...prevData,
         compUsers: updatedCompUsers,
         compResults: updatedCompResults,
       }));
-      // setCompetitionData({...competitionData, compUsers: updatedCompUsers, compResults: updatedCompResults})
     } catch (error) {
-      console.error("Error saving competition:", error);
+      console.error("Error deleting participant:", error);
+      alert(
+        "Failed to delete participant. Please try again or contact support if the problem persists."
+      );
     }
   };
 
@@ -1347,18 +1346,13 @@ const CompetitionDetail = () => {
         }
         // Only use block height for Binary and non-large print
         const blockHeight = isB ? binaryBlockHeight : 1;
-        let groupIdx = 0;
-        let digitsLeftInGroup = 0;
         let rowsDrawn = 0;
         for (
           let i = 0, rowNum = 1;
           i < data.length;
           i += numbersPerRow, rowNum++
         ) {
-          if (noWrapOption) {
-            groupIdx = 0;
-            digitsLeftInGroup = 0;
-          }
+          // noWrapOption is handled within each code path where groupIdx/digitsLeftInGroup are used
           if (isB && blockHeight > 1) {
             console.log("Entered Binary blockHeight > 1 branch:", {
               customLineDrawing,

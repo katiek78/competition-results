@@ -213,8 +213,8 @@ const CompetitionAddScore = () => {
     // const timezoneOffset = new Date().getTimezoneOffset() * 60 * 1000;
     // console.log(timezoneOffset);
 
-    const isRecent =
-      Date.now() - timestamp.getTime() <= RECENT_MINUTES * 60 * 1000;
+    // const isRecent =
+    //   Date.now() - timestamp.getTime() <= RECENT_MINUTES * 60 * 1000;
 
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
     console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
