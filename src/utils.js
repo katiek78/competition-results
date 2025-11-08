@@ -73,47 +73,6 @@ const directCountryFlags = {
   "Northern Ireland": "🇬🇧",
 };
 
-// Cache for emoji rendering support detection
-let emojiSupportCache = null;
-
-// Function to detect if browser can render flag emojis properly
-function canRenderFlagEmojis() {
-  if (emojiSupportCache !== null) return emojiSupportCache;
-
-  try {
-    // Test with a common flag emoji (US flag)
-    const canvas = document.createElement("canvas");
-    const context = canvas.getContext("2d");
-    canvas.width = 20;
-    canvas.height = 20;
-
-    // Draw the flag emoji
-    context.textBaseline = "top";
-    context.font = "16px Arial";
-    context.fillText("🇺🇸", 0, 0);
-
-    // Get image data to check if emoji rendered properly
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-
-    // Check if any non-transparent pixels exist (indicating emoji rendered)
-    let hasContent = false;
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] > 0) {
-        hasContent = true;
-        break;
-      }
-    }
-
-    emojiSupportCache = hasContent;
-    return hasContent;
-  } catch (error) {
-    // If canvas isn't supported or there's an error, assume no emoji support
-    emojiSupportCache = false;
-    return false;
-  }
-}
-
 export function getFlagEmoji(countryName) {
   try {
     if (!countryName || countryName === "(none)") return null;

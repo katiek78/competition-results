@@ -2,7 +2,6 @@ import React, { useState, useRef } from "react";
 
 const FlagTooltip = ({ country, children, style = {} }) => {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [isHovering, setIsHovering] = useState(false);
   const timeoutRef = useRef(null);
 
   const handleClick = (e) => {
@@ -26,12 +25,10 @@ const FlagTooltip = ({ country, children, style = {} }) => {
   };
 
   const handleMouseEnter = (e) => {
-    setIsHovering(true);
     e.target.style.backgroundColor = "#f0f0f0";
   };
 
   const handleMouseLeave = (e) => {
-    setIsHovering(false);
     e.target.style.backgroundColor = "transparent";
   };
 

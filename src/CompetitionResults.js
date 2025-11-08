@@ -176,6 +176,7 @@ const CompetitionResults = () => {
   const [importText, setImportText] = useState("");
   const [importError, setImportError] = useState("");
   const [importDiscipline, setImportDiscipline] = useState("");
+  const [isImporting, setIsImporting] = useState(false);
 
   // Safe mobile detection using useState and useEffect to prevent render issues
   const [isMobile, setIsMobile] = useState(() => {
@@ -252,9 +253,20 @@ const CompetitionResults = () => {
 
   const handleImportModalClose = () => {
     setShowImportModal(false);
+    setIsImporting(false); // Reset importing state when closing modal
   };
 
   const handleImportSubmit = () => {
+    // Prevent double imports
+    if (isImporting) {
+      console.log(
+        "[Import Protection] Import already in progress, ignoring duplicate click"
+      );
+      return;
+    }
+
+    setIsImporting(true); // Set importing state immediately
+
     // Parse imported scores
     const namesAndScores = importText
       .split("\n")
@@ -351,6 +363,7 @@ const CompetitionResults = () => {
       setImportError(issues.join("\n"));
       setPendingImports(duplicates);
       setValidImports(valid);
+      setIsImporting(false); // Reset importing state
       return;
     }
 
@@ -359,6 +372,7 @@ const CompetitionResults = () => {
       alert("No valid scores to import.");
       setValidImports([]);
       setPendingImports([]);
+      setIsImporting(false); // Reset importing state
       return;
     }
 
@@ -432,13 +446,17 @@ const CompetitionResults = () => {
             if (selectedDiscipline) {
               handleSelectDiscipline(selectedDiscipline);
             }
+
+            setIsImporting(false); // Reset importing state on success
           })
           .catch((error) => {
             alert("Scores imported, but failed to refresh data.");
+            setIsImporting(false); // Reset importing state on refresh error
           });
       })
       .catch((error) => {
         alert("Error importing scores. Please try again.");
+        setIsImporting(false); // Reset importing state on import error
       });
   };
 
@@ -577,6 +595,167 @@ const CompetitionResults = () => {
         competitionData?.compUsers.length > 0 &&
         getNumberOfResultsForDiscipline(d) === competitionData?.compUsers.length
       );
+  };
+
+  // Function to clean up duplicate results - keeps the most recent result per competitor per discipline
+  const cleanupDuplicateResults = async () => {
+    if (!competitionData || !competitionData.compResults || !isAdmin()) {
+      alert("Only admins can perform this cleanup operation.");
+      return;
+    }
+
+    const duplicateGroups = {};
+
+    // Group results by compUser + discipline
+    competitionData.compResults.forEach((result) => {
+      const key = `${result.compUser}-${result.discipline}`;
+      if (!duplicateGroups[key]) {
+        duplicateGroups[key] = [];
+      }
+      duplicateGroups[key].push(result);
+    });
+
+    // Find groups with more than one result (duplicates) and prepare for cleanup
+    const duplicateCombinations = [];
+    let totalDuplicatesFound = 0;
+
+    Object.entries(duplicateGroups).forEach(([key, group]) => {
+      if (group.length > 1) {
+        totalDuplicatesFound += group.length - 1;
+
+        // Sort by timestamp (most recent first) or by _id as fallback
+        group.sort((a, b) => {
+          if (a.timestamp && b.timestamp) {
+            return new Date(b.timestamp) - new Date(a.timestamp);
+          }
+          // If no timestamps, keep the one with the later _id (assuming ObjectId)
+          return (b._id || "").localeCompare(a._id || "");
+        });
+
+        // Store the combination info - we'll delete all and then re-add the most recent
+        const [compUser, discipline] = key.split("-");
+        const mostRecent = group[0]; // First after sorting is most recent
+
+        duplicateCombinations.push({
+          compUser,
+          discipline,
+          allResults: group,
+          mostRecent: mostRecent,
+          duplicateCount: group.length - 1,
+        });
+      }
+    });
+
+    if (totalDuplicatesFound === 0) {
+      alert("No duplicate results found.");
+      return;
+    }
+
+    const proceed = window.confirm(
+      `Found ${totalDuplicatesFound} duplicate result(s) across ${
+        Object.values(duplicateGroups).filter((g) => g.length > 1).length
+      } competitor-discipline combinations.\n\nThis will keep the most recent result for each competitor per discipline and delete the older duplicates.\n\nProceed with cleanup?`
+    );
+
+    if (!proceed) return;
+
+    try {
+      // Delete duplicates using the new backend endpoint and then re-add the most recent result
+      let updatedResults = [...competitionData.compResults];
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (let i = 0; i < duplicateCombinations.length; i++) {
+        const { compUser, discipline, mostRecent, duplicateCount } =
+          duplicateCombinations[i];
+        try {
+          // Step 1: Delete ALL results for this user+discipline combination
+          const deleteConfig = {
+            method: "delete",
+            url: `${backendUrl}/competition/${id}/results/${compUser}/${discipline}`,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          };
+
+          const deleteResponse = await axios(deleteConfig);
+
+          if (!deleteResponse.data.success) {
+            throw new Error(
+              deleteResponse.data.message || "Delete operation failed"
+            );
+          }
+
+          // Step 2: Re-add the most recent result
+          const addConfig = {
+            method: "put",
+            url: `${backendUrl}/competition/${id}/results`,
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            data: mostRecent,
+          };
+
+          await axios(addConfig);
+
+          successCount += duplicateCount; // Count the number of duplicates removed
+          console.log(
+            `Successfully cleaned up ${duplicateCount} duplicate(s) for ${
+              i + 1
+            }/${duplicateCombinations.length}: ${compUser}-${discipline}`
+          );
+
+          // Update local array: remove all results for this combination and add back the most recent
+          updatedResults = updatedResults.filter(
+            (result) =>
+              !(
+                result.compUser === compUser && result.discipline === discipline
+              )
+          );
+          updatedResults.push(mostRecent);
+        } catch (cleanupError) {
+          failureCount += duplicateCount;
+          console.warn(
+            `Failed to cleanup duplicates ${i + 1}/${
+              duplicateCombinations.length
+            } for ${compUser}-${discipline}:`,
+            cleanupError?.response?.data?.message || cleanupError.message
+          );
+
+          // Still clean up local array for display purposes by keeping only the most recent
+          updatedResults = updatedResults.filter(
+            (result) =>
+              !(
+                result.compUser === compUser && result.discipline === discipline
+              )
+          );
+          updatedResults.push(mostRecent);
+        }
+      }
+
+      // Update local state with cleaned results
+      setCompetitionData({
+        ...competitionData,
+        compResults: updatedResults,
+      });
+
+      const message =
+        failureCount > 0
+          ? `Cleanup completed: ${successCount} duplicates removed successfully, ${failureCount} failed to delete from server but were removed from display.`
+          : `Successfully removed ${successCount} duplicate result(s) from server and display.`;
+
+      alert(message);
+
+      // Refresh current discipline if selected
+      if (selectedDiscipline) {
+        handleSelectDiscipline(selectedDiscipline);
+      }
+    } catch (error) {
+      console.error("Error cleaning up duplicates:", error);
+      alert(
+        "Error occurred while cleaning up duplicates. Some duplicates may remain. Please check the results and try again."
+      );
+    }
   };
   const getReadableDate = (timestamp) => {
     const date = new Date(timestamp);
@@ -1355,6 +1534,11 @@ const CompetitionResults = () => {
                     Import scores {">>>"}
                   </span>
                 </p>
+                <p className="highlightText">
+                  <span onClick={cleanupDuplicateResults}>
+                    Remove duplicate results {">>>"}
+                  </span>
+                </p>
               </>
             )}
           </div>
@@ -1538,6 +1722,16 @@ const CompetitionResults = () => {
                           );
 
                         // Deduplicate results - keep only one result per competitor (preferably the most recent)
+                        const duplicatesFound =
+                          disciplineResults.length >
+                          new Set(disciplineResults.map((r) => r.compUser))
+                            .size;
+                        if (duplicatesFound) {
+                          console.warn(
+                            `[Display] Found duplicate results for discipline ${selectedDiscipline}. Showing only the most recent result per competitor.`
+                          );
+                        }
+
                         const uniqueResults = disciplineResults.reduce(
                           (acc, result) => {
                             const existingIndex = acc.findIndex(
@@ -1959,7 +2153,18 @@ const CompetitionResults = () => {
                   <Button
                     variant={"outline-primary"}
                     type="button"
+                    disabled={isImporting}
                     onClick={() => {
+                      // Prevent double imports
+                      if (isImporting) {
+                        console.log(
+                          "[Import Protection] Update existing scores already in progress, ignoring duplicate click"
+                        );
+                        return;
+                      }
+
+                      setIsImporting(true);
+
                       // Update existing scores (import all, using appropriate endpoint)
                       const allImports = [...validImports, ...pendingImports];
                       console.log(
@@ -2024,12 +2229,15 @@ const CompetitionResults = () => {
                               if (selectedDiscipline) {
                                 handleSelectDiscipline(selectedDiscipline);
                               }
+
+                              setIsImporting(false); // Reset importing state on success
                             })
                             .catch((error) => {
                               console.error(
                                 "[Update Existing] Error refreshing data:",
                                 error
                               );
+                              setIsImporting(false); // Reset importing state on refresh error
                             });
                         })
                         .catch((error) => {
@@ -2038,15 +2246,27 @@ const CompetitionResults = () => {
                             error
                           );
                           alert("Error importing scores. Please try again.");
+                          setIsImporting(false); // Reset importing state on import error
                         });
                     }}
                   >
-                    Update existing scores
+                    {isImporting ? "Updating..." : "Update existing scores"}
                   </Button>
                   <Button
                     variant={"outline-primary"}
                     type="button"
+                    disabled={isImporting}
                     onClick={() => {
+                      // Prevent double imports
+                      if (isImporting) {
+                        console.log(
+                          "[Import Protection] Import new only already in progress, ignoring duplicate click"
+                        );
+                        return;
+                      }
+
+                      setIsImporting(true);
+
                       // Import only new scores - ONLY use ADD endpoint, skip duplicates entirely
                       console.log(
                         `[Import New Only] About to import ${validImports.length} new scores (using ADD endpoint only):`,
@@ -2136,12 +2356,14 @@ const CompetitionResults = () => {
                               console.log(
                                 `[Import New Only] Competition data refreshed`
                               );
+                              setIsImporting(false); // Reset importing state on success
                             })
                             .catch((error) => {
                               console.error(
                                 "[Import New Only] Error refreshing data:",
                                 error
                               );
+                              setIsImporting(false); // Reset importing state on refresh error
                             });
                         })
                         .catch((error) => {
@@ -2150,10 +2372,11 @@ const CompetitionResults = () => {
                             error
                           );
                           alert("Error importing scores. Please try again.");
+                          setIsImporting(false); // Reset importing state on import error
                         });
                     }}
                   >
-                    Import only new scores
+                    {isImporting ? "Importing..." : "Import only new scores"}
                   </Button>
                   <Button
                     variant={"outline-primary"}
@@ -2163,6 +2386,7 @@ const CompetitionResults = () => {
                       setImportError("");
                       setPendingImports([]);
                       setImportText("");
+                      setIsImporting(false); // Reset importing state when canceling
                     }}
                   >
                     Cancel import
@@ -2171,13 +2395,15 @@ const CompetitionResults = () => {
               </div>
             ) : (
               <Button
-                variant={importDiscipline ? "primary" : "secondary"}
+                variant={
+                  importDiscipline && !isImporting ? "primary" : "secondary"
+                }
                 type="button"
                 style={{ marginTop: "1em" }}
                 onClick={handleImportSubmit}
-                disabled={!importDiscipline}
+                disabled={!importDiscipline || isImporting}
               >
-                Import
+                {isImporting ? "Importing..." : "Import"}
               </Button>
             )}
           </Form>
