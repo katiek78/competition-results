@@ -1404,33 +1404,21 @@ const CompetitionResults = () => {
               </div>
             )}
             {/* Age group buttons below discipline buttons */}
-            <div
-              style={{
-                display: "flex",
-                gap: "1em",
-                marginTop: "1em",
-                justifyContent: "center",
-              }}
-            >
+            <div className="age-group-container">
               <button
                 key={"all-ages"}
                 type="button"
+                className="age-group-button"
                 onClick={() => handleToggleAgeGroup("all-ages")}
                 style={{
                   background: "darkorange",
                   color: "white",
                   border: allAgeGroupsSelected ? "3px solid #222" : "none",
-                  borderRadius: "6px",
-                  padding: "0.5em 1.2em",
-                  fontWeight: 600,
-                  fontSize: "1em",
-                  cursor: "pointer",
                   boxShadow: allAgeGroupsSelected
                     ? "0 0 0 2px #fff, 0 0 0 4px #222"
                     : "none",
                   opacity: allAgeGroupsSelected ? 1 : 0.6,
                   outline: allAgeGroupsSelected ? "2px solid #222" : "none",
-                  transition: "all 0.15s",
                 }}
               >
                 All ages
@@ -1441,22 +1429,17 @@ const CompetitionResults = () => {
                   <button
                     key={group.key}
                     type="button"
+                    className="age-group-button"
                     onClick={() => handleToggleAgeGroup(group.key)}
                     style={{
                       background: group.color,
                       color: group.textColor,
                       border: selected ? "3px solid #222" : "none",
-                      borderRadius: "6px",
-                      padding: "0.5em 1.2em",
-                      fontWeight: 600,
-                      fontSize: "1em",
-                      cursor: "pointer",
                       boxShadow: selected
                         ? "0 0 0 2px #fff, 0 0 0 4px #222"
                         : "none",
                       opacity: selected ? 1 : 0.6,
                       outline: selected ? "2px solid #222" : "none",
-                      transition: "all 0.15s",
                     }}
                   >
                     {group.label}
