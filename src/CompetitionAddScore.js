@@ -20,7 +20,7 @@ const CompetitionAddScore = () => {
   const [time, setTime] = useState(0);
   const [disciplineName, setDisciplineName] = useState("");
 
-  const RECENT_MINUTES = 20;
+  // const RECENT_MINUTES = 20; // Temporarily unused while recent check is disabled
 
   function decryptMessage(msg) {
     var key = "123";
@@ -214,7 +214,7 @@ const CompetitionAddScore = () => {
     // console.log(timezoneOffset);
 
     // const isRecent =
-    //   Date.now() - timestamp.getTime() <= RECENT_MINUTES * 60 * 1000;
+    //   Date.now() - timestamp.getTime() <= 20 * 60 * 1000; // RECENT_MINUTES replaced with hardcoded value
 
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
     console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
@@ -225,7 +225,7 @@ const CompetitionAddScore = () => {
 
     // if (!isRecent) {
     //   alert(
-    //     `This code was generated more than ${RECENT_MINUTES} minutes ago. Please see a competition official. Note: Your score has NOT been added. Current date/time:  ${new Date(
+    //     `This code was generated more than 20 minutes ago. Please see a competition official. Note: Your score has NOT been added. Current date/time:  ${new Date(
     //       Date.now()
     //     ).toISOString()}, Timestamp: ${new Date(
     //       timestamp.getTime()
