@@ -1817,11 +1817,6 @@ const CompetitionResults = () => {
                                     (-)
                                   </span>
                                 )}
-                                <CompetitorModal
-                                  show={showCompetitorModal}
-                                  onHide={() => setShowCompetitorModal(false)}
-                                  competitor={selectedCompetitor}
-                                />
                               </td>
                               <td className="champ-points">
                                 {roundingOn
