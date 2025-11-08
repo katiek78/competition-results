@@ -8,6 +8,7 @@ import {
   getFlagEmoji,
 } from "./utils";
 import { Button, Modal, Form } from "react-bootstrap";
+import FlagTooltip from "./FlagTooltip";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faStar,
@@ -711,9 +712,12 @@ const Users = () => {
                           <span>
                             {`${usr.firstName} ${usr.lastName}`}
                             {usr.country && usr.country !== "(none)" && (
-                              <span style={{ marginLeft: "6px" }}>
+                              <FlagTooltip
+                                country={usr.country}
+                                style={{ marginLeft: "6px" }}
+                              >
                                 {getFlagEmoji(usr.country)}
-                              </span>
+                              </FlagTooltip>
                             )}
                             {usr.country === "(none)" && (
                               <span

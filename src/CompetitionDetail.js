@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import { useUser } from "./UserProvider";
 import { fetchCurrentUserData, getToken, getFlagEmoji } from "./utils";
+import FlagTooltip from "./FlagTooltip";
 import axios from "axios";
 import CompetitionForm from "./CompetitionForm";
 import ParticipantsForm from "./ParticipantsForm";
@@ -1919,9 +1920,12 @@ const CompetitionDetail = () => {
                                 {user?.firstName} {user?.lastName}
                                 {user?.country &&
                                   user?.country !== "(none)" && (
-                                    <span style={{ marginLeft: "6px" }}>
+                                    <FlagTooltip
+                                      country={user.country}
+                                      style={{ marginLeft: "6px" }}
+                                    >
                                       {getFlagEmoji(user.country)}
-                                    </span>
+                                    </FlagTooltip>
                                   )}
                                 {user?.country === "(none)" && (
                                   <span

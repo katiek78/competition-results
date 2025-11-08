@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flag Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        line-height: 2;
+      }
+      .flag-test {
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Flag Emoji Test for Chrome</h1>
+
+    <div class="flag-test">
+      <strong>Direct Unicode Flags:</strong><br />
+      🇺🇸 United States<br />
+      🇬🇧 United Kingdom<br />
+      🇨🇦 Canada<br />
+      🇩🇪 Germany<br />
+      🇫🇷 France<br />
+    </div>
+
+    <div class="flag-test">
+      <strong>Generated Flags (JavaScript):</strong><br />
+      <span id="generated-flags"></span>
+    </div>
+
+    <script>
+      // Copy the exact function from utils.js
+      const countryNameToCode = {
+        "United States": "US",
+        "United Kingdom": "GB",
+        Canada: "CA",
+        Germany: "DE",
+        France: "FR",
+      };
+
+      function getFlagEmoji(countryName) {
+        try {
+          if (!countryName || countryName === "(none)") return null;
+
+          let code = countryNameToCode[countryName];
+          if (!code && countryName.length === 2)
+            code = countryName.toUpperCase();
+          if (!code) return "(" + countryName + ")";
+
+          // The exact method used in utils.js
+          return code
+            .toUpperCase()
+            .replace(/./g, (c) =>
+              String.fromCodePoint(127397 + c.charCodeAt(0))
+            );
+        } catch (error) {
+          console.warn(
+            "Error generating flag emoji for",
+            countryName,
+            ":",
+            error
+          );
+          return countryName ? `(${countryName})` : null;
+        }
+      }
+
+      // Test the function
+      const countries = [
+        "United States",
+        "United Kingdom",
+        "Canada",
+        "Germany",
+        "France",
+      ];
+      const generatedDiv = document.getElementById("generated-flags");
+
+      countries.forEach((country) => {
+        const flag = getFlagEmoji(country);
+        const div = document.createElement("div");
+        div.textContent = `${flag} ${country}`;
+        generatedDiv.appendChild(div);
+      });
+
+      console.log("Flag generation test completed");
+      console.log("Chrome version:", navigator.userAgent);
+    </script>
+  </body>
+</html>

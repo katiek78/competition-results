@@ -36,42 +36,126 @@ export const countryNameToCode = {
   // ...add more as needed
 };
 
+// Direct emoji mapping for common countries to ensure Chrome compatibility
+const directCountryFlags = {
+  "United States": "🇺🇸",
+  "United Kingdom": "🇬🇧",
+  Canada: "🇨🇦",
+  Australia: "🇦🇺",
+  Germany: "🇩🇪",
+  France: "🇫🇷",
+  Finland: "🇫🇮",
+  Sweden: "🇸🇪",
+  Norway: "🇳🇴",
+  Denmark: "🇩🇰",
+  Estonia: "🇪🇪",
+  Latvia: "🇱🇻",
+  Lithuania: "🇱🇹",
+  Poland: "🇵🇱",
+  Russia: "🇷🇺",
+  Japan: "🇯🇵",
+  China: "🇨🇳",
+  India: "🇮🇳",
+  Italy: "🇮🇹",
+  Turkey: "🇹🇷",
+  Spain: "🇪🇸",
+  Portugal: "🇵🇹",
+  Netherlands: "🇳🇱",
+  Belgium: "🇧🇪",
+  Switzerland: "🇨🇭",
+  Mongolia: "🇲🇳",
+  Austria: "🇦🇹",
+  Uzbekistan: "🇺🇿",
+  Philippines: "🇵🇭",
+  England: "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+  Wales: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
+  Scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
+  "Northern Ireland": "🇬🇧",
+};
+
+// Cache for emoji rendering support detection
+let emojiSupportCache = null;
+
+// Function to detect if browser can render flag emojis properly
+function canRenderFlagEmojis() {
+  if (emojiSupportCache !== null) return emojiSupportCache;
+
+  try {
+    // Test with a common flag emoji (US flag)
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+    canvas.width = 20;
+    canvas.height = 20;
+
+    // Draw the flag emoji
+    context.textBaseline = "top";
+    context.font = "16px Arial";
+    context.fillText("🇺🇸", 0, 0);
+
+    // Get image data to check if emoji rendered properly
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Check if any non-transparent pixels exist (indicating emoji rendered)
+    let hasContent = false;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 0) {
+        hasContent = true;
+        break;
+      }
+    }
+
+    emojiSupportCache = hasContent;
+    return hasContent;
+  } catch (error) {
+    // If canvas isn't supported or there's an error, assume no emoji support
+    emojiSupportCache = false;
+    return false;
+  }
+}
+
 export function getFlagEmoji(countryName) {
   try {
     if (!countryName || countryName === "(none)") return null;
 
-    // Special case for England - return England flag emoji
-    if (countryName === "England") {
-      return "🏴󠁧󠁢󠁥󠁮󠁧󠁿";
+    // Chrome on Windows often has issues with flag emoji rendering
+    // Detect Chrome and provide a better fallback
+    const isChrome =
+      /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    const isWindows = /Windows/.test(navigator.userAgent);
+
+    if (isChrome && isWindows) {
+      // Use bracketed country codes for better Chrome/Windows compatibility
+      const code =
+        countryNameToCode[countryName] ||
+        (countryName.length === 2 ? countryName.toUpperCase() : null);
+      return code ? `[${code}]` : `(${countryName})`;
     }
 
-    // Special case for Wales - return Wales flag emoji
-    if (countryName === "Wales") {
-      return "🏴󠁧󠁢󠁷󠁬󠁳󠁿";
-    }
-
-    // Special case for Scotland - return Scotland flag emoji
-    if (countryName === "Scotland") {
-      return "🏴󠁧󠁢󠁳󠁣󠁴󠁿";
-    }
-
-    // Special case for Northern Ireland - return Northern Ireland flag emoji
-    if (countryName === "Northern Ireland") {
-      return "🇬🇧";
+    // First try direct mapping for better Chrome compatibility
+    const directFlag = directCountryFlags[countryName];
+    if (directFlag) {
+      return directFlag;
     }
 
     let code = countryNameToCode[countryName];
     if (!code && countryName.length === 2) code = countryName.toUpperCase();
     if (!code) return "(" + countryName + ")";
 
-    // Add error handling for mobile Safari Unicode issues
-    return code
+    // Generate flag emoji using Regional Indicator Symbols
+    // Use the correct Unicode calculation (127462 = 0x1F1E6)
+    const flagEmoji = code
       .toUpperCase()
-      .replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+      .replace(/./g, (c) =>
+        String.fromCodePoint(127462 + c.charCodeAt(0) - 65)
+      );
+
+    return flagEmoji;
   } catch (error) {
-    // Fallback for mobile browsers with Unicode issues
+    // Fallback for browsers with Unicode issues
     console.warn("Error generating flag emoji for", countryName, ":", error);
-    return countryName ? `(${countryName})` : null;
+    const code = countryNameToCode[countryName];
+    return code ? `[${code}]` : `(${countryName})`;
   }
 }
 

@@ -4,6 +4,7 @@ import ErrorBoundary from "./ErrorBoundary";
 import { Modal, Form, Button } from "react-bootstrap";
 import { useParams, Link } from "react-router-dom";
 import { useUser } from "./UserProvider";
+import FlagTooltip from "./FlagTooltip";
 import axios from "axios";
 import {
   getDisciplineNameFromRef,
@@ -845,6 +846,7 @@ const CompetitionResults = () => {
         // Make the API call
         const result = await axios(configuration);
         setCompetitionData(result.data);
+        console.log(result.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching competition data:", error);
@@ -1534,7 +1536,35 @@ const CompetitionResults = () => {
                           competitionData.compResults.filter(
                             (result) => result.discipline === selectedDiscipline
                           );
-                        return disciplineResults;
+
+                        // Deduplicate results - keep only one result per competitor (preferably the most recent)
+                        const uniqueResults = disciplineResults.reduce(
+                          (acc, result) => {
+                            const existingIndex = acc.findIndex(
+                              (r) => r.compUser === result.compUser
+                            );
+                            if (existingIndex === -1) {
+                              // No existing result for this competitor, add it
+                              acc.push(result);
+                            } else {
+                              // Compare timestamps and keep the more recent one, or if no timestamps, keep the first one
+                              const existing = acc[existingIndex];
+                              if (result.timestamp && existing.timestamp) {
+                                if (
+                                  new Date(result.timestamp) >
+                                  new Date(existing.timestamp)
+                                ) {
+                                  acc[existingIndex] = result;
+                                }
+                              }
+                              // If no timestamp comparison possible, keep the first one (existing)
+                            }
+                            return acc;
+                          },
+                          []
+                        );
+
+                        return uniqueResults;
                       })()
                         .filter((result) => {
                           const thisUser = users.find(
@@ -1580,7 +1610,7 @@ const CompetitionResults = () => {
                           const isCurrentUser = thisUser?._id === user?.userId;
                           return (
                             <tr
-                              key={thisUser?._id}
+                              key={`${thisUser?._id}-${selectedDiscipline}`}
                               className={result.status ? result.status : ""}
                             >
                               <td>{i + 1}</td>
@@ -1802,9 +1832,12 @@ const CompetitionResults = () => {
                                 </span>
                                 {thisUser.country &&
                                   thisUser.country !== "(none)" && (
-                                    <span style={{ marginLeft: "6px" }}>
+                                    <FlagTooltip
+                                      country={thisUser.country}
+                                      style={{ marginLeft: "6px" }}
+                                    >
                                       {getFlagEmoji(thisUser.country)}
-                                    </span>
+                                    </FlagTooltip>
                                   )}
                                 {thisUser.country === "(none)" && (
                                   <span

@@ -1,6 +1,7 @@
 import React from "react";
 import { Modal, Table } from "react-bootstrap";
 import { getFlagEmoji } from "./utils";
+import FlagTooltip from "./FlagTooltip";
 
 const CompetitorModal = ({
   show,
@@ -29,9 +30,16 @@ const CompetitorModal = ({
           </strong>
         </div>
         {competitor.country && competitor.country !== "(none)" && (
-          <div style={{ fontSize: "2em" }}>
+          <FlagTooltip
+            country={competitor.country}
+            style={{
+              fontSize: "2em",
+              display: "block",
+              padding: "5px",
+            }}
+          >
             {getFlagEmoji(competitor.country)}
-          </div>
+          </FlagTooltip>
         )}
         {competitor.country === "(none)" && (
           <div style={{ color: "#888", fontStyle: "italic" }}>

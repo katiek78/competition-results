@@ -37,3 +37,9 @@ code {
   background-color: #11AACC;
   border-color: #11AACC;
 }
+
+/* Flag tooltip animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(5px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
