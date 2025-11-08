@@ -151,6 +151,11 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
                 ?.filter(
                   (usr) => competitionData.compUsers.indexOf(usr._id) > -1
                 )
+                .sort((a, b) => {
+                  const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+                  const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+                  return nameA.localeCompare(nameB);
+                })
                 .map((usr) => (
                   <option key={usr._id} value={usr._id}>
                     {usr.firstName} {usr.lastName}
