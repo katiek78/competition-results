@@ -268,39 +268,66 @@ const CompetitionResults = () => {
     setIsImporting(true); // Set importing state immediately
 
     // Parse imported scores
+    const isSpeedCards = importDiscipline && importDiscipline.includes("SC");
+
     const namesAndScores = importText
       .split("\n")
       .map((line) => {
         const parts = line.split("\t").map((item) => item.trim());
 
-        let name, category, score;
+        let name, category, score, time;
 
-        if (parts.length === 2) {
-          // Two columns: name, score
-          [name, score] = parts;
-          category = "";
-        } else if (parts.length >= 3) {
-          // Three or more columns: check if second column is numeric (age group to ignore)
-          const secondColumn = parts[1];
-          const isNumeric =
-            !isNaN(parseFloat(secondColumn)) && isFinite(secondColumn);
-
-          if (isNumeric) {
-            // Second column is numeric (age group), ignore it: name, age_group, score
-            [name, , score] = parts;
+        if (isSpeedCards) {
+          // Speed Cards format: name, score, time OR name, category, score, time
+          if (parts.length === 3) {
+            // Three columns: name, score, time
+            [name, score, time] = parts;
             category = "";
+          } else if (parts.length === 4) {
+            // Four columns: name, category, score, time
+            [name, category, score, time] = parts;
+          } else if (parts.length === 2) {
+            // Two columns: name, score (time defaults to 0)
+            [name, score] = parts;
+            category = "";
+            time = "0";
           } else {
-            // Second column is text (category), keep it: name, category, score
-            [name, category, score] = parts;
+            // Invalid format for Speed Cards
+            name = parts[0] || "";
+            category = "";
+            score = "";
+            time = "0";
           }
         } else {
-          // Only one column or invalid format
-          name = parts[0] || "";
-          category = "";
-          score = "";
+          // Non-Speed Cards format (original logic)
+          if (parts.length === 2) {
+            // Two columns: name, score
+            [name, score] = parts;
+            category = "";
+          } else if (parts.length >= 3) {
+            // Three or more columns: check if second column is numeric (age group to ignore)
+            const secondColumn = parts[1];
+            const isNumeric =
+              !isNaN(parseFloat(secondColumn)) && isFinite(secondColumn);
+
+            if (isNumeric) {
+              // Second column is numeric (age group), ignore it: name, age_group, score
+              [name, , score] = parts;
+              category = "";
+            } else {
+              // Second column is text (category), keep it: name, category, score
+              [name, category, score] = parts;
+            }
+          } else {
+            // Only one column or invalid format
+            name = parts[0] || "";
+            category = "";
+            score = "";
+          }
+          time = "0"; // Default time for non-Speed Cards
         }
 
-        return { name, category, score };
+        return { name, category, score, time };
       })
       .filter((entry) => entry.name.trim() !== "" && entry.score.trim() !== ""); // Filter out rows with empty names or scores
 
@@ -330,6 +357,27 @@ const CompetitionResults = () => {
         issues.push(`Row ${idx + 1}: Name not matched: '${entry.name}'`);
         return;
       }
+
+      // Validate score
+      const scoreValue = parseFloat(entry.score);
+      if (isNaN(scoreValue)) {
+        issues.push(
+          `Row ${idx + 1}: Invalid score for '${entry.name}': '${entry.score}'`
+        );
+        return;
+      }
+
+      // Validate time for Speed Cards
+      const timeValue = entry.time ? parseFloat(entry.time) : 0;
+      if (isSpeedCards && entry.time && (isNaN(timeValue) || timeValue < 0)) {
+        issues.push(
+          `Row ${idx + 1}: Invalid time for Speed Cards '${entry.name}': '${
+            entry.time
+          }'`
+        );
+        return;
+      }
+
       // Check for duplicate score for this discipline
       const alreadyHasScore = competitionData.compResults.some(
         (r) =>
@@ -338,8 +386,8 @@ const CompetitionResults = () => {
       const importObj = {
         compUser: competitor._id,
         discipline: importDiscipline,
-        rawScore: parseFloat(entry.score),
-        time: 0,
+        rawScore: scoreValue,
+        time: timeValue,
         status: "submitted",
         additionalInfo: entry.category,
         timestamp: Date.now(),
@@ -2129,16 +2177,28 @@ const CompetitionResults = () => {
               style={{ marginTop: "1em" }}
             >
               <Form.Label>
-                Paste scores (name, [optional age group], score):
+                {importDiscipline && importDiscipline.includes("SC")
+                  ? "Paste scores (name, score, time) or (name, category, score, time):"
+                  : "Paste scores (name, [optional age group], score):"}
               </Form.Label>
               <Form.Control
                 as="textarea"
                 rows={10}
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
-                placeholder="e.g. John Smith\t123 OR John Smith\tSenior\t123 OR John Smith\t65\t123"
+                placeholder={
+                  importDiscipline && importDiscipline.includes("SC")
+                    ? "e.g. John Smith\t52\t45.23 OR John Smith\tSenior\t52\t45.23"
+                    : "e.g. John Smith\t123 OR John Smith\tSenior\t123 OR John Smith\t65\t123"
+                }
                 style={{ fontSize: "1.2em" }}
               />
+              {importDiscipline && importDiscipline.includes("SC") && (
+                <Form.Text className="text-muted">
+                  For Speed Cards, provide the number of cards memorized and the
+                  time taken in seconds (e.g., 52 cards in 45.23 seconds).
+                </Form.Text>
+              )}
             </Form.Group>
             {importError && <div style={{ color: "red" }}>{importError}</div>}
             {/* Show options if there are duplicate issues */}
