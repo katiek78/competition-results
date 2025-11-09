@@ -267,6 +267,17 @@ const CompetitionResults = () => {
 
     setIsImporting(true); // Set importing state immediately
 
+    // Helper: parse numbers allowing comma or dot as decimal separator
+    const parseNumber = (input) => {
+      if (input === null || input === undefined) return NaN;
+      if (typeof input === "number") return input;
+      const s = String(input).trim().replace(/\s+/g, ""); // remove spaces
+      // Replace comma with dot to allow German decimal separator
+      const normalized = s.replace(/,/g, ".");
+      const n = parseFloat(normalized);
+      return isNaN(n) ? NaN : n;
+    };
+
     // Parse imported scores
     const isSpeedCards = importDiscipline && importDiscipline.includes("SC");
 
@@ -308,7 +319,8 @@ const CompetitionResults = () => {
             // Three or more columns: check if second column is numeric (age group to ignore)
             const secondColumn = parts[1];
             const isNumeric =
-              !isNaN(parseFloat(secondColumn)) && isFinite(secondColumn);
+              !isNaN(parseNumber(secondColumn)) &&
+              isFinite(parseNumber(secondColumn));
 
             if (isNumeric) {
               // Second column is numeric (age group), ignore it: name, age_group, score
@@ -358,8 +370,8 @@ const CompetitionResults = () => {
         return;
       }
 
-      // Validate score
-      const scoreValue = parseFloat(entry.score);
+      // Validate score (accept comma or dot as decimal separator)
+      const scoreValue = parseNumber(entry.score);
       if (isNaN(scoreValue)) {
         issues.push(
           `Row ${idx + 1}: Invalid score for '${entry.name}': '${entry.score}'`
@@ -367,8 +379,8 @@ const CompetitionResults = () => {
         return;
       }
 
-      // Validate time for Speed Cards
-      const timeValue = entry.time ? parseFloat(entry.time) : 0;
+      // Validate time for Speed Cards (accept comma or dot)
+      const timeValue = entry.time ? parseNumber(entry.time) : 0;
       if (isSpeedCards && entry.time && (isNaN(timeValue) || timeValue < 0)) {
         issues.push(
           `Row ${idx + 1}: Invalid time for Speed Cards '${entry.name}': '${
@@ -394,6 +406,7 @@ const CompetitionResults = () => {
         name: entry.name,
         row: idx + 1,
       };
+
       if (alreadyHasScore) {
         issues.push(
           `Row ${idx + 1}: Duplicate score for '${
