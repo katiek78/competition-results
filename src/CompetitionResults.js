@@ -1246,7 +1246,7 @@ const CompetitionResults = () => {
     "5-minute Dates": "DATES5",
     "Hour Cards": "CARDS60",
     "Hour Numbers": "NUM60",
-    Images: "IMAGESOLD",
+    Images: "IMAGES5",
     "15-minute Names & Faces": "NAMES15",
     "15-minute Poem/Text (Old)": "POEM15",
     "15-minute Words": "WORDS15",
@@ -1325,21 +1325,17 @@ const CompetitionResults = () => {
 
     // 2. Export score.csv
     // Build scoreFields: combine trials/attempts as required, but respect custom order
+    // Build statsDisciplineFields with NUM5 in the position of 5-min Numbers Trial 2
     const statsDisciplineFields = [];
     const disciplineOrder = competitionData?.disciplines || [];
     let insertedNum5 = false;
     let insertedSpoken1 = false;
     let insertedSpeedCards = false;
-
     for (let i = 0; i < disciplineOrder.length; i++) {
       const d = disciplineOrder[i];
       const name = getDisciplineNameFromRef(d);
-      // 5-min Numbers Trials
-      if (
-        !insertedNum5 &&
-        (name === "5-minute Numbers Trial 1" ||
-          name === "5-minute Numbers Trial 2")
-      ) {
+      // Insert NUM5 at the position of 5-minute Numbers Trial 2
+      if (name === "5-minute Numbers Trial 2" && !insertedNum5) {
         statsDisciplineFields.push("NUM5");
         insertedNum5 = true;
         continue;
@@ -1395,8 +1391,8 @@ const CompetitionResults = () => {
       "first name",
       "last name",
       "iam id",
-      "Country",
-      "Age group",
+      "country",
+      "category",
       ...statsDisciplineFields,
     ];
 
@@ -1406,14 +1402,19 @@ const CompetitionResults = () => {
       // If country is '(none)', export as 'undefined'
       let exportCountry = user.country;
       if (exportCountry === "(none)") exportCountry = "undefined";
-      const row = [
-        user.firstName || "N/A",
-        user.lastName || "N/A",
-        user.iamId || user.iam_id || "N/A",
-        exportCountry || "N/A",
-        user.ageGroup || user.age_group || "N/A",
-      ];
-      // NUM5: highest of 5-minute Numbers Trial 1/2
+      // Map age group to category string
+      let ageGroupKey = user.ageGroup || user.age_group;
+      if (!ageGroupKey) {
+        ageGroupKey = getUserAgeGroup(user);
+      }
+      let category = "adult";
+      if (ageGroupKey === "kids") category = "kid";
+      else if (ageGroupKey === "juniors") category = "junior";
+      else if (ageGroupKey === "seniors") category = "senior";
+
+      // Build a mapping from field to score for this user
+      const disciplineScores = {};
+      // NUM5
       const num1 = getResult(compUserId, "5N1");
       const num2 = getResult(compUserId, "5N2");
       const num1Score = num1?.rawScore !== undefined ? num1.rawScore : null;
@@ -1423,8 +1424,9 @@ const CompetitionResults = () => {
         num5Score = Math.max(num1Score, num2Score);
       else if (num1Score !== null) num5Score = num1Score;
       else if (num2Score !== null) num5Score = num2Score;
-      row.push(num5Score);
-      // SPOKEN1: highest of Spoken Numbers Attempt 1/2/3
+      disciplineScores["NUM5"] = num5Score;
+
+      // SPOKEN1
       const k1 = getResult(compUserId, "K1");
       const k2 = getResult(compUserId, "K2");
       const k3 = getResult(compUserId, "K3");
@@ -1433,8 +1435,9 @@ const CompetitionResults = () => {
       );
       let spokenScore = "N/A";
       if (kScores.length > 0) spokenScore = Math.max(...kScores);
-      row.push(spokenScore);
-      // Other disciplines
+      disciplineScores["SPOKEN1"] = spokenScore;
+
+      // Other disciplines (rawScore)
       (competitionData?.disciplines || []).forEach((discipline) => {
         const name = getDisciplineNameFromRef(discipline);
         if (
@@ -1449,16 +1452,38 @@ const CompetitionResults = () => {
           ].includes(name)
         )
           return;
+        const statsId = disciplineNameToStatsId[name] || discipline;
         const result = getResult(compUserId, discipline);
-        row.push(result?.rawScore !== undefined ? result.rawScore : "N/A");
+        disciplineScores[statsId] =
+          result?.rawScore !== undefined ? result.rawScore : "N/A";
       });
-      // spdcards1 and spdcards2 use SC1 and SC2
+
+      // Speed Cards
       const spd1 = getResult(compUserId, "SC1");
-      row.push(spd1?.rawScore !== undefined ? spd1.rawScore : "N/A");
-      row.push(spd1?.time !== undefined ? spd1.time : "N/A");
+      disciplineScores["spdcards1_cards"] =
+        spd1?.rawScore !== undefined ? spd1.rawScore : "N/A";
+      // If time is 0, export as 300
+      let spd1Time = spd1?.time !== undefined ? spd1.time : "N/A";
+      if (spd1Time === 0) spd1Time = 300;
+      disciplineScores["spdcards1_time"] = spd1Time;
       const spd2 = getResult(compUserId, "SC2");
-      row.push(spd2?.rawScore !== undefined ? spd2.rawScore : "N/A");
-      row.push(spd2?.time !== undefined ? spd2.time : "N/A");
+      disciplineScores["spdcards2_cards"] =
+        spd2?.rawScore !== undefined ? spd2.rawScore : "N/A";
+      let spd2Time = spd2?.time !== undefined ? spd2.time : "N/A";
+      if (spd2Time === 0) spd2Time = 300;
+      disciplineScores["spdcards2_time"] = spd2Time;
+
+      // Build row in the correct order
+      const row = [
+        user.firstName || "N/A",
+        user.lastName || "N/A",
+        user.iamId || user.iam_id || "N/A",
+        exportCountry || "N/A",
+        category,
+        ...statsDisciplineFields.map(
+          (field) => disciplineScores[field] ?? "N/A"
+        ),
+      ];
       scoreRows.push(row);
     });
     const scoreCsv =

@@ -126,7 +126,7 @@ export default function Account() {
       // Handle the response (e.g., show a message to the user)
       console.log("Initiate Email Change Response:", response.data);
       setConfirmEmailRequestSent(
-        "An email has been sent to the address you just entered. Click on the link in the email to confirm this change."
+        "An email has been sent to the address you just entered. Click on the link in the email to confirm this change.",
       );
       setShowEmailInput(false);
     } catch (error) {
@@ -169,7 +169,7 @@ export default function Account() {
       // Handle the response
       console.log("Initiate Password Change Response:", response.data);
       setConfirmMessage(
-        "An email has been sent to your email address. Click on the link in the email to reset your password."
+        "An email has been sent to your email address. Click on the link in the email to reset your password.",
       );
       setShowPasswordForm(false);
     } catch (error) {
@@ -323,17 +323,21 @@ export default function Account() {
                   <label>Birth Year: </label>
                   <input
                     type="number"
-                    defaultValue={userData.birthYear || ""}
+                    value={userData.birthYear || ""}
                     min="1900"
                     max={new Date().getFullYear()}
-                    onBlur={(e) => handleSubmitBirthYear(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSubmitBirthYear(e.target.value);
-                      }
-                    }}
+                    onChange={(e) =>
+                      setUserData({ ...userData, birthYear: e.target.value })
+                    }
                     autoFocus
                   />
+                  <Button
+                    onClick={() => {
+                      handleSubmitBirthYear(userData.birthYear);
+                    }}
+                  >
+                    Save
+                  </Button>
                   <Button onClick={() => setShowBirthYearInput(false)}>
                     Cancel
                   </Button>
