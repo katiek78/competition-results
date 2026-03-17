@@ -18,8 +18,10 @@ const EmailForm = ({ handleCancel, onSubmitEmail, form }) => {
         onChange={(e) => setEmail(e.target.value)}
       />
 
-      <Button type="submit">Submit</Button>
-      <Button onClick={handleCancel}>Cancel</Button>
+      <div className="d-flex gap-2">
+        <Button type="submit">Submit</Button>
+        <Button onClick={handleCancel}>Cancel</Button>
+      </div>
     </form>
   );
 };

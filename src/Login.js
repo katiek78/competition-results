@@ -101,7 +101,7 @@ export default function Login() {
       // Handle the response (e.g., show a message to the user)
       console.log("Initiate Password Change Response:", response.data);
       setConfirmPasswordRequestSent(
-        "An email has been sent to the address you just entered. Click on the link in the email to reset your password."
+        "An email has been sent to the address you just entered. Click on the link in the email to reset your password.",
       );
       setShowEmailInput(false);
     } catch (error) {
@@ -150,9 +150,13 @@ export default function Login() {
       {!login && isResolved && (
         <>
           <p className="text-danger">Login failed</p>
-          <p className="link" onClick={handleForgottenPassword}>
+          <Button
+            variant="link"
+            className="p-0 fw-bold"
+            onClick={handleForgottenPassword}
+          >
             Forgotten password?
-          </p>
+          </Button>
           {showEmailInput && (
             <>
               <p>
