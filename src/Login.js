@@ -147,30 +147,32 @@ export default function Login() {
           Login
         </Button>
       </Form>
+
+      <Button
+        variant="link"
+        className="p-0 fw-bold"
+        onClick={handleForgottenPassword}
+      >
+        Forgotten password?
+      </Button>
+      {showEmailInput && (
+        <>
+          <p>
+            Enter your email address here and we'll send you an email. Click on
+            the link in the email to reset your password.
+          </p>
+          <EmailForm
+            handleCancel={handleCancelEmailEdit}
+            onSubmitEmail={handlePasswordReset}
+            form={{ email: "" }}
+          />
+        </>
+      )}
+      <p>{confirmPasswordRequestSent}</p>
+
       {!login && isResolved && (
         <>
           <p className="text-danger">Login failed</p>
-          <Button
-            variant="link"
-            className="p-0 fw-bold"
-            onClick={handleForgottenPassword}
-          >
-            Forgotten password?
-          </Button>
-          {showEmailInput && (
-            <>
-              <p>
-                Enter your email address here and we'll send you an email. Click
-                on the link in the email to reset your password.
-              </p>
-              <EmailForm
-                handleCancel={handleCancelEmailEdit}
-                onSubmitEmail={handlePasswordReset}
-                form={{ email: "" }}
-              />
-            </>
-          )}
-          <p>{confirmPasswordRequestSent}</p>
         </>
       )}
 

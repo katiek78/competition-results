@@ -18,7 +18,7 @@ const EmailForm = ({ handleCancel, onSubmitEmail, form }) => {
         onChange={(e) => setEmail(e.target.value)}
       />
 
-      <div className="d-flex gap-2">
+      <div className="d-flex gap-2" style={{ flexDirection: "row" }}>
         <Button type="submit">Submit</Button>
         <Button onClick={handleCancel}>Cancel</Button>
       </div>
