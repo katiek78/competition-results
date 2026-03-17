@@ -19,6 +19,7 @@ export default function Account() {
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [showCountryInput, setShowCountryInput] = useState(false);
   const [showBirthYearInput, setShowBirthYearInput] = useState(false);
+  const [showIamIdInput, setShowIamIdInput] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [confirmMessage, setConfirmMessage] = useState("");
@@ -59,6 +60,11 @@ export default function Account() {
   const handleSubmitBirthYear = (birthYear) => {
     setShowBirthYearInput(false);
     saveUser({ birthYear });
+  };
+
+  const handleSubmitIamId = (iamId) => {
+    setShowIamIdInput(false);
+    saveUser({ iamId });
   };
 
   // const handleSubmitEmail = (email) => {
@@ -344,7 +350,35 @@ export default function Account() {
                 </>
               )}
               <br />
-              IAM ID: {userData.iamId || "Not specified"}
+              {!showIamIdInput && (
+                <>
+                  IAM ID: {userData.iamId || "Not specified"}
+                  <Button onClick={() => setShowIamIdInput(true)}>Edit</Button>
+                </>
+              )}
+              {showIamIdInput && (
+                <>
+                  <label>IAM ID: </label>
+                  <input
+                    type="text"
+                    value={userData.iamId || ""}
+                    onChange={(e) =>
+                      setUserData({ ...userData, iamId: e.target.value })
+                    }
+                    autoFocus
+                  />
+                  <Button
+                    onClick={() => {
+                      handleSubmitIamId(userData.iamId);
+                    }}
+                  >
+                    Save
+                  </Button>
+                  <Button onClick={() => setShowIamIdInput(false)}>
+                    Cancel
+                  </Button>
+                </>
+              )}
               <br />
               <Button className="IAMbutton" onClick={handleShowPasswordForm}>
                 Change password
