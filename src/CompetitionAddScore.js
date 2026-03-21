@@ -178,6 +178,11 @@ const CompetitionAddScore = () => {
         timestamp = new Date(
           parts[parts.length - 1].replace("Timestamp:", "").trim()
         );
+
+        if (isNaN(timestamp.getTime())) {
+  console.warn("Invalid timestamp parsed from code:", parts[parts.length - 1]);
+  // Optionally, you can set timestamp = new Date() or handle as needed
+}
       }
     } else {
       //const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
@@ -193,6 +198,11 @@ const CompetitionAddScore = () => {
           ? match[3]
           : undefined;
         timestamp = new Date(match[4]);
+
+        if (isNaN(timestamp.getTime())) {
+  console.warn("Invalid timestamp parsed from code:", match[4]);
+  // Optionally, you can set timestamp = new Date() or handle as needed
+}
       } else {
         // If string does not match pattern, alert the user that they need to check and try again
         alert(
@@ -217,7 +227,8 @@ const CompetitionAddScore = () => {
     //   Date.now() - timestamp.getTime() <= 20 * 60 * 1000; // RECENT_MINUTES replaced with hardcoded value
 
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
-    console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
+    //console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
+
 
     //const timestampString = new Date(timestamp.getTime()).toISOString();
 
