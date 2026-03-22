@@ -157,7 +157,7 @@ const CompetitionAddScore = () => {
       );
       return;
     }
-    const decryptedDisciplineName = disciplineMatch[1].trim();
+    let decryptedDisciplineName = disciplineMatch[1].trim();
 
     //parse the text
     if (decryptedDisciplineName.includes("Words")) {
@@ -246,7 +246,10 @@ const CompetitionAddScore = () => {
     // }
 
     // Check if disciplineName can be matched to a discipline and if not, alert user
-    if (findMatchingDiscipline(decryptedDisciplineName)) {
+ if (!findMatchingDiscipline(decryptedDisciplineName) && decryptedDisciplineName.toLowerCase().includes("images")) {
+    decryptedDisciplineName = "Images";
+  }
+    if (findMatchingDiscipline(decryptedDisciplineName) || decryptedDisciplineName === 'Images') {
       saveScore(
         decryptedScore,
         decryptedDisciplineName,
