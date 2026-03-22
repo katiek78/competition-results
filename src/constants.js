@@ -204,7 +204,7 @@ export const disciplines = [
 
 export function getDisciplineNameFromRef(disciplineRef) {
   const matchingDiscipline = disciplines.find(
-    (discipline) => discipline.ref === disciplineRef
+    (discipline) => discipline.ref === disciplineRef,
   );
 
   return matchingDiscipline ? matchingDiscipline.label : "Unknown Discipline";
@@ -212,17 +212,21 @@ export function getDisciplineNameFromRef(disciplineRef) {
 
 export function getDisciplineStandardFromRef(disciplineRef) {
   const matchingDiscipline = disciplines.find(
-    (discipline) => discipline.ref === disciplineRef
+    (discipline) => discipline.ref === disciplineRef,
   );
 
   return matchingDiscipline?.standard || null;
 }
 
 export function getDisciplineRefFromName(disciplineName) {
-  const matchingDiscipline = disciplines.find(
+  let matchingDiscipline = disciplines.find(
     (discipline) =>
-      discipline.label.toLowerCase() === disciplineName.toLowerCase()
+      discipline.label.toLowerCase() === disciplineName.toLowerCase(),
   );
+
+  if (disciplineName.toLowerCase().includes("images")) {
+    matchingDiscipline = "Images";
+  }
 
   return matchingDiscipline ? matchingDiscipline.ref : "Unknown Discipline";
 }

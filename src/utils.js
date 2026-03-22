@@ -106,7 +106,7 @@ export function getFlagEmoji(countryName) {
     const flagEmoji = code
       .toUpperCase()
       .replace(/./g, (c) =>
-        String.fromCodePoint(127462 + c.charCodeAt(0) - 65)
+        String.fromCodePoint(127462 + c.charCodeAt(0) - 65),
       );
 
     return flagEmoji;
@@ -126,7 +126,7 @@ export const getToken = () => {
 export const exportCompetitionToExcel = async (
   compTitle,
   disciplines,
-  data
+  data,
 ) => {
   const workbook = new ExcelJS.Workbook();
   const overallSheet = workbook.addWorksheet("Overall");
@@ -156,7 +156,7 @@ export const exportCompetitionToExcel = async (
           ...acc,
           [discipline]: row[discipline]?.champ || "",
         }),
-        {}
+        {},
       ),
     };
 

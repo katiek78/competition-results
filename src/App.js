@@ -14,6 +14,7 @@ import CompetitionAddScore from "./CompetitionAddScore";
 import EmailChange from "./EmailChange";
 import PasswordReset from "./PasswordReset";
 import EmailVerification from "./EmailVerification";
+import AdminResetPassword from "./AdminResetPassword";
 import Home from "./Home";
 import Users from "./Users";
 import RequireAuth from "./RequireAuth";
@@ -225,6 +226,10 @@ function App() {
               </RequireAuth>
             }
           /> */}
+          <Route
+            path="/admin/reset-password"
+            element={<AdminResetPassword />}
+          />
         </Routes>
       </Container>
       {/* </UserProvider> */}
