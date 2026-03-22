@@ -1653,7 +1653,15 @@ const CompetitionResults = () => {
               Select discipline
             </button>
             {((isMobile && showDisciplineMenu) || !isMobile) && (
-              <div className="disciplinesMenu">
+              // Add onClick handler to stop propagation
+              <div
+                className="disciplinesMenu"
+                onClick={(e) => e.stopPropagation()} // Prevent menu from closing on scroll/click inside
+                style={{
+                  maxHeight: isMobile ? 300 : "none",
+                  overflowY: isMobile ? "auto" : "visible",
+                }}
+              >
                 <span
                   className={
                     "disciplineHeading" +
