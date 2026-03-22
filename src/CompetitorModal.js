@@ -2,6 +2,7 @@ import React from "react";
 import { Modal, Table } from "react-bootstrap";
 import { getFlagEmoji } from "./utils";
 import FlagTooltip from "./FlagTooltip";
+import twemoji from "twemoji";
 
 const CompetitorModal = ({
   show,
@@ -15,7 +16,7 @@ const CompetitorModal = ({
 
   // Filter results for this competitor
   const competitorResults = (results || []).filter(
-    (r) => r.compUser === competitor._id
+    (r) => r.compUser === competitor._id,
   );
 
   return (
@@ -38,7 +39,19 @@ const CompetitorModal = ({
               padding: "5px",
             }}
           >
-            {getFlagEmoji(competitor.country)}
+            <span
+              dangerouslySetInnerHTML={{
+                __html: twemoji.parse(getFlagEmoji(competitor.country), {
+                  folder: "svg",
+                  ext: ".svg",
+                  attributes: () => ({
+                    style:
+                      "width: 1.2em; height: 1.2em; vertical-align: middle;",
+                    onerror: `this.outerHTML='<span style=&quot;font-size:1em;color:#888;&quot;>${getFlagEmoji(competitor.country)} || competitor.country : ""}</span>'`,
+                  }),
+                }),
+              }}
+            />
           </FlagTooltip>
         )}
         {competitor.country === "(none)" && (
@@ -63,7 +76,7 @@ const CompetitorModal = ({
                 {disciplines &&
                   disciplines.map((discipline) => {
                     const res = competitorResults.find(
-                      (r) => r.discipline === discipline
+                      (r) => r.discipline === discipline,
                     );
                     if (!res) return null;
                     return (
