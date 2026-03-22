@@ -18,6 +18,7 @@ import {
   faEdit,
 } from "@fortawesome/free-solid-svg-icons";
 import { backendUrl } from "./constants";
+import twemoji from "twemoji";
 
 const Users = () => {
   const token = useMemo(() => getToken(), []);
@@ -48,7 +49,7 @@ const Users = () => {
   const handleDeleteUser = async (userId) => {
     if (
       !window.confirm(
-        "Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in."
+        "Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.",
       )
     )
       return;
@@ -206,7 +207,7 @@ const Users = () => {
       if (!userId) {
         console.warn(
           "No userId found in user creation response:",
-          response.data
+          response.data,
         );
       }
 
@@ -225,7 +226,7 @@ const Users = () => {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
           console.log("Verification email sent to user.");
         } catch (err) {
@@ -467,10 +468,10 @@ const Users = () => {
             .then((result) => {
               // Check if any users have verified field
               const usersWithVerified = result.data.users.filter((user) =>
-                user.hasOwnProperty("verified")
+                user.hasOwnProperty("verified"),
               );
               console.log(
-                `Users with 'verified' field: ${usersWithVerified.length}`
+                `Users with 'verified' field: ${usersWithVerified.length}`,
               );
 
               // Filter out unverified users (treat undefined as verified for legacy users)
@@ -478,15 +479,15 @@ const Users = () => {
                 const isVerified = user.verified !== false;
                 if (user.verified === true) {
                   console.log(
-                    `✓ ${user.firstName} ${user.lastName}: verified = true`
+                    `✓ ${user.firstName} ${user.lastName}: verified = true`,
                   );
                 } else if (user.verified === false) {
                   console.log(
-                    `✗ ${user.firstName} ${user.lastName}: verified = false (filtered out)`
+                    `✗ ${user.firstName} ${user.lastName}: verified = false (filtered out)`,
                   );
                 } else {
                   console.log(
-                    `? ${user.firstName} ${user.lastName}: verified = undefined (legacy user, treated as verified)`
+                    `? ${user.firstName} ${user.lastName}: verified = undefined (legacy user, treated as verified)`,
                   );
                 }
                 return isVerified;
@@ -624,8 +625,8 @@ const Users = () => {
               {users
                 .sort((a, b) =>
                   a.lastName.localeCompare(
-                    b.lastName || a.firstName.localeCompare(b.firstName)
-                  )
+                    b.lastName || a.firstName.localeCompare(b.firstName),
+                  ),
                 )
                 .map((usr) => (
                   <tr key={usr._id}>
@@ -716,7 +717,22 @@ const Users = () => {
                                 country={usr.country}
                                 style={{ marginLeft: "6px" }}
                               >
-                                {getFlagEmoji(usr.country)}
+                                <span
+                                  dangerouslySetInnerHTML={{
+                                    __html: twemoji.parse(
+                                      getFlagEmoji(usr.country),
+                                      {
+                                        folder: "svg",
+                                        ext: ".svg",
+                                        attributes: () => ({
+                                          style:
+                                            "width: 1.2em; height: 1.2em; vertical-align: middle;",
+                                          onerror: `this.outerHTML='<span style=&quot;font-size:1em;color:#888;&quot;>${getFlagEmoji(usr.country)} || usr.country : ""}</span>'`,
+                                        }),
+                                      },
+                                    ),
+                                  }}
+                                />
                               </FlagTooltip>
                             )}
                             {usr.country === "(none)" && (
@@ -740,7 +756,7 @@ const Users = () => {
                                 handleEditName(
                                   usr._id,
                                   usr.firstName,
-                                  usr.lastName
+                                  usr.lastName,
                                 )
                               }
                               style={{ marginLeft: "10px", cursor: "pointer" }}

@@ -28,6 +28,7 @@ import {
 } from "./utils";
 import { backendUrl } from "./constants";
 import { generateCompId } from "./competitionIdUtils";
+import twemoji from "twemoji";
 
 const CompetitionResults = () => {
   // Modal state and handler already declared above
@@ -51,7 +52,7 @@ const CompetitionResults = () => {
       if (!user || !user._id) {
         console.warn(
           "Invalid user data passed to handleCompetitorClick:",
-          user
+          user,
         );
         return;
       }
@@ -83,9 +84,9 @@ const CompetitionResults = () => {
     alert(
       notSubmitted.length > 0
         ? `Competitors who haven't submitted a result for ${getDisciplineNameFromRef(
-            selectedDiscipline
+            selectedDiscipline,
           )}:\n\n${notSubmitted.join("\n")}`
-        : "All competitors have submitted a result for this discipline."
+        : "All competitors have submitted a result for this discipline.",
     );
   }
 
@@ -114,7 +115,7 @@ const CompetitionResults = () => {
         const updatedResults = prevCompetitionData.compResults.map((r) =>
           r.compUser === compUserId && r.discipline === selectedDiscipline
             ? updatedResult
-            : r
+            : r,
         );
         return {
           ...prevCompetitionData,
@@ -133,7 +134,7 @@ const CompetitionResults = () => {
     return (
       competitionData.compResults.find(
         (result) =>
-          result.compUser === compUser && result.discipline === discipline
+          result.compUser === compUser && result.discipline === discipline,
       ) || null
     );
   }
@@ -142,7 +143,7 @@ const CompetitionResults = () => {
   function getNumberOfResultsForDiscipline(discipline) {
     if (!competitionData || !competitionData.compResults) return 0;
     return competitionData.compResults.filter(
-      (result) => result.discipline === discipline
+      (result) => result.discipline === discipline,
     ).length;
   }
 
@@ -196,7 +197,7 @@ const CompetitionResults = () => {
     { key: "seniors", label: "Seniors", color: "#3a8a16ff", textColor: "#fff" },
   ];
   const [selectedAgeGroups, setSelectedAgeGroups] = useState(
-    ageGroups.map((g) => g.key)
+    ageGroups.map((g) => g.key),
   );
 
   const allAgeGroupsSelected = selectedAgeGroups.length === ageGroups.length;
@@ -260,7 +261,7 @@ const CompetitionResults = () => {
     // Prevent double imports
     if (isImporting) {
       console.log(
-        "[Import Protection] Import already in progress, ignoring duplicate click"
+        "[Import Protection] Import already in progress, ignoring duplicate click",
       );
       return;
     }
@@ -363,7 +364,7 @@ const CompetitionResults = () => {
     namesAndScores.forEach((entry, idx) => {
       // Match name to competitor
       const competitor = competitors.find(
-        (c) => c.name.toLowerCase() === entry.name.toLowerCase()
+        (c) => c.name.toLowerCase() === entry.name.toLowerCase(),
       );
       if (!competitor) {
         issues.push(`Row ${idx + 1}: Name not matched: '${entry.name}'`);
@@ -374,7 +375,7 @@ const CompetitionResults = () => {
       const scoreValue = parseNumber(entry.score);
       if (isNaN(scoreValue)) {
         issues.push(
-          `Row ${idx + 1}: Invalid score for '${entry.name}': '${entry.score}'`
+          `Row ${idx + 1}: Invalid score for '${entry.name}': '${entry.score}'`,
         );
         return;
       }
@@ -385,7 +386,7 @@ const CompetitionResults = () => {
         issues.push(
           `Row ${idx + 1}: Invalid time for Speed Cards '${entry.name}': '${
             entry.time
-          }'`
+          }'`,
         );
         return;
       }
@@ -393,7 +394,7 @@ const CompetitionResults = () => {
       // Check for duplicate score for this discipline
       const alreadyHasScore = competitionData.compResults.some(
         (r) =>
-          r.compUser === competitor._id && r.discipline === importDiscipline
+          r.compUser === competitor._id && r.discipline === importDiscipline,
       );
       const importObj = {
         compUser: competitor._id,
@@ -411,7 +412,7 @@ const CompetitionResults = () => {
         issues.push(
           `Row ${idx + 1}: Duplicate score for '${
             entry.name
-          }' in ${disciplineLabel}`
+          }' in ${disciplineLabel}`,
         );
         duplicates.push(importObj);
       } else {
@@ -440,7 +441,7 @@ const CompetitionResults = () => {
     // If no issues, import all valid scores
     console.log(
       `[Import Debug] About to import ${valid.length} valid scores:`,
-      valid
+      valid,
     );
     Promise.all(
       valid.map((importObj) => {
@@ -448,10 +449,10 @@ const CompetitionResults = () => {
         const alreadyHasScore = competitionData.compResults.some(
           (r) =>
             r.compUser === importObj.compUser &&
-            r.discipline === importObj.discipline
+            r.discipline === importObj.discipline,
         );
         console.log(
-          `[Import Debug] Processing import for ${importObj.name}, discipline: ${importObj.discipline}, score: ${importObj.rawScore}`
+          `[Import Debug] Processing import for ${importObj.name}, discipline: ${importObj.discipline}, score: ${importObj.rawScore}`,
         );
         const configuration = {
           method: "put",
@@ -464,7 +465,7 @@ const CompetitionResults = () => {
           data: importObj,
         };
         return axios(configuration);
-      })
+      }),
     )
       .then(() => {
         // Fetch latest competition data to refresh the page
@@ -479,24 +480,24 @@ const CompetitionResults = () => {
           .then((result) => {
             console.log(
               `[Import Success] Updated competition data:`,
-              result.data
+              result.data,
             );
             console.log(
               `[Import Success] Total compResults after import:`,
-              result.data.compResults?.length
+              result.data.compResults?.length,
             );
             console.log(
               `[Import Success] Results for discipline ${importDiscipline}:`,
               result.data.compResults?.filter(
-                (r) => r.discipline === importDiscipline
-              )
+                (r) => r.discipline === importDiscipline,
+              ),
             );
             setCompetitionData(result.data);
 
             alert(
               `${valid.length} new score${
                 valid.length !== 1 ? "s" : ""
-              } imported.`
+              } imported.`,
             );
             setShowImportModal(false);
             setImportError("");
@@ -524,7 +525,7 @@ const CompetitionResults = () => {
   function isDuplicateResult(compResults, compUser, discipline) {
     return compResults.some(
       (result) =>
-        result.compUser === compUser && result.discipline === discipline
+        result.compUser === compUser && result.discipline === discipline,
     );
   }
 
@@ -547,7 +548,7 @@ const CompetitionResults = () => {
   const confirmDelete = () => {
     const { user, discipline } = deleteConfirm;
     const resultIndex = competitionData.compResults.findIndex(
-      (result) => result.compUser === user && result.discipline === discipline
+      (result) => result.compUser === user && result.discipline === discipline,
     );
     deleteResult(resultIndex);
     setDeleteConfirm({ show: false, user: null, discipline: null });
@@ -568,7 +569,7 @@ const CompetitionResults = () => {
       false,
       "corrected",
       additionalInfo,
-      timestamp
+      timestamp,
     ); //only change is to mark status as 'corrected'
   };
 
@@ -586,7 +587,7 @@ const CompetitionResults = () => {
       isDuplicateResult(competitionData.compResults, user, discipline)
     ) {
       alert(
-        "User already has a score for this discipline. Please find the score in the results and edit it from there."
+        "User already has a score for this discipline. Please find the score in the results and edit it from there.",
       );
       return;
     }
@@ -594,7 +595,7 @@ const CompetitionResults = () => {
     const rawScore = parseFloat(score);
     if (isNaN(rawScore)) {
       alert(
-        "The score you entered could not be processed. Score must be a number."
+        "The score you entered could not be processed. Score must be a number.",
       );
     } else
       saveScore(
@@ -605,7 +606,7 @@ const CompetitionResults = () => {
         newScore,
         status,
         additionalInfo,
-        ""
+        "",
       );
 
     if (newScore) {
@@ -632,12 +633,12 @@ const CompetitionResults = () => {
   const areAllResultsComplete = (d) => {
     // Filter out the results with the specified discipline
     const filteredResults = competitionData.compResults.filter(
-      (result) => result.discipline === d
+      (result) => result.discipline === d,
     );
 
     // Check if all filtered results are final
     const allComplete = filteredResults.every(
-      (result) => !result.status || result.status !== "review"
+      (result) => !result.status || result.status !== "review",
     );
 
     return allComplete;
@@ -715,7 +716,7 @@ const CompetitionResults = () => {
     const proceed = window.confirm(
       `Found ${totalDuplicatesFound} duplicate result(s) across ${
         Object.values(duplicateGroups).filter((g) => g.length > 1).length
-      } competitor-discipline combinations.\n\nThis will keep the most recent result for each competitor per discipline and delete the older duplicates.\n\nProceed with cleanup?`
+      } competitor-discipline combinations.\n\nThis will keep the most recent result for each competitor per discipline and delete the older duplicates.\n\nProceed with cleanup?`,
     );
 
     if (!proceed) return;
@@ -743,7 +744,7 @@ const CompetitionResults = () => {
 
           if (!deleteResponse.data.success) {
             throw new Error(
-              deleteResponse.data.message || "Delete operation failed"
+              deleteResponse.data.message || "Delete operation failed",
             );
           }
 
@@ -763,7 +764,7 @@ const CompetitionResults = () => {
           console.log(
             `Successfully cleaned up ${duplicateCount} duplicate(s) for ${
               i + 1
-            }/${duplicateCombinations.length}: ${compUser}-${discipline}`
+            }/${duplicateCombinations.length}: ${compUser}-${discipline}`,
           );
 
           // Update local array: remove all results for this combination and add back the most recent
@@ -771,7 +772,7 @@ const CompetitionResults = () => {
             (result) =>
               !(
                 result.compUser === compUser && result.discipline === discipline
-              )
+              ),
           );
           updatedResults.push(mostRecent);
         } catch (cleanupError) {
@@ -780,7 +781,7 @@ const CompetitionResults = () => {
             `Failed to cleanup duplicates ${i + 1}/${
               duplicateCombinations.length
             } for ${compUser}-${discipline}:`,
-            cleanupError?.response?.data?.message || cleanupError.message
+            cleanupError?.response?.data?.message || cleanupError.message,
           );
 
           // Still clean up local array for display purposes by keeping only the most recent
@@ -788,7 +789,7 @@ const CompetitionResults = () => {
             (result) =>
               !(
                 result.compUser === compUser && result.discipline === discipline
-              )
+              ),
           );
           updatedResults.push(mostRecent);
         }
@@ -814,7 +815,7 @@ const CompetitionResults = () => {
     } catch (error) {
       console.error("Error cleaning up duplicates:", error);
       alert(
-        "Error occurred while cleaning up duplicates. Some duplicates may remain. Please check the results and try again."
+        "Error occurred while cleaning up duplicates. Some duplicates may remain. Please check the results and try again.",
       );
     }
   };
@@ -878,7 +879,7 @@ const CompetitionResults = () => {
     newScore,
     status,
     additionalInfo,
-    timestamp
+    timestamp,
   ) => {
     const newResult = {
       compUser: user,
@@ -912,7 +913,7 @@ const CompetitionResults = () => {
               (result) =>
                 result.compUser === user && result.discipline === discipline
                   ? newResult // Replace with the new result
-                  : result // Keep the existing result
+                  : result, // Keep the existing result
             );
         return {
           ...prevCompetitionData,
@@ -926,7 +927,7 @@ const CompetitionResults = () => {
       alert(
         `The score could not be ${
           newScore ? "added" : "edited"
-        }. Please try again.`
+        }. Please try again.`,
       );
     }
   };
@@ -1042,7 +1043,7 @@ const CompetitionResults = () => {
             ({ rawScore, time, discipline }) => {
               const points = getChampPoints(discipline, rawScore, time);
               totalPoints += parseFloat(points);
-            }
+            },
           );
 
           return {
@@ -1050,7 +1051,7 @@ const CompetitionResults = () => {
             total: Math.ceil(totalPoints), // TODO: can this be rounded up or down? Or just up?
             unroundedTotal: totalPoints,
           };
-        }
+        },
       );
 
       setCompUserTotals(updatedCompUserTotals);
@@ -1122,11 +1123,11 @@ const CompetitionResults = () => {
   const handleSelectDiscipline = (discipline) => {
     if (competitionData?.compResults) {
       const resultsForDiscipline = competitionData.compResults.filter(
-        (r) => r.discipline === discipline
+        (r) => r.discipline === discipline,
       );
       console.log(
         `[Discipline Selection] Results for ${discipline}:`,
-        resultsForDiscipline
+        resultsForDiscipline,
       );
     }
     setSelectedDiscipline(discipline);
@@ -1221,7 +1222,7 @@ const CompetitionResults = () => {
         return lastNameCompare !== 0
           ? lastNameCompare
           : firstNameA.localeCompare(firstNameB);
-      })
+      }),
     );
   };
 
@@ -1298,15 +1299,15 @@ const CompetitionResults = () => {
       competitionData?.rankable !== undefined
         ? competitionData.rankable
         : competitionData?.Rankable !== undefined
-        ? competitionData.Rankable
-        : false,
+          ? competitionData.Rankable
+          : false,
       competitionData?.adult_rankable !== undefined
         ? competitionData.adult_rankable
         : competitionData?.Adult_rankable !== undefined
-        ? competitionData.Adult_rankable
-        : competitionData?.adultRankable !== undefined
-        ? competitionData.adultRankable
-        : false,
+          ? competitionData.Adult_rankable
+          : competitionData?.adultRankable !== undefined
+            ? competitionData.adultRankable
+            : false,
       competitionData?.country || "N/A",
       competitionData?.championship_type || "N/A",
       competitionData?.championship_status || "N/A",
@@ -1362,7 +1363,7 @@ const CompetitionResults = () => {
           "spdcards1_cards",
           "spdcards1_time",
           "spdcards2_cards",
-          "spdcards2_time"
+          "spdcards2_time",
         );
         insertedSpeedCards = true;
         continue;
@@ -1431,7 +1432,7 @@ const CompetitionResults = () => {
       const k2 = getResult(compUserId, "K2");
       const k3 = getResult(compUserId, "K3");
       const kScores = [k1?.rawScore, k2?.rawScore, k3?.rawScore].filter(
-        (v) => v !== undefined
+        (v) => v !== undefined,
       );
       let spokenScore = "N/A";
       if (kScores.length > 0) spokenScore = Math.max(...kScores);
@@ -1481,7 +1482,7 @@ const CompetitionResults = () => {
         exportCountry || "N/A",
         category,
         ...statsDisciplineFields.map(
-          (field) => disciplineScores[field] ?? "N/A"
+          (field) => disciplineScores[field] ?? "N/A",
         ),
       ];
       scoreRows.push(row);
@@ -1804,7 +1805,8 @@ const CompetitionResults = () => {
                       {(() => {
                         const disciplineResults =
                           competitionData.compResults.filter(
-                            (result) => result.discipline === selectedDiscipline
+                            (result) =>
+                              result.discipline === selectedDiscipline,
                           );
 
                         // Deduplicate results - keep only one result per competitor (preferably the most recent)
@@ -1814,14 +1816,14 @@ const CompetitionResults = () => {
                             .size;
                         if (duplicatesFound) {
                           console.warn(
-                            `[Display] Found duplicate results for discipline ${selectedDiscipline}. Showing only the most recent result per competitor.`
+                            `[Display] Found duplicate results for discipline ${selectedDiscipline}. Showing only the most recent result per competitor.`,
                           );
                         }
 
                         const uniqueResults = disciplineResults.reduce(
                           (acc, result) => {
                             const existingIndex = acc.findIndex(
-                              (r) => r.compUser === result.compUser
+                              (r) => r.compUser === result.compUser,
                             );
                             if (existingIndex === -1) {
                               // No existing result for this competitor, add it
@@ -1841,14 +1843,14 @@ const CompetitionResults = () => {
                             }
                             return acc;
                           },
-                          []
+                          [],
                         );
 
                         return uniqueResults;
                       })()
                         .filter((result) => {
                           const thisUser = users.find(
-                            (u) => u._id === result.compUser
+                            (u) => u._id === result.compUser,
                           );
                           const group = getUserAgeGroup(thisUser);
                           return selectedAgeGroups.includes(group);
@@ -1878,13 +1880,13 @@ const CompetitionResults = () => {
                           return lastNameCompare !== 0
                             ? lastNameCompare
                             : (userA?.firstName || "").localeCompare(
-                                userB?.firstName || ""
+                                userB?.firstName || "",
                               );
                         })
                         .map((result, i) => {
                           // Find the user with the matching ID in the users array
                           const thisUser = users.find(
-                            (u) => u._id === result.compUser
+                            (u) => u._id === result.compUser,
                           );
                           //determine if this user is the currently logged in user
                           const isCurrentUser = thisUser?._id === user?.userId;
@@ -1923,7 +1925,7 @@ const CompetitionResults = () => {
                                       dangerouslySetInnerHTML={{
                                         __html: formatCorrections(
                                           result.additionalInfo,
-                                          result.status
+                                          result.status,
                                         ),
                                       }}
                                     ></td>
@@ -1987,7 +1989,7 @@ const CompetitionResults = () => {
                                     onClick={() =>
                                       handleEditScore(
                                         result.compUser,
-                                        result.discipline
+                                        result.discipline,
                                       )
                                     }
                                   />
@@ -1998,7 +2000,7 @@ const CompetitionResults = () => {
                                     onClick={() =>
                                       handleDeleteScore(
                                         result.compUser,
-                                        result.discipline
+                                        result.discipline,
                                       )
                                     }
                                   />
@@ -2066,7 +2068,7 @@ const CompetitionResults = () => {
                           .map((competitor) => {
                             // Find the user with the matching ID in the users array
                             const thisUser = users.find(
-                              (u) => u._id === competitor.userId
+                              (u) => u._id === competitor.userId,
                             ) || {
                               firstName: "Unknown",
                               lastName: "Unknown",
@@ -2075,7 +2077,7 @@ const CompetitionResults = () => {
                             return { competitor, thisUser, group };
                           })
                           .filter(({ group }) =>
-                            selectedAgeGroups.includes(group)
+                            selectedAgeGroups.includes(group),
                           )
                           .sort((a, b) => {
                             // Primary sort: by total championship points
@@ -2091,7 +2093,7 @@ const CompetitionResults = () => {
                             return lastNameCompare !== 0
                               ? lastNameCompare
                               : (a.thisUser?.firstName || "").localeCompare(
-                                  b.thisUser?.firstName || ""
+                                  b.thisUser?.firstName || "",
                                 );
                           })
                           .map(({ competitor, thisUser }, i) => (
@@ -2116,7 +2118,22 @@ const CompetitionResults = () => {
                                       country={thisUser.country}
                                       style={{ marginLeft: "6px" }}
                                     >
-                                      {getFlagEmoji(thisUser.country)}
+                                      <span
+                                        dangerouslySetInnerHTML={{
+                                          __html: twemoji.parse(
+                                            getFlagEmoji(thisUser.country),
+                                            {
+                                              folder: "svg",
+                                              ext: ".svg",
+                                              attributes: () => ({
+                                                style:
+                                                  "width: 1.2em; height: 1.2em; vertical-align: middle;",
+                                                onerror: `this.outerHTML='<span style=&quot;font-size:1em;color:#888;&quot;>${getFlagEmoji(thisUser.country)} || thisUser.country : ""}</span>'`,
+                                              }),
+                                            },
+                                          ),
+                                        }}
+                                      />
                                     </FlagTooltip>
                                   )}
                                 {thisUser.country === "(none)" && (
@@ -2201,7 +2218,7 @@ const CompetitionResults = () => {
                   competitionData.disciplines &&
                   require("./constants")
                     .disciplines.filter((d) =>
-                      competitionData.disciplines.includes(d.ref)
+                      competitionData.disciplines.includes(d.ref),
                     )
                     .map((d) => (
                       <option key={d.ref} value={d.ref}>
@@ -2256,7 +2273,7 @@ const CompetitionResults = () => {
                       // Prevent double imports
                       if (isImporting) {
                         console.log(
-                          "[Import Protection] Update existing scores already in progress, ignoring duplicate click"
+                          "[Import Protection] Update existing scores already in progress, ignoring duplicate click",
                         );
                         return;
                       }
@@ -2266,7 +2283,7 @@ const CompetitionResults = () => {
                       // Update existing scores (import all, using appropriate endpoint)
                       const allImports = [...validImports, ...pendingImports];
                       console.log(
-                        `[Update Existing] About to process ${allImports.length} scores (${validImports.length} new + ${pendingImports.length} updates)`
+                        `[Update Existing] About to process ${allImports.length} scores (${validImports.length} new + ${pendingImports.length} updates)`,
                       );
                       Promise.all(
                         allImports.map((importObj) => {
@@ -2275,7 +2292,7 @@ const CompetitionResults = () => {
                             competitionData.compResults.some(
                               (r) =>
                                 r.compUser === importObj.compUser &&
-                                r.discipline === importObj.discipline
+                                r.discipline === importObj.discipline,
                             );
                           const configuration = {
                             method: "put",
@@ -2290,19 +2307,19 @@ const CompetitionResults = () => {
                           console.log(
                             `[Update Existing] ${importObj.name}: ${
                               alreadyHasScore ? "UPDATE" : "ADD"
-                            } - ${configuration.url}`
+                            } - ${configuration.url}`,
                           );
                           return axios(configuration);
-                        })
+                        }),
                       )
                         .then(() => {
                           console.log(
-                            `[Update Existing] Successfully processed ${allImports.length} scores`
+                            `[Update Existing] Successfully processed ${allImports.length} scores`,
                           );
                           alert(
                             `${allImports.length} score${
                               allImports.length !== 1 ? "s" : ""
-                            } imported (including overwrites).`
+                            } imported (including overwrites).`,
                           );
                           setShowImportModal(false);
                           setImportError("");
@@ -2320,7 +2337,7 @@ const CompetitionResults = () => {
                             .then((result) => {
                               setCompetitionData(result.data);
                               console.log(
-                                `[Update Existing] Competition data refreshed`
+                                `[Update Existing] Competition data refreshed`,
                               );
 
                               // Refresh current discipline standings if we're on a discipline
@@ -2333,7 +2350,7 @@ const CompetitionResults = () => {
                             .catch((error) => {
                               console.error(
                                 "[Update Existing] Error refreshing data:",
-                                error
+                                error,
                               );
                               setIsImporting(false); // Reset importing state on refresh error
                             });
@@ -2341,7 +2358,7 @@ const CompetitionResults = () => {
                         .catch((error) => {
                           console.error(
                             "[Update Existing] Error importing scores:",
-                            error
+                            error,
                           );
                           alert("Error importing scores. Please try again.");
                           setIsImporting(false); // Reset importing state on import error
@@ -2358,7 +2375,7 @@ const CompetitionResults = () => {
                       // Prevent double imports
                       if (isImporting) {
                         console.log(
-                          "[Import Protection] Import new only already in progress, ignoring duplicate click"
+                          "[Import Protection] Import new only already in progress, ignoring duplicate click",
                         );
                         return;
                       }
@@ -2368,11 +2385,11 @@ const CompetitionResults = () => {
                       // Import only new scores - ONLY use ADD endpoint, skip duplicates entirely
                       console.log(
                         `[Import New Only] About to import ${validImports.length} new scores (using ADD endpoint only):`,
-                        validImports
+                        validImports,
                       );
                       console.log(
                         `[Import New Only] Completely skipping ${pendingImports.length} duplicate scores:`,
-                        pendingImports
+                        pendingImports,
                       );
 
                       if (validImports.length === 0) {
@@ -2387,7 +2404,7 @@ const CompetitionResults = () => {
                       Promise.all(
                         validImports.map((importObj) => {
                           console.log(
-                            `[Import New Only] ADD: ${importObj.name} - ${importObj.discipline} - ${importObj.rawScore}`
+                            `[Import New Only] ADD: ${importObj.name} - ${importObj.discipline} - ${importObj.rawScore}`,
                           );
                           const configuration = {
                             method: "put",
@@ -2399,14 +2416,14 @@ const CompetitionResults = () => {
                           };
                           console.log(
                             `[Import New Only] API call (ADD only):`,
-                            configuration
+                            configuration,
                           );
                           return axios(configuration)
                             .then((response) => {
                               console.log(
                                 `[Import New Only] API response for ${importObj.name}:`,
                                 response.status,
-                                response.data
+                                response.data,
                               );
                               return response;
                             })
@@ -2415,20 +2432,20 @@ const CompetitionResults = () => {
                                 `[Import New Only] API error for ${importObj.name}:`,
                                 error.response?.status,
                                 error.response?.data,
-                                error.message
+                                error.message,
                               );
                               throw error;
                             });
-                        })
+                        }),
                       )
                         .then(() => {
                           console.log(
-                            `[Import New Only] Successfully imported ${validImports.length} new scores`
+                            `[Import New Only] Successfully imported ${validImports.length} new scores`,
                           );
                           alert(
                             `${validImports.length} new score${
                               validImports.length !== 1 ? "s" : ""
-                            } imported.`
+                            } imported.`,
                           );
                           setShowImportModal(false);
                           setImportError("");
@@ -2452,14 +2469,14 @@ const CompetitionResults = () => {
                             .then((result) => {
                               setCompetitionData(result.data);
                               console.log(
-                                `[Import New Only] Competition data refreshed`
+                                `[Import New Only] Competition data refreshed`,
                               );
                               setIsImporting(false); // Reset importing state on success
                             })
                             .catch((error) => {
                               console.error(
                                 "[Import New Only] Error refreshing data:",
-                                error
+                                error,
                               );
                               setIsImporting(false); // Reset importing state on refresh error
                             });
@@ -2467,7 +2484,7 @@ const CompetitionResults = () => {
                         .catch((error) => {
                           console.error(
                             "[Import New Only] Error importing scores:",
-                            error
+                            error,
                           );
                           alert("Error importing scores. Please try again.");
                           setIsImporting(false); // Reset importing state on import error

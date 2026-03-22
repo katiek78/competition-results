@@ -79,17 +79,17 @@ export function getFlagEmoji(countryName) {
 
     // Chrome on Windows often has issues with flag emoji rendering
     // Detect Chrome and provide a better fallback
-    const isChrome =
-      /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-    const isWindows = /Windows/.test(navigator.userAgent);
+    // const isChrome =
+    //   /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    // const isWindows = /Windows/.test(navigator.userAgent);
 
-    if (isChrome && isWindows) {
-      // Use bracketed country codes for better Chrome/Windows compatibility
-      const code =
-        countryNameToCode[countryName] ||
-        (countryName.length === 2 ? countryName.toUpperCase() : null);
-      return code ? `[${code}]` : `(${countryName})`;
-    }
+    // if (isChrome && isWindows) {
+    //   // Use bracketed country codes for better Chrome/Windows compatibility
+    //   const code =
+    //     countryNameToCode[countryName] ||
+    //     (countryName.length === 2 ? countryName.toUpperCase() : null);
+    //   return code ? `[${code}]` : `(${countryName})`;
+    // }
 
     // First try direct mapping for better Chrome compatibility
     const directFlag = directCountryFlags[countryName];
