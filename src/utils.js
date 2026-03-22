@@ -33,6 +33,7 @@ export const countryNameToCode = {
   Austria: "AT",
   Uzbekistan: "UZ",
   Philippines: "PH",
+  Albania: "AL",
   // ...add more as needed
 };
 
