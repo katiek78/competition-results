@@ -8,7 +8,6 @@ import { Button } from "react-bootstrap";
 const AdminResetPassword = () => {
   const { user } = useUser();
   const [userData, setUserData] = useState({});
-  const [username, setUsername] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState("");
