@@ -225,7 +225,9 @@ export function getDisciplineRefFromName(disciplineName) {
   );
 
   if (disciplineName.toLowerCase().includes("images")) {
-    matchingDiscipline = "Images";
+    matchingDiscipline = disciplines.find(
+      (discipline) => discipline.label === "Images",
+    );
   }
 
   return matchingDiscipline ? matchingDiscipline.ref : "Unknown Discipline";
