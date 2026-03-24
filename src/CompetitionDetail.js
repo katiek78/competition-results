@@ -24,10 +24,12 @@ import {
   faRedoAlt,
   faEye,
   faFile,
+  faTrophy,
 } from "@fortawesome/free-solid-svg-icons";
 import jsPDF from "jspdf";
 import stringSimilarity from "string-similarity";
 import "./assets/fonts/calibri-normal.js";
+import twemoji from "twemoji";
 
 const CompetitionDetail = () => {
   const token = useMemo(() => getToken(), []);
@@ -62,7 +64,7 @@ const CompetitionDetail = () => {
   function findUserMatches(
     importedParticipants,
     existingUsers,
-    nameThreshold = 0.85
+    nameThreshold = 0.85,
   ) {
     return importedParticipants
       .map((participant) => {
@@ -75,7 +77,7 @@ const CompetitionDetail = () => {
 
         // Filter users by country first
         const countryMatches = existingUsers.filter(
-          (user) => user.country === participant.country || user.country === ""
+          (user) => user.country === participant.country || user.country === "",
         );
 
         // Combine firstName and lastName for users
@@ -89,7 +91,7 @@ const CompetitionDetail = () => {
             user,
             similarity: stringSimilarity.compareTwoStrings(
               userFullName.toLowerCase(),
-              participantFullName.toLowerCase()
+              participantFullName.toLowerCase(),
             ),
             userFullName,
           };
@@ -198,7 +200,7 @@ const CompetitionDetail = () => {
     let headerIdx = rows.findIndex(
       (row) =>
         row.includes("Name") &&
-        (row.includes("Country") || row.includes("Nationality"))
+        (row.includes("Country") || row.includes("Nationality")),
     );
     let dataRows;
     if (headerIdx === -1) {
@@ -464,7 +466,7 @@ const CompetitionDetail = () => {
           // Find closest match using string similarity
           let bestMatch = stringSimilarity.findBestMatch(
             countryRaw,
-            countryList
+            countryList,
           );
           if (bestMatch.bestMatch.rating >= 0.8) {
             matchedCountry = bestMatch.bestMatch.target;
@@ -512,7 +514,7 @@ const CompetitionDetail = () => {
       (c) =>
         c.countryMatchStatus &&
         (c.countryMatchStatus.type === "close" ||
-          c.countryMatchStatus.type === "none")
+          c.countryMatchStatus.type === "none"),
     );
     if (flaggedCountryMatches.length > 0) {
       setCountryFlagSummary(flaggedCountryMatches);
@@ -544,7 +546,7 @@ const CompetitionDetail = () => {
             headers: {
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
         createdUserIds = response.data.userIds || [];
         console.log(createdUserIds);
@@ -589,8 +591,8 @@ const CompetitionDetail = () => {
               createdUserIds.map((userId) =>
                 axios.delete(`${backendUrl}/users/${userId}`, {
                   headers: { Authorization: `Bearer ${token}` },
-                })
-              )
+                }),
+              ),
             );
           }
 
@@ -602,7 +604,7 @@ const CompetitionDetail = () => {
             },
             {
               headers: { Authorization: `Bearer ${token}` },
-            }
+            },
           );
           setCompetitionData({
             ...competitionData,
@@ -613,12 +615,12 @@ const CompetitionDetail = () => {
           setUsers(originalUsers);
 
           setImportError(
-            "Import failed. All changes have been rolled back. Please check your data and try again."
+            "Import failed. All changes have been rolled back. Please check your data and try again.",
           );
         } catch (rollbackErr) {
           console.error("Rollback failed:", rollbackErr);
           setImportError(
-            "Import failed and rollback was unsuccessful. Please refresh the page and try again."
+            "Import failed and rollback was unsuccessful. Please refresh the page and try again.",
           );
         }
       }
@@ -686,7 +688,7 @@ const CompetitionDetail = () => {
   const deleteAdmin = async (id) => {
     try {
       const updatedCompAdmins = competitionData.compAdmins.filter(
-        (adminId) => adminId !== id
+        (adminId) => adminId !== id,
       );
       const response = await axios.put(
         `${backendUrl}/competition/${competitionData._id}`,
@@ -697,7 +699,7 @@ const CompetitionDetail = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       console.log("Competition saved:", response.data);
       setCompetitionData({ ...competitionData, compAdmins: updatedCompAdmins });
@@ -715,17 +717,17 @@ const CompetitionDetail = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       console.log("Participant deleted:", response.data);
 
       // Update local state after successful deletion
       const updatedCompUsers = competitionData.compUsers.filter(
-        (userId) => userId !== id
+        (userId) => userId !== id,
       );
       const updatedCompResults = competitionData.compResults.filter(
-        (r) => r.compUser !== id
+        (r) => r.compUser !== id,
       );
 
       setCompetitionData((prevData) => ({
@@ -736,7 +738,7 @@ const CompetitionDetail = () => {
     } catch (error) {
       console.error("Error deleting participant:", error);
       alert(
-        "Failed to delete participant. Please try again or contact support if the problem persists."
+        "Failed to delete participant. Please try again or contact support if the problem persists.",
       );
     }
   };
@@ -811,7 +813,7 @@ const CompetitionDetail = () => {
       .then((result) => {
         // Filter out unverified users (treat undefined as verified for legacy users)
         const verifiedUsers = result.data.users.filter(
-          (user) => user.verified !== false
+          (user) => user.verified !== false,
         );
         setUsers(verifiedUsers);
 
@@ -833,7 +835,7 @@ const CompetitionDetail = () => {
   const handleDeleteParticipant = (id) => {
     if (
       window.confirm(
-        "Are you sure you wish to delete this participant? All their scores will be deleted."
+        "Are you sure you wish to delete this participant? All their scores will be deleted.",
       )
     )
       deleteParticipant(id);
@@ -848,8 +850,8 @@ const CompetitionDetail = () => {
     }
     alert(
       `Data for ${getDisciplineNameFromRef(discipline)}: \n${JSON.stringify(
-        data
-      )}`
+        data,
+      )}`,
     );
   }
 
@@ -898,7 +900,7 @@ const CompetitionDetail = () => {
         // Only add userIds that are not already in compUsers
         const existingCompUsers = competitionData.compUsers || [];
         const newUserIds = userIds.filter(
-          (id) => !existingCompUsers.includes(id)
+          (id) => !existingCompUsers.includes(id),
         );
 
         if (newUserIds.length > 0) {
@@ -910,7 +912,7 @@ const CompetitionDetail = () => {
             updatedCompetition,
             {
               headers: { Authorization: `Bearer ${token}` },
-            }
+            },
           );
           setCompetitionData((prev) => ({
             ...prev,
@@ -936,7 +938,7 @@ const CompetitionDetail = () => {
               role: "user",
             })),
           },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const createdIds = response.data.userIds || [];
         createdUserIds = [...createdUserIds, ...createdIds];
@@ -978,7 +980,7 @@ const CompetitionDetail = () => {
               role: "user",
             })),
           },
-          { headers: { Authorization: `Bearer ${token}` } }
+          { headers: { Authorization: `Bearer ${token}` } },
         );
         const createdIds = response.data.userIds || [];
         createdUserIds = [...createdUserIds, ...createdIds];
@@ -1019,8 +1021,8 @@ const CompetitionDetail = () => {
             createdUserIds.map((userId) =>
               axios.delete(`${backendUrl}/users/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` },
-              })
-            )
+              }),
+            ),
           );
         }
 
@@ -1033,7 +1035,7 @@ const CompetitionDetail = () => {
             },
             {
               headers: { Authorization: `Bearer ${token}` },
-            }
+            },
           );
           setCompetitionData((prev) => ({
             ...prev,
@@ -1045,12 +1047,12 @@ const CompetitionDetail = () => {
         setUsers(originalUsers);
 
         setImportError(
-          "Import failed. All changes have been rolled back. Please check your data and try again."
+          "Import failed. All changes have been rolled back. Please check your data and try again.",
         );
       } catch (rollbackErr) {
         console.error("Rollback failed:", rollbackErr);
         setImportError(
-          "Import failed and rollback was unsuccessful. Please refresh the page and try again."
+          "Import failed and rollback was unsuccessful. Please refresh the page and try again.",
         );
       }
     }
@@ -1063,7 +1065,7 @@ const CompetitionDetail = () => {
   const deleteDiscipline = async (discipline) => {
     try {
       const updatedDisciplines = competitionData.disciplines.filter(
-        (d) => d !== discipline
+        (d) => d !== discipline,
       );
 
       const response = await axios.put(
@@ -1075,7 +1077,7 @@ const CompetitionDetail = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
       console.log("Competition saved:", response.data);
       setCompetitionData((prevData) => ({
@@ -1134,8 +1136,8 @@ const CompetitionDetail = () => {
     if (
       !window.confirm(
         `Are you sure you want to regenerate data for ${getDisciplineNameFromRef(
-          discipline
-        )}? This action cannot be undone.`
+          discipline,
+        )}? This action cannot be undone.`,
       )
     )
       return;
@@ -1152,12 +1154,12 @@ const CompetitionDetail = () => {
     if (discipline.includes("N")) {
       //generate array of random digits (amount is number of digits)
       data = Array.from({ length: amount }, () =>
-        Math.floor(Math.random() * 10)
+        Math.floor(Math.random() * 10),
       );
     } else if (discipline.includes("B")) {
       //generate array of random digits (amount is number of digits)
       data = Array.from({ length: amount }, () =>
-        Math.floor(Math.random() * 2)
+        Math.floor(Math.random() * 2),
       );
     } else if (discipline.includes("I")) {
       const usedImageNums = [];
@@ -1314,7 +1316,7 @@ const CompetitionDetail = () => {
         }`,
         pageWidth / 2,
         y,
-        { align: "center" }
+        { align: "center" },
       );
       doc.setTextColor(0, 0, 0); // reset to black for rest
       if (recall) {
@@ -1381,7 +1383,7 @@ const CompetitionDetail = () => {
               let blockY = y;
               let blockRowDigits = data.slice(
                 i + blockRow * numbersPerRow,
-                i + (blockRow + 1) * numbersPerRow
+                i + (blockRow + 1) * numbersPerRow,
               );
               // Restore row numbering for each row in block
               doc.setFontSize(labelFontSize);
@@ -1411,7 +1413,7 @@ const CompetitionDetail = () => {
                 const groupStartX = blockX - borderShift;
                 let digitsToDraw = Math.min(
                   digitsInThisGroup,
-                  blockRowDigits.length - digitIdx
+                  blockRowDigits.length - digitIdx,
                 );
                 for (let g = 0; g < digitsToDraw; g++) {
                   doc.text(
@@ -1420,7 +1422,7 @@ const CompetitionDetail = () => {
                     blockY,
                     {
                       baseline: "top",
-                    }
+                    },
                   );
                   blockX += digitSpacing;
                   digitIdx++;
@@ -1447,7 +1449,7 @@ const CompetitionDetail = () => {
                       groupStartX,
                       blockY + borderHeight,
                       groupEndX,
-                      blockY + borderHeight
+                      blockY + borderHeight,
                     );
                   }
                   // Left border for every group
@@ -1455,14 +1457,14 @@ const CompetitionDetail = () => {
                     groupStartX,
                     blockY - 1,
                     groupStartX,
-                    blockY + borderHeight
+                    blockY + borderHeight,
                   );
                   // Right border for every group
                   doc.line(
                     groupEndX,
                     blockY - 1,
                     groupEndX,
-                    blockY + borderHeight
+                    blockY + borderHeight,
                   );
                 }
                 if (digitsToDraw < digitsInThisGroup) {
@@ -1499,7 +1501,7 @@ const CompetitionDetail = () => {
                 leftMargin - 0.7 + rowMaxWidth,
                 topY,
                 leftMargin - 0.7 + rowMaxWidth,
-                bottomY
+                bottomY,
               );
               // Draw vertical lines for each recorded right border x-position
               rightBorderXs.forEach((x) => {
@@ -1551,7 +1553,7 @@ const CompetitionDetail = () => {
               const groupStartX = x - borderShift;
               let digitsToDraw = Math.min(
                 digitsInThisGroup,
-                rowDigits.length - digitIdx
+                rowDigits.length - digitIdx,
               );
               for (let g = 0; g < digitsToDraw; g++) {
                 doc.text(rowDigits[digitIdx].toString(), x, y, {
@@ -1585,7 +1587,7 @@ const CompetitionDetail = () => {
                   groupStartX,
                   y + borderHeight,
                   groupEndX,
-                  y + borderHeight
+                  y + borderHeight,
                 );
                 // Left border for every group
                 doc.line(groupStartX, y - 1, groupStartX, y + borderHeight);
@@ -1687,10 +1689,10 @@ const CompetitionDetail = () => {
       }
       doc.save(
         `${competitionData.name || "competition"}_${getDisciplineNameFromRef(
-          discipline
+          discipline,
         )}_${recall ? "recall" : "memorisation"}${
           largePrint ? " (LARGE)" : ""
-        }.pdf`
+        }.pdf`,
       );
     });
   }
@@ -1740,7 +1742,7 @@ const CompetitionDetail = () => {
         },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
     } catch (err) {
       alert("Error saving discipline order");
@@ -1892,7 +1894,7 @@ const CompetitionDetail = () => {
                         ?.map((userId) => {
                           // Find the user with the matching ID in the users array
                           const user = users.find(
-                            (user) => user._id === userId
+                            (user) => user._id === userId,
                           );
                           return { userId, user };
                         })
@@ -1905,14 +1907,71 @@ const CompetitionDetail = () => {
                           // Sort by lastName, then firstName
                           return (
                             (a.user.lastName || "").localeCompare(
-                              b.user.lastName || ""
+                              b.user.lastName || "",
                             ) ||
                             (a.user.firstName || "").localeCompare(
-                              b.user.firstName || ""
+                              b.user.firstName || "",
                             )
                           );
                         })
                         .map(({ userId, user }) => {
+                          // Find the compUser object (could be just an ID or an object)
+                          let compUserObj = null;
+                          if (Array.isArray(competitionData.compUsers)) {
+                            compUserObj = competitionData.compUsers.find(
+                              (cu) =>
+                                typeof cu === "object"
+                                  ? cu._id === userId
+                                  : cu === userId,
+                            );
+                          }
+
+                          const nonRanked =
+                            Array.isArray(
+                              competitionData.nonRankedCompetitors,
+                            ) &&
+                            competitionData.nonRankedCompetitors.includes(
+                              userId,
+                            );
+
+                          // Handler for toggling nonRanked
+                          const handleToggleNonRanked = async (e) => {
+                            e.stopPropagation();
+                            if (
+                              userData.role !== "superAdmin" &&
+                              userData.role !== "admin"
+                            )
+                              return;
+                            const current = Array.isArray(
+                              competitionData.nonRankedCompetitors,
+                            )
+                              ? competitionData.nonRankedCompetitors
+                              : [];
+                            let updated;
+                            if (current.includes(userId)) {
+                              updated = current.filter((id) => id !== userId);
+                            } else {
+                              updated = [...current, userId];
+                            }
+                            try {
+                              await axios.put(
+                                `${backendUrl}/competition/${competitionData._id}`,
+                                {
+                                  nonRankedCompetitors: updated,
+                                },
+                                {
+                                  headers: { Authorization: `Bearer ${token}` },
+                                },
+                              );
+                              setCompetitionData((prev) => ({
+                                ...prev,
+                                nonRankedCompetitors: updated,
+                              }));
+                            } catch (err) {
+                              alert("Failed to update non-ranked status.");
+                            }
+                          };
+
                           return (
                             <tr key={userId}>
                               <td>
@@ -1924,7 +1983,22 @@ const CompetitionDetail = () => {
                                       country={user.country}
                                       style={{ marginLeft: "6px" }}
                                     >
-                                      {getFlagEmoji(user.country)}
+                                      <span
+                                        dangerouslySetInnerHTML={{
+                                          __html: twemoji.parse(
+                                            getFlagEmoji(user.country),
+                                            {
+                                              folder: "svg",
+                                              ext: ".svg",
+                                              attributes: () => ({
+                                                style:
+                                                  "width: 1.2em; height: 1.2em; vertical-align: middle;",
+                                                onerror: `this.outerHTML='<span style=&quot;font-size:1em;color:#888;&quot;>${getFlagEmoji(user.country)} || user.country : ""}</span>'`,
+                                              }),
+                                            },
+                                          ),
+                                        }}
+                                      />
                                     </FlagTooltip>
                                   )}
                                 {user?.country === "(none)" && (
@@ -1946,7 +2020,7 @@ const CompetitionDetail = () => {
                                       (c) =>
                                         c.firstName === user?.firstName &&
                                         c.lastName === user?.lastName &&
-                                        c.birthYear === user?.birthYear
+                                        c.birthYear === user?.birthYear,
                                     );
                                     if (
                                       imported &&
@@ -1983,13 +2057,42 @@ const CompetitionDetail = () => {
                                     return null;
                                   })()}
                               </td>
-                              <td
-                                onClick={() => handleDeleteParticipant(userId)}
-                              >
-                                <FontAwesomeIcon
-                                  className="menuIcon"
-                                  icon={faTrash}
-                                />
+                              <td>
+                                <td style={{ whiteSpace: "nowrap" }}>
+                                  {/* Trophy icon for non-ranked toggle */}
+                                  <span
+                                    title={
+                                      nonRanked
+                                        ? "Non-ranked competitor"
+                                        : "Click to mark as non-ranked"
+                                    }
+                                    style={{
+                                      cursor: "pointer",
+                                      opacity: nonRanked ? 0.4 : 1,
+                                      marginRight: 12,
+                                      color: nonRanked ? "#888" : "#bfa200",
+                                      fontSize: "1.2em",
+                                      verticalAlign: "middle",
+                                    }}
+                                    onClick={handleToggleNonRanked}
+                                  >
+                                    <FontAwesomeIcon
+                                      icon={faTrophy}
+                                      color={nonRanked ? "#888" : "#bfa200"}
+                                    />
+                                  </span>
+                                  <span
+                                    onClick={() =>
+                                      handleDeleteParticipant(userId)
+                                    }
+                                    style={{ cursor: "pointer" }}
+                                  >
+                                    <FontAwesomeIcon
+                                      className="menuIcon"
+                                      icon={faTrash}
+                                    />
+                                  </span>
+                                </td>
                               </td>
                             </tr>
                           );
@@ -2357,7 +2460,7 @@ const CompetitionDetail = () => {
                       (c) =>
                         (
                           c.firstName + (c.lastName ? " " + c.lastName : "")
-                        ).trim() === participantFullName
+                        ).trim() === participantFullName,
                     );
                     return (
                       <div key={idx} style={{ marginBottom: "1em" }}>

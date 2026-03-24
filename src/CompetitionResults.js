@@ -195,6 +195,12 @@ const CompetitionResults = () => {
     { key: "juniors", label: "Juniors", color: "#4682b4", textColor: "#fff" },
     { key: "adults", label: "Adults", color: "#274472", textColor: "#fff" },
     { key: "seniors", label: "Seniors", color: "#3a8a16ff", textColor: "#fff" },
+    {
+      key: "discovery",
+      label: "Discovery",
+      color: "rgb(191, 33, 212)",
+      textColor: "#fff",
+    },
   ];
   const [selectedAgeGroups, setSelectedAgeGroups] = useState(
     ageGroups.map((g) => g.key),
@@ -227,8 +233,19 @@ const CompetitionResults = () => {
     });
   };
 
+  const isUserRankedInThisCompetition = (user) => {
+    console.log(user);
+    console.log(competitionData.nonRankedCompetitors.indexOf(user._id));
+    if (!competitionData || !user) return false;
+    return (
+      competitionData.nonRankedCompetitors &&
+      competitionData.nonRankedCompetitors.indexOf(user._id) === -1
+    );
+  };
+
   // Helper: get age group for a user (by birthYear)
   function getUserAgeGroup(user) {
+    if (!isUserRankedInThisCompetition(user)) return "discovery";
     const year = user?.birthYear;
     if (!year) return "adults";
     const currentYear = new Date().getFullYear();

@@ -17,33 +17,35 @@ const formatDate = (date) => {
 const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
   const [name, setName] = useState(editing ? form.compName : "");
   const [dateStart, setDateStart] = useState(
-    editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date())
+    editing ? formatDate(new Date(form.dateStart)) : formatDate(new Date()),
   );
   const [dateEnd, setDateEnd] = useState(
-    editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date())
+    editing ? formatDate(new Date(form.dateEnd)) : formatDate(new Date()),
   );
   const [format, setFormat] = useState(editing ? form.format || "n" : "n");
   const [compId, setCompId] = useState(
-    editing ? form.comp_id || generateCompId(form.compName, form.dateStart) : ""
+    editing
+      ? form.comp_id || generateCompId(form.compName, form.dateStart)
+      : "",
   );
   const [location, setLocation] = useState(editing ? form.location || "" : "");
   const [rankable, setRankable] = useState(
-    editing ? form.rankable || false : false
+    editing ? form.rankable || false : false,
   );
   const [adultRankable, setAdultRankable] = useState(
-    editing ? form.adult_rankable || false : false
+    editing ? form.adult_rankable || false : false,
   );
   const [country, setCountry] = useState(editing ? form.country || "" : "");
   const [championshipType, setChampionshipType] = useState(
-    editing ? form.championship_type || "Adult" : "Adult"
+    editing ? form.championship_type || "Adult" : "Adult",
   );
   const [championshipStatus, setChampionshipStatus] = useState(
-    editing ? form.championship_status || "None" : "None"
+    editing ? form.championship_status || "None" : "None",
   );
 
   // Logo URLs state (array of strings)
   const [logos, setLogos] = useState(
-    editing && Array.isArray(form.logos) ? form.logos : []
+    editing && Array.isArray(form.logos) ? form.logos : [],
   );
 
   // Handle logo URL change
