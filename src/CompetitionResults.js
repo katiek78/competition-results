@@ -1415,95 +1415,103 @@ const CompetitionResults = () => {
     ];
 
     const scoreRows = [];
-    (competitionData?.compUsers || []).forEach((compUserId) => {
-      const user = users.find((u) => u._id === compUserId) || {};
-      // If country is '(none)', export as 'undefined'
-      let exportCountry = user.country;
-      if (exportCountry === "(none)") exportCountry = "undefined";
-      // Map age group to category string
-      let ageGroupKey = user.ageGroup || user.age_group;
-      if (!ageGroupKey) {
-        ageGroupKey = getUserAgeGroup(user);
-      }
-      let category = "adult";
-      if (ageGroupKey === "kids") category = "kid";
-      else if (ageGroupKey === "juniors") category = "junior";
-      else if (ageGroupKey === "seniors") category = "senior";
+    (competitionData?.compUsers || [])
+      .filter(
+        (compUserId) =>
+          !(
+            Array.isArray(competitionData?.nonRankedCompetitors) &&
+            competitionData.nonRankedCompetitors.includes(compUserId)
+          ),
+      )
+      .forEach((compUserId) => {
+        const user = users.find((u) => u._id === compUserId) || {};
+        // If country is '(none)', export as 'undefined'
+        let exportCountry = user.country;
+        if (exportCountry === "(none)") exportCountry = "undefined";
+        // Map age group to category string
+        let ageGroupKey = user.ageGroup || user.age_group;
+        if (!ageGroupKey) {
+          ageGroupKey = getUserAgeGroup(user);
+        }
+        let category = "adult";
+        if (ageGroupKey === "kids") category = "kid";
+        else if (ageGroupKey === "juniors") category = "junior";
+        else if (ageGroupKey === "seniors") category = "senior";
 
-      // Build a mapping from field to score for this user
-      const disciplineScores = {};
-      // NUM5
-      const num1 = getResult(compUserId, "5N1");
-      const num2 = getResult(compUserId, "5N2");
-      const num1Score = num1?.rawScore !== undefined ? num1.rawScore : null;
-      const num2Score = num2?.rawScore !== undefined ? num2.rawScore : null;
-      let num5Score = "N/A";
-      if (num1Score !== null && num2Score !== null)
-        num5Score = Math.max(num1Score, num2Score);
-      else if (num1Score !== null) num5Score = num1Score;
-      else if (num2Score !== null) num5Score = num2Score;
-      disciplineScores["NUM5"] = num5Score;
+        // Build a mapping from field to score for this user
+        const disciplineScores = {};
+        // NUM5
+        const num1 = getResult(compUserId, "5N1");
+        const num2 = getResult(compUserId, "5N2");
+        const num1Score = num1?.rawScore !== undefined ? num1.rawScore : null;
+        const num2Score = num2?.rawScore !== undefined ? num2.rawScore : null;
+        let num5Score = "N/A";
+        if (num1Score !== null && num2Score !== null)
+          num5Score = Math.max(num1Score, num2Score);
+        else if (num1Score !== null) num5Score = num1Score;
+        else if (num2Score !== null) num5Score = num2Score;
+        disciplineScores["NUM5"] = num5Score;
 
-      // SPOKEN1
-      const k1 = getResult(compUserId, "K1");
-      const k2 = getResult(compUserId, "K2");
-      const k3 = getResult(compUserId, "K3");
-      const kScores = [k1?.rawScore, k2?.rawScore, k3?.rawScore].filter(
-        (v) => v !== undefined,
-      );
-      let spokenScore = "N/A";
-      if (kScores.length > 0) spokenScore = Math.max(...kScores);
-      disciplineScores["SPOKEN1"] = spokenScore;
+        // SPOKEN1
+        const k1 = getResult(compUserId, "K1");
+        const k2 = getResult(compUserId, "K2");
+        const k3 = getResult(compUserId, "K3");
+        const kScores = [k1?.rawScore, k2?.rawScore, k3?.rawScore].filter(
+          (v) => v !== undefined,
+        );
+        let spokenScore = "N/A";
+        if (kScores.length > 0) spokenScore = Math.max(...kScores);
+        disciplineScores["SPOKEN1"] = spokenScore;
 
-      // Other disciplines (rawScore)
-      (competitionData?.disciplines || []).forEach((discipline) => {
-        const name = getDisciplineNameFromRef(discipline);
-        if (
-          [
-            "5-minute Numbers Trial 1",
-            "5-minute Numbers Trial 2",
-            "Spoken Numbers Attempt 1",
-            "Spoken Numbers Attempt 2",
-            "Spoken Numbers Attempt 3",
-            "Speed Cards Trial 1",
-            "Speed Cards Trial 2",
-          ].includes(name)
-        )
-          return;
-        const statsId = disciplineNameToStatsId[name] || discipline;
-        const result = getResult(compUserId, discipline);
-        disciplineScores[statsId] =
-          result?.rawScore !== undefined ? result.rawScore : "N/A";
+        // Other disciplines (rawScore)
+        (competitionData?.disciplines || []).forEach((discipline) => {
+          const name = getDisciplineNameFromRef(discipline);
+          if (
+            [
+              "5-minute Numbers Trial 1",
+              "5-minute Numbers Trial 2",
+              "Spoken Numbers Attempt 1",
+              "Spoken Numbers Attempt 2",
+              "Spoken Numbers Attempt 3",
+              "Speed Cards Trial 1",
+              "Speed Cards Trial 2",
+            ].includes(name)
+          )
+            return;
+          const statsId = disciplineNameToStatsId[name] || discipline;
+          const result = getResult(compUserId, discipline);
+          disciplineScores[statsId] =
+            result?.rawScore !== undefined ? result.rawScore : "N/A";
+        });
+
+        // Speed Cards
+        const spd1 = getResult(compUserId, "SC1");
+        disciplineScores["spdcards1_cards"] =
+          spd1?.rawScore !== undefined ? spd1.rawScore : "N/A";
+        // If time is 0, export as 300
+        let spd1Time = spd1?.time !== undefined ? spd1.time : "N/A";
+        if (spd1Time === 0) spd1Time = 300;
+        disciplineScores["spdcards1_time"] = spd1Time;
+        const spd2 = getResult(compUserId, "SC2");
+        disciplineScores["spdcards2_cards"] =
+          spd2?.rawScore !== undefined ? spd2.rawScore : "N/A";
+        let spd2Time = spd2?.time !== undefined ? spd2.time : "N/A";
+        if (spd2Time === 0) spd2Time = 300;
+        disciplineScores["spdcards2_time"] = spd2Time;
+
+        // Build row in the correct order
+        const row = [
+          user.firstName || "N/A",
+          user.lastName || "N/A",
+          user.iamId || user.iam_id || "N/A",
+          exportCountry || "N/A",
+          category,
+          ...statsDisciplineFields.map(
+            (field) => disciplineScores[field] ?? "N/A",
+          ),
+        ];
+        scoreRows.push(row);
       });
-
-      // Speed Cards
-      const spd1 = getResult(compUserId, "SC1");
-      disciplineScores["spdcards1_cards"] =
-        spd1?.rawScore !== undefined ? spd1.rawScore : "N/A";
-      // If time is 0, export as 300
-      let spd1Time = spd1?.time !== undefined ? spd1.time : "N/A";
-      if (spd1Time === 0) spd1Time = 300;
-      disciplineScores["spdcards1_time"] = spd1Time;
-      const spd2 = getResult(compUserId, "SC2");
-      disciplineScores["spdcards2_cards"] =
-        spd2?.rawScore !== undefined ? spd2.rawScore : "N/A";
-      let spd2Time = spd2?.time !== undefined ? spd2.time : "N/A";
-      if (spd2Time === 0) spd2Time = 300;
-      disciplineScores["spdcards2_time"] = spd2Time;
-
-      // Build row in the correct order
-      const row = [
-        user.firstName || "N/A",
-        user.lastName || "N/A",
-        user.iamId || user.iam_id || "N/A",
-        exportCountry || "N/A",
-        category,
-        ...statsDisciplineFields.map(
-          (field) => disciplineScores[field] ?? "N/A",
-        ),
-      ];
-      scoreRows.push(row);
-    });
     const scoreCsv =
       "\uFEFF" +
       scoreFields.join(",") +

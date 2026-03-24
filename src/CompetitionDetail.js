@@ -1915,17 +1915,6 @@ const CompetitionDetail = () => {
                           );
                         })
                         .map(({ userId, user }) => {
-                          // Find the compUser object (could be just an ID or an object)
-                          let compUserObj = null;
-                          if (Array.isArray(competitionData.compUsers)) {
-                            compUserObj = competitionData.compUsers.find(
-                              (cu) =>
-                                typeof cu === "object"
-                                  ? cu._id === userId
-                                  : cu === userId,
-                            );
-                          }
-
                           const nonRanked =
                             Array.isArray(
                               competitionData.nonRankedCompetitors,
