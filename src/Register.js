@@ -79,42 +79,14 @@ export default function Register() {
 
         // Don't redirect - show verification message instead
         setMessage(
-          `Registration successful! We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`,
+          `We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`,
         );
       })
       .catch((error) => {
         setIsSubmitted(true);
-        if (error.response?.data.message === "Email already exists") {
-          if (!error.response?.data.verified) {
-            setMessage(
-              <>
-                If you have already tried to register with this email, your
-                account has not yet been verified. Please check your email for
-                the verification link, or{" "}
-                <button
-                  type="button"
-                  onClick={() => resendVerificationEmail(email)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    color: "#007bff",
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    padding: 0,
-                    font: "inherit",
-                  }}
-                >
-                  click here to resend it
-                </button>
-                .
-              </>,
-            );
-          } else {
-            setMessage(duplicateEmailMessage);
-          }
-        } else {
-          setMessage("Registration failed.");
-        }
+        setMessage(
+          `We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`,
+        );
       });
   };
 
