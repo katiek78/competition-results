@@ -199,7 +199,7 @@ export default function Register() {
 
         {register && (
           <div className="alert alert-success mt-3" role="alert">
-            <h5>Registration Successful!</h5>
+            <h5>Thank you for registering!</h5>
             <p>{message}</p>
             <hr />
             <p className="mb-0">
