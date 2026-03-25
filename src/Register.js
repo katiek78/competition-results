@@ -30,6 +30,21 @@ export default function Register() {
     }
   };
 
+  const resendVerificationEmail = async (emailToResend) => {
+    try {
+      await axios.post(`${backendUrl}/resend-verification-email`, {
+        email: emailToResend,
+      });
+      setMessage(
+        `A new verification email has been sent to ${emailToResend}. Please check your inbox.`,
+      );
+    } catch (err) {
+      setMessage(
+        "Failed to resend verification email. Please try again later.",
+      );
+    }
+  };
+
   const handleSubmit = (e) => {
     // prevent the form from refreshing the whole page
     e.preventDefault();
@@ -59,19 +74,44 @@ export default function Register() {
         //send an email
         sendRegistrationMail(
           configuration.data.email,
-          configuration.data.firstName
+          configuration.data.firstName,
         );
 
         // Don't redirect - show verification message instead
         setMessage(
-          `Registration successful! We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`
+          `Registration successful! We've sent a verification email to ${email}. Please check your inbox and click the verification link to activate your account.`,
         );
       })
       .catch((error) => {
-        console.log(error);
         setIsSubmitted(true);
         if (error.response?.data.message === "Email already exists") {
-          setMessage(duplicateEmailMessage);
+          if (!error.response?.data.verified) {
+            setMessage(
+              <>
+                If you have already tried to register with this email, your
+                account has not yet been verified. Please check your email for
+                the verification link, or{" "}
+                <button
+                  type="button"
+                  onClick={() => resendVerificationEmail(email)}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#007bff",
+                    textDecoration: "underline",
+                    cursor: "pointer",
+                    padding: 0,
+                    font: "inherit",
+                  }}
+                >
+                  click here to resend it
+                </button>
+                .
+              </>,
+            );
+          } else {
+            setMessage(duplicateEmailMessage);
+          }
         } else {
           setMessage("Registration failed.");
         }

@@ -32,6 +32,8 @@ const Users = () => {
   const [editingNameUserId, setEditingNameUserId] = useState(null);
   const [editingFirstNameValue, setEditingFirstNameValue] = useState("");
   const [editingLastNameValue, setEditingLastNameValue] = useState("");
+  const [editingEmailUserId, setEditingEmailUserId] = useState(null);
+  const [editingEmailValue, setEditingEmailValue] = useState("");
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Modal state for add user
@@ -261,6 +263,43 @@ const Users = () => {
     setEditingNameUserId(userId);
     setEditingFirstNameValue(currentFirstName || "");
     setEditingLastNameValue(currentLastName || "");
+  };
+
+  const handleEditEmail = (userId, currentEmail) => {
+    setEditingEmailUserId(userId);
+    setEditingEmailValue(currentEmail || "");
+  };
+
+  const handleCancelEmailEdit = () => {
+    setEditingEmailUserId(null);
+    setEditingEmailValue("");
+  };
+
+  const handleSaveEmail = async (userId) => {
+    try {
+      const configuration = {
+        method: "put",
+        url: `${backendUrl}/user-update/${userId}`,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        data: {
+          email: editingEmailValue,
+        },
+      };
+      const response = await axios(configuration);
+      console.log("User email updated:", response.data);
+
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user._id === userId ? { ...user, email: editingEmailValue } : user,
+        ),
+      );
+      setEditingEmailUserId(null);
+      setEditingEmailValue("");
+    } catch (error) {
+      console.error("Error updating user email:", error);
+    }
   };
 
   // Helper to generate a strong password
@@ -777,7 +816,49 @@ const Users = () => {
                         </div>
                       )}
                     </td>
-                    <td>{usr.email}</td>
+                    <td>
+                      {editingEmailUserId === usr._id ? (
+                        <div>
+                          <input
+                            type="email"
+                            value={editingEmailValue}
+                            onChange={(e) =>
+                              setEditingEmailValue(e.target.value)
+                            }
+                            style={{ width: "180px", display: "inline" }}
+                            autoFocus
+                          />
+                          <button
+                            onClick={() => handleSaveEmail(usr._id)}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={handleCancelEmailEdit}
+                            style={{ marginLeft: "5px", fontSize: "12px" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <div>
+                          <span>{usr.email}</span>
+                          {(userData.role === "superAdmin" ||
+                            userData.role === "admin") && (
+                            <FontAwesomeIcon
+                              title="Edit Email"
+                              className="actionIcon"
+                              icon={faEdit}
+                              onClick={() =>
+                                handleEditEmail(usr._id, usr.email)
+                              }
+                              style={{ marginLeft: "10px", cursor: "pointer" }}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </td>
                     <td>
                       {editingBirthYearUserId === usr._id ? (
                         <div>
