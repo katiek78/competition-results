@@ -34,6 +34,9 @@ export const countryNameToCode = {
   Uzbekistan: "UZ",
   Philippines: "PH",
   Albania: "AL",
+  Algeria: "DZ",
+  "Saudi Arabia": "SA",
+  Brazil: "BR",
   // ...add more as needed
 };
 
@@ -72,6 +75,9 @@ const directCountryFlags = {
   Wales: "🏴󠁧󠁢󠁷󠁬󠁳󠁿",
   Scotland: "🏴󠁧󠁢󠁳󠁣󠁴󠁿",
   "Northern Ireland": "🇬🇧",
+  Algeria: "🇩🇿",
+  "Saudi Arabia": "🇸🇦",
+  Brazil: "🇧🇷",
 };
 
 export function getFlagEmoji(countryName) {
