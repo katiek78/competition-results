@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
-import { backendUrl, duplicateEmailMessage } from "./constants";
+import { backendUrl } from "./constants";
 import { COUNTRIES } from "./utils";
 
 export default function Register() {
@@ -30,20 +30,20 @@ export default function Register() {
     }
   };
 
-  const resendVerificationEmail = async (emailToResend) => {
-    try {
-      await axios.post(`${backendUrl}/resend-verification-email`, {
-        email: emailToResend,
-      });
-      setMessage(
-        `A new verification email has been sent to ${emailToResend}. Please check your inbox.`,
-      );
-    } catch (err) {
-      setMessage(
-        "Failed to resend verification email. Please try again later.",
-      );
-    }
-  };
+  // const resendVerificationEmail = async (emailToResend) => {
+  //   try {
+  //     await axios.post(`${backendUrl}/resend-verification-email`, {
+  //       email: emailToResend,
+  //     });
+  //     setMessage(
+  //       `A new verification email has been sent to ${emailToResend}. Please check your inbox.`,
+  //     );
+  //   } catch (err) {
+  //     setMessage(
+  //       "Failed to resend verification email. Please try again later.",
+  //     );
+  //   }
+  // };
 
   const handleSubmit = (e) => {
     // prevent the form from refreshing the whole page
