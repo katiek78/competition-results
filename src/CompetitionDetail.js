@@ -141,6 +141,7 @@ const CompetitionDetail = () => {
   };
 
   const saveParticipant = async (participantId) => {
+    if (!participantId) return;
     try {
       const updatedCompetition = {
         // ...competitionData,
@@ -629,6 +630,7 @@ const CompetitionDetail = () => {
   };
 
   const saveAdmin = async (participantId) => {
+    if (!participantId) return;
     try {
       const updatedCompetition = {
         // ...competitionData,
@@ -708,11 +710,12 @@ const CompetitionDetail = () => {
     }
   };
 
-  const deleteParticipant = async (id) => {
+  const deleteParticipant = async (participantId) => {
+    if (!participantId) return;
     try {
       // Send a targeted delete request with just the participant ID
       const response = await axios.delete(
-        `${backendUrl}/competition/${competitionData._id}/participant/${id}`,
+        `${backendUrl}/competition/${competitionData._id}/participant/${participantId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -724,10 +727,10 @@ const CompetitionDetail = () => {
 
       // Update local state after successful deletion
       const updatedCompUsers = competitionData.compUsers.filter(
-        (userId) => userId !== id,
+        (userId) => userId !== participantId,
       );
       const updatedCompResults = competitionData.compResults.filter(
-        (r) => r.compUser !== id,
+        (r) => r.compUser !== participantId,
       );
 
       setCompetitionData((prevData) => ({

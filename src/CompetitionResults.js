@@ -166,6 +166,7 @@ const CompetitionResults = () => {
   const [users, setUsers] = useState([]);
   const [userData, setUserData] = useState({});
   const [selectedDiscipline, setSelectedDiscipline] = useState("");
+  const [displayTabType, setDisplayTabType] = useState(null); // "best5N" | "bestK" | "bestSC" | null
   const [standard, setStandard] = useState(1);
   const [showScoreForm, setShowScoreForm] = useState(false);
   const [showEditScoreForm, setShowEditScoreForm] = useState(false);
@@ -1147,8 +1148,54 @@ const CompetitionResults = () => {
         resultsForDiscipline,
       );
     }
+    setDisplayTabType(null);
     setSelectedDiscipline(discipline);
     if (isMobile) setShowDisciplineMenu(false);
+  };
+
+  const handleSelectDisplayTab = (type) => {
+    setSelectedDiscipline("");
+    setDisplayTabType(type);
+    if (isMobile) setShowDisciplineMenu(false);
+  };
+
+  // Returns sorted array of { userId, bestResult } for a display-only tab
+  const getDisplayTabResults = (type) => {
+    if (!competitionData?.compResults || !users.length) return [];
+    let relevantDisciplines = [];
+    if (type === "best5N") relevantDisciplines = ["5N1", "5N2"];
+    else if (type === "bestK") relevantDisciplines = ["K1", "K2", "K3"];
+    else if (type === "bestSC") relevantDisciplines = ["SC1", "SC2"];
+    else return [];
+    relevantDisciplines = relevantDisciplines.filter((d) =>
+      competitionData.disciplines.includes(d),
+    );
+
+    return competitionData.compUsers
+      .map((userId) => {
+        const userResults = competitionData.compResults.filter(
+          (r) =>
+            r.compUser === userId && relevantDisciplines.includes(r.discipline),
+        );
+        if (userResults.length === 0) return null;
+        let bestResult = null;
+        if (type === "best5N" || type === "bestK") {
+          bestResult = userResults.reduce(
+            (best, r) => (!best || r.rawScore > best.rawScore ? r : best),
+            null,
+          );
+        } else if (type === "bestSC") {
+          bestResult = userResults.reduce((best, r) => {
+            if (!best) return r;
+            if (r.rawScore === 52 && best.rawScore === 52)
+              return r.time < best.time ? r : best;
+            if (r.rawScore > best.rawScore) return r;
+            return best;
+          }, null);
+        }
+        return bestResult ? { userId, bestResult } : null;
+      })
+      .filter(Boolean);
   };
 
   function formatCorrections(corrections, status) {
@@ -1696,17 +1743,71 @@ const CompetitionResults = () => {
                 >
                   Overall
                 </span>
-                {competitionData.disciplines?.map((discipline) => (
-                  <span
-                    key={discipline}
-                    className={`disciplineHeading ${
-                      selectedDiscipline === discipline ? "selected" : ""
-                    }`}
-                    onClick={() => handleSelectDiscipline(discipline)}
-                  >
-                    {getDisciplineNameFromRef(discipline)}
-                  </span>
-                ))}
+                {(() => {
+                  const allDisciplines = competitionData.disciplines || [];
+                  const fiveNGroup = allDisciplines.filter(
+                    (d) => d === "5N1" || d === "5N2",
+                  );
+                  const kGroup = allDisciplines.filter(
+                    (d) => d === "K1" || d === "K2" || d === "K3",
+                  );
+                  const scGroup = allDisciplines.filter(
+                    (d) => d === "SC1" || d === "SC2",
+                  );
+                  const fiveNLast =
+                    fiveNGroup.length >= 2
+                      ? fiveNGroup[fiveNGroup.length - 1]
+                      : null;
+                  const kLast =
+                    kGroup.length >= 2 ? kGroup[kGroup.length - 1] : null;
+                  const scLast =
+                    scGroup.length >= 2 ? scGroup[scGroup.length - 1] : null;
+                  return allDisciplines.map((discipline) => (
+                    <React.Fragment key={discipline}>
+                      <span
+                        className={`disciplineHeading ${
+                          selectedDiscipline === discipline ? "selected" : ""
+                        }`}
+                        onClick={() => handleSelectDiscipline(discipline)}
+                      >
+                        {getDisciplineNameFromRef(discipline)}
+                      </span>
+                      {fiveNLast === discipline && (
+                        <span
+                          className={`disciplineHeading disciplineHeading--display ${
+                            displayTabType === "best5N" ? "selected" : ""
+                          }`}
+                          onClick={() => handleSelectDisplayTab("best5N")}
+                          title="Display only – shows best of 5-min Numbers trials"
+                        >
+                          ★ Best 5-Min Numbers
+                        </span>
+                      )}
+                      {kLast === discipline && (
+                        <span
+                          className={`disciplineHeading disciplineHeading--display ${
+                            displayTabType === "bestK" ? "selected" : ""
+                          }`}
+                          onClick={() => handleSelectDisplayTab("bestK")}
+                          title="Display only – shows best of Spoken Numbers attempts"
+                        >
+                          ★ Best Spoken Numbers
+                        </span>
+                      )}
+                      {scLast === discipline && (
+                        <span
+                          className={`disciplineHeading disciplineHeading--display ${
+                            displayTabType === "bestSC" ? "selected" : ""
+                          }`}
+                          onClick={() => handleSelectDisplayTab("bestSC")}
+                          title="Display only – shows best of Speed Cards trials"
+                        >
+                          ★ Best Speed Cards
+                        </span>
+                      )}
+                    </React.Fragment>
+                  ));
+                })()}
               </div>
             )}
             {/* Age group buttons below discipline buttons */}
@@ -1759,11 +1860,18 @@ const CompetitionResults = () => {
             <div className="standingsDiv">
               <h2>
                 {" "}
-                {selectedDiscipline === ""
-                  ? "Overall standings"
-                  : getDisciplineNameFromRef(selectedDiscipline)}
+                {displayTabType === "best5N"
+                  ? "Best 5-Minute Numbers"
+                  : displayTabType === "bestK"
+                    ? "Best Spoken Numbers"
+                    : displayTabType === "bestSC"
+                      ? "Best Speed Cards"
+                      : selectedDiscipline === ""
+                        ? "Overall standings"
+                        : getDisciplineNameFromRef(selectedDiscipline)}
               </h2>
               {selectedDiscipline === "" &&
+                !displayTabType &&
                 (isCompetitionComplete() ? (
                   <h3 className="compComplete">Competition complete!</h3>
                 ) : (
@@ -2076,7 +2184,103 @@ const CompetitionResults = () => {
                 </>
               )}
 
-              {selectedDiscipline === "" && (
+              {displayTabType &&
+                (() => {
+                  const displayResults = getDisplayTabResults(displayTabType);
+                  const isSpeedCardsDisplay = displayTabType === "bestSC";
+                  return (
+                    <>
+                      <p className="display-only-banner">
+                        ★ Display only — shows each competitor's best result
+                        across trials/attempts. Scores cannot be edited here.
+                      </p>
+                      <table className="niceTable resultsTable displayOnlyTable">
+                        <thead>
+                          <tr>
+                            <th>Rank</th>
+                            <th>Competitor</th>
+                            <th>Best Score</th>
+                            {isSpeedCardsDisplay && <th>Time</th>}
+                            <th>Champ. Pts</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {displayResults
+                            .filter((item) => {
+                              const thisUser = users.find(
+                                (u) => u._id === item.userId,
+                              );
+                              const group = getUserAgeGroup(thisUser);
+                              return selectedAgeGroups.includes(group);
+                            })
+                            .sort((a, b) => {
+                              if (isSpeedCardsDisplay) {
+                                if (
+                                  a.bestResult.rawScore === 52 &&
+                                  b.bestResult.rawScore === 52
+                                )
+                                  return a.bestResult.time - b.bestResult.time;
+                                const diff =
+                                  b.bestResult.rawScore - a.bestResult.rawScore;
+                                if (diff !== 0) return diff;
+                              } else {
+                                const diff =
+                                  b.bestResult.rawScore - a.bestResult.rawScore;
+                                if (diff !== 0) return diff;
+                              }
+                              const uA = users.find((u) => u._id === a.userId);
+                              const uB = users.find((u) => u._id === b.userId);
+                              const ln = (uA?.lastName || "").localeCompare(
+                                uB?.lastName || "",
+                              );
+                              return ln !== 0
+                                ? ln
+                                : (uA?.firstName || "").localeCompare(
+                                    uB?.firstName || "",
+                                  );
+                            })
+                            .map((item, i) => {
+                              const thisUser = users.find(
+                                (u) => u._id === item.userId,
+                              );
+                              const { rawScore, time } = item.bestResult;
+                              const champPts = getChampPoints(
+                                item.bestResult.discipline,
+                                rawScore,
+                                time,
+                              );
+                              return (
+                                <tr key={item.userId}>
+                                  <td>{i + 1}</td>
+                                  <td>
+                                    <span
+                                      className="asLink"
+                                      style={{
+                                        cursor: "pointer",
+                                        textDecoration: "underline",
+                                      }}
+                                      onClick={() =>
+                                        handleCompetitorClick(thisUser)
+                                      }
+                                    >
+                                      {`${thisUser?.firstName || "Unknown"} ${thisUser?.lastName || "Unknown"}`}
+                                    </span>
+                                  </td>
+                                  <td>{rawScore}</td>
+                                  {isSpeedCardsDisplay && (
+                                    <td>{time?.toFixed(2) || time}</td>
+                                  )}
+                                  <td className="champ-points">{champPts}</td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </>
+                  );
+                })()}
+
+              {selectedDiscipline === "" && !displayTabType && (
                 <>
                   <table className="niceTable resultsTable overallTable">
                     <thead>

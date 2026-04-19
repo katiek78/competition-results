@@ -331,6 +331,35 @@ input {
   }
 }
 
+.disciplineHeading--display {
+  background-color: #b3d9f5; /* light blue to distinguish display-only tabs */
+  border: 1px dashed #1a6fa0;
+
+  &:hover {
+    background-color: #7bbfe8;
+  }
+
+  &.selected {
+    background-color: #1976D2;
+    color: #fff;
+  }
+}
+
+.display-only-banner {
+  font-size: 0.85em;
+  color: #555;
+  font-style: italic;
+  background-color: #e8f4fd;
+  border-left: 4px solid #1976D2;
+  padding: 6px 10px;
+  margin-bottom: 0.75em;
+  border-radius: 0 4px 4px 0;
+}
+
+.niceTable.displayOnlyTable thead tr {
+  background-color: #1976D2;
+}
+
 .current-account {
   padding-left: 20px;
 }

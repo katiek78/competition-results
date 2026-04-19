@@ -26,7 +26,7 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
       .then((result) => {
         // Filter out unverified users (treat undefined as verified for legacy users)
         const verifiedUsers = result.data.users.filter(
-          (user) => user.verified !== false
+          (user) => user.verified !== false,
         );
         setUsers(verifiedUsers);
 
@@ -42,6 +42,7 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!id) return;
     onSubmitParticipant(id);
   };
 
@@ -60,7 +61,7 @@ const ParticipantsForm = ({ onSubmitParticipant, admin, group }) => {
             .sort((a, b) => {
               // Compare first names
               const firstNameComparison = a.firstName.localeCompare(
-                b.firstName
+                b.firstName,
               );
 
               // If first names are equal, compare last names
