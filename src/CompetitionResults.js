@@ -874,18 +874,21 @@ const CompetitionResults = () => {
   };
 
   const getChampPoints = (discipline, score, time = 0) => {
+    const rawPoints = getUnroundedChampPoints(discipline, score, time);
+    return parseFloat(rawPoints.toFixed(2)); // Round to 2 decimal places
+  };
+
+  const getUnroundedChampPoints = (discipline, score, time = 0) => {
     const thisStandard = getDisciplineStandardFromRef(discipline) || 0;
     if (!thisStandard) return 0; // Default to 0 if standard is not defined
     if (discipline.includes("SC")) {
-      const calculatedPoints =
-        score === 52
-          ? thisStandard.part1 / Math.pow(time, thisStandard.part2)
-          : (score / 52) * thisStandard.part3;
-      return parseFloat(calculatedPoints.toFixed(2)); // Round to 2 decimal places
+      return score === 52
+        ? thisStandard.part1 / Math.pow(time, thisStandard.part2)
+        : (score / 52) * thisStandard.part3;
     } else if (discipline.includes("K")) {
-      return parseFloat((Math.sqrt(score) * thisStandard).toFixed(2)); // Round to 2 decimal places
+      return Math.sqrt(score) * thisStandard;
     } else {
-      return parseFloat((score / thisStandard) * 1000).toFixed(2); // Round to 2 decimal places
+      return (score / thisStandard) * 1000;
     }
   };
 
@@ -1051,22 +1054,28 @@ const CompetitionResults = () => {
                 }
               } else {
                 // Add points for other disciplines directly
-                const points = getChampPoints(discipline, rawScore, time);
-                totalPoints += parseFloat(points);
+                totalPoints += getUnroundedChampPoints(
+                  discipline,
+                  rawScore,
+                  time,
+                );
               }
             });
 
           // Add the highest scores for "5N", "SC", or "K" to the total points
           Object.values(highestScores).forEach(
             ({ rawScore, time, discipline }) => {
-              const points = getChampPoints(discipline, rawScore, time);
-              totalPoints += parseFloat(points);
+              totalPoints += getUnroundedChampPoints(
+                discipline,
+                rawScore,
+                time,
+              );
             },
           );
 
           return {
             userId: competitor,
-            total: Math.ceil(totalPoints), // TODO: can this be rounded up or down? Or just up?
+            total: Math.round(totalPoints),
             unroundedTotal: totalPoints,
           };
         },
