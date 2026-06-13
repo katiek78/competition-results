@@ -40,7 +40,7 @@ const CompetitionAddScore = () => {
   function findMatchingDiscipline(d) {
     // Find the discipline in the array based on label (case-insensitive)
     return disciplines.find(
-      (discipline) => discipline.label.toLowerCase() === d.toLowerCase()
+      (discipline) => discipline.label.toLowerCase() === d.toLowerCase(),
     );
   }
 
@@ -49,9 +49,16 @@ const CompetitionAddScore = () => {
       compResults &&
       compResults.some(
         (result) =>
-          result.compUser === compUser && result.discipline === discipline
+          result.compUser === compUser && result.discipline === discipline,
       )
     );
+  }
+
+  function parseScoreValue(input) {
+    if (input === null || input === undefined) return NaN;
+    const normalized = String(input).trim().replace(/,/g, ".");
+    const parsed = parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : NaN;
   }
 
   // const showScore = (score, disciplineName) => {
@@ -63,13 +70,13 @@ const CompetitionAddScore = () => {
     decryptedDisciplineName,
     time,
     additionalInfo,
-    timestamp
+    timestamp,
   ) => {
     const disciplineRef = getDisciplineRefFromName(decryptedDisciplineName);
 
     if (disciplineRef === "Unknown Discipline") {
       alert(
-        "There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added"
+        "There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added",
       );
       return;
     }
@@ -92,11 +99,11 @@ const CompetitionAddScore = () => {
       isDuplicateResult(
         competitionData.compResults,
         newResult.compUser,
-        newResult.discipline
+        newResult.discipline,
       )
     ) {
       alert(
-        "You've already submitted a score for this discipline. Please see a competition official if you feel this is an error. Note: This new score has NOT been added."
+        "You've already submitted a score for this discipline. Please see a competition official if you feel this is an error. Note: This new score has NOT been added.",
       );
       return;
     }
@@ -134,7 +141,7 @@ const CompetitionAddScore = () => {
     } catch (error) {
       console.error("Error adding result:", error);
       alert(
-        "Your score could not be added. Please try submitting again, or see a competition official."
+        "Your score could not be added. Please try submitting again, or see a competition official.",
       );
     }
   };
@@ -153,7 +160,7 @@ const CompetitionAddScore = () => {
     const disciplineMatch = decryptedText.match(disciplinePattern);
     if (!disciplineMatch) {
       alert(
-        "Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added."
+        "Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added.",
       );
       return;
     }
@@ -169,48 +176,59 @@ const CompetitionAddScore = () => {
       if (scorePart) {
         // Remove "Score:" and take everything before the first newline as the score
         const scoreMatch = scorePart.replace("Score:", "").split(/\r?\n/);
-        decryptedScore = parseInt(scoreMatch[0], 10);
+        decryptedScore = parseScoreValue(scoreMatch[0]);
 
         // Take the rest of the part as additional info
         additionalInfo = scoreMatch.slice(1).join("\n").trim();
 
         // Extract timestamp from the last part and remove "Timestamp:"
         timestamp = new Date(
-          parts[parts.length - 1].replace("Timestamp:", "").trim()
+          parts[parts.length - 1].replace("Timestamp:", "").trim(),
         );
 
         if (isNaN(timestamp.getTime())) {
-  console.warn("Invalid timestamp parsed from code:", parts[parts.length - 1]);
-  // Optionally, you can set timestamp = new Date() or handle as needed
-}
+          console.warn(
+            "Invalid timestamp parsed from code:",
+            parts[parts.length - 1],
+          );
+          // Optionally, you can set timestamp = new Date() or handle as needed
+        }
       }
     } else {
       //const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?:\r?\n)? \/\/ Time:([\d.]+) \/\/ Timestamp: (.+)/;
       // const pattern = /Discipline: ([^//]+) \/\/ Score: (\d+)(?: \/\/ Time:([\d.]+))?(?: \/\/ Timestamp: (.+))?/;
       const pattern =
-        /Discipline:\s*([^//]+)\s*\/\/\s*Score:\s*(\d+)(?:\s*\/\/\s*Time:\s*([\d.]+))?(?:\s*\/\/\s*Timestamp:\s*(.+))?/;
+        /Discipline:\s*([^//]+)\s*\/\/\s*Score:\s*([\d.,]+)(?:\s*\/\/\s*Time:\s*([\d.]+))?(?:\s*\/\/\s*Timestamp:\s*(.+))?/;
 
       const match = decryptedText.match(pattern);
       console.log(match);
       if (match) {
-        decryptedScore = parseInt(match[2], 10); // Parse score as an integer
+        decryptedScore = parseScoreValue(match[2]);
         time = decryptedDisciplineName.includes("Speed Cards")
           ? match[3]
           : undefined;
         timestamp = new Date(match[4]);
 
         if (isNaN(timestamp.getTime())) {
-  console.warn("Invalid timestamp parsed from code:", match[4]);
-  // Optionally, you can set timestamp = new Date() or handle as needed
-}
+          console.warn("Invalid timestamp parsed from code:", match[4]);
+          // Optionally, you can set timestamp = new Date() or handle as needed
+        }
       } else {
         // If string does not match pattern, alert the user that they need to check and try again
         alert(
-          "Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added."
+          "Code could not be processed. Please check and try again, or ask a competition official. Note: Your score has NOT been added.",
         );
         return;
       }
     }
+
+    if (isNaN(decryptedScore)) {
+      alert(
+        "Code could not be processed (invalid score format). Please check and try again, or ask a competition official. Note: Your score has NOT been added.",
+      );
+      return;
+    }
+
     //example
     //U2FsdGVkX1+SH9v3jyQxf+sM6zabyDhf+lmboyeTo8DCEBZ9og1+y3Yum3PoVMgbIThCOPbBP9QC2FRusHNtgVtICGu/3QbDiRhJC62W/bOdV+N9Vxfsk2OlicGD3NyDHR78BWcVWhkP0pzzX150zfpDNxUcnvquC3AGQpZ1oTA=
 
@@ -229,7 +247,6 @@ const CompetitionAddScore = () => {
     console.log(`Current date: ${new Date(Date.now()).toISOString()}`);
     //console.log(`Timestamp: ${new Date(timestamp.getTime()).toISOString()}`);
 
-
     //const timestampString = new Date(timestamp.getTime()).toISOString();
 
     // Removed the check for recent scores temporarily
@@ -246,20 +263,26 @@ const CompetitionAddScore = () => {
     // }
 
     // Check if disciplineName can be matched to a discipline and if not, alert user
- if (!findMatchingDiscipline(decryptedDisciplineName) && decryptedDisciplineName.toLowerCase().includes("images")) {
-    decryptedDisciplineName = "Images";
-  }
-    if (findMatchingDiscipline(decryptedDisciplineName) || decryptedDisciplineName === 'Images') {
+    if (
+      !findMatchingDiscipline(decryptedDisciplineName) &&
+      decryptedDisciplineName.toLowerCase().includes("images")
+    ) {
+      decryptedDisciplineName = "Images";
+    }
+    if (
+      findMatchingDiscipline(decryptedDisciplineName) ||
+      decryptedDisciplineName === "Images"
+    ) {
       saveScore(
         decryptedScore,
         decryptedDisciplineName,
         time,
         additionalInfo,
-        timestamp.toISOString()
+        timestamp.toISOString(),
       );
     } else {
       alert(
-        "There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added."
+        "There was an error processing your score (discipline name does not match). Please see a competition official. Note: Your score has NOT been added.",
       );
     }
   };
@@ -343,7 +366,7 @@ const CompetitionAddScore = () => {
               competition official.
               <p className="highlightText">
                 <Link to={`/competition_results/${id}`}>
-                  Back to results page >>>
+                  Back to results page {">>>"}
                 </Link>
               </p>
             </div>
