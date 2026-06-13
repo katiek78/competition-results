@@ -72,6 +72,15 @@ const CompetitionAddScore = () => {
     additionalInfo,
     timestamp,
   ) => {
+    const normalizedScore = Number(decryptedScore);
+    if (!Number.isFinite(normalizedScore)) {
+      alert(
+        "There was an error processing your score (invalid score value). Please see a competition official. Note: Your score has NOT been added",
+      );
+      return;
+    }
+    const roundedRawScore = Math.ceil(normalizedScore);
+
     const disciplineRef = getDisciplineRefFromName(decryptedDisciplineName);
 
     if (disciplineRef === "Unknown Discipline") {
@@ -84,7 +93,7 @@ const CompetitionAddScore = () => {
     const newResult = {
       compUser: user.userId,
       discipline: getDisciplineRefFromName(decryptedDisciplineName),
-      rawScore: decryptedScore,
+      rawScore: roundedRawScore,
       timestamp,
     };
     if (disciplineRef.includes("SC")) newResult.time = time;
@@ -129,7 +138,7 @@ const CompetitionAddScore = () => {
       };
 
       axios(configuration);
-      setScore(decryptedScore);
+      setScore(roundedRawScore);
       if (time) setTime(time);
       setDisciplineName(decryptedDisciplineName);
       setCompetitionData({

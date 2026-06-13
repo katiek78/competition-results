@@ -397,6 +397,7 @@ const CompetitionResults = () => {
         );
         return;
       }
+      const roundedScoreValue = Math.ceil(scoreValue);
 
       // Validate time for Speed Cards (accept comma or dot)
       const timeValue = entry.time ? parseNumber(entry.time) : 0;
@@ -417,7 +418,7 @@ const CompetitionResults = () => {
       const importObj = {
         compUser: competitor._id,
         discipline: importDiscipline,
-        rawScore: scoreValue,
+        rawScore: roundedScoreValue,
         time: timeValue,
         status: "submitted",
         additionalInfo: entry.category,
@@ -902,10 +903,20 @@ const CompetitionResults = () => {
     additionalInfo,
     timestamp,
   ) => {
+    const normalizedRawScore = Number(rawScore);
+    if (!Number.isFinite(normalizedRawScore)) {
+      alert(
+        "The score could not be processed. Score must be a valid number.",
+      );
+      return;
+    }
+
+    const roundedRawScore = Math.ceil(normalizedRawScore);
+
     const newResult = {
       compUser: user,
       discipline,
-      rawScore,
+      rawScore: roundedRawScore,
       time: Number(time) || 0,
       status,
       additionalInfo,
