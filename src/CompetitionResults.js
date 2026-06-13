@@ -30,6 +30,22 @@ import { backendUrl } from "./constants";
 import { generateCompId } from "./competitionIdUtils";
 import twemoji from "twemoji";
 
+const getCompetitionCode = (compName) => {
+  //return a string that is the first letter of each alphabetic word in compName, uppercased, plus the last 2 digits of the year
+  const words = compName.split(" ").filter((word) => /^[A-Za-z]+$/.test(word));
+  const firstLetters = words.map((word) => word[0].toUpperCase()).join("");
+  const year = new Date().getFullYear().toString().slice(-2);
+  return firstLetters + year;
+};
+
+const getFilenamePrefix = (comp_id, compName) => {
+  return (
+    comp_id ||
+    generateCompId(compName, new Date()) ||
+    getCompetitionCode(compName)
+  );
+};
+
 const CompetitionResults = () => {
   // Modal state and handler already declared above
   const [showCompetitorModal, setShowCompetitorModal] = useState(false);
@@ -180,6 +196,11 @@ const CompetitionResults = () => {
   const [importDiscipline, setImportDiscipline] = useState("");
   const [isImporting, setIsImporting] = useState(false);
 
+  const filenamePrefix = useMemo(() => {
+    if (!competitionData) return "competition";
+    return getFilenamePrefix(competitionData.comp_id, competitionData.name);
+  }, [competitionData]);
+
   // Safe mobile detection using useState and useEffect to prevent render issues
   const [isMobile, setIsMobile] = useState(() => {
     try {
@@ -235,8 +256,6 @@ const CompetitionResults = () => {
   };
 
   const isUserRankedInThisCompetition = (user) => {
-    console.log(user);
-    console.log(competitionData.nonRankedCompetitors.indexOf(user._id));
     if (!competitionData || !user) return false;
     return (
       competitionData.nonRankedCompetitors &&
@@ -905,9 +924,7 @@ const CompetitionResults = () => {
   ) => {
     const normalizedRawScore = Number(rawScore);
     if (!Number.isFinite(normalizedRawScore)) {
-      alert(
-        "The score could not be processed. Score must be a valid number.",
-      );
+      alert("The score could not be processed. Score must be a valid number.");
       return;
     }
 
@@ -1402,7 +1419,7 @@ const CompetitionResults = () => {
     const compUrl = URL.createObjectURL(compBlob);
     const compLink = document.createElement("a");
     compLink.href = compUrl;
-    compLink.download = "competition.csv";
+    compLink.download = filenamePrefix + ".competition.csv";
     document.body.appendChild(compLink);
     compLink.click();
     document.body.removeChild(compLink);
@@ -1589,41 +1606,12 @@ const CompetitionResults = () => {
     const scoreUrl = URL.createObjectURL(scoreBlob);
     const scoreLink = document.createElement("a");
     scoreLink.href = scoreUrl;
-    scoreLink.download = "score.csv";
+    scoreLink.download = filenamePrefix + ".score.csv";
     document.body.appendChild(scoreLink);
     scoreLink.click();
     document.body.removeChild(scoreLink);
     URL.revokeObjectURL(scoreUrl);
   };
-
-  // Log current state immediately when component renders
-  if (competitionData) {
-    // console.log("=== CURRENT DATA ANALYSIS ===");
-    // console.log("Competition name:", competitionData.name);
-    // console.log(
-    //   "Total results in system:",
-    //   competitionData.compResults?.length || 0
-    // );
-    // console.log("All disciplines:", competitionData.disciplines);
-    // console.log("All results:", competitionData.compResults);
-    // // Check for 15-minute Words specifically
-    // const wordsResults = competitionData.compResults?.filter(
-    //   (r) =>
-    //     r.discipline?.toLowerCase().includes("word") ||
-    //     r.discipline?.includes("W") ||
-    //     r.discipline?.includes("15W")
-    // );
-    // console.log("Results containing 'word' or 'W':", wordsResults);
-    // // Check exact discipline matches
-    // competitionData.disciplines?.forEach((discipline) => {
-    //   const results = competitionData.compResults?.filter(
-    //     (r) => r.discipline === discipline
-    //   );
-    //   console.log(`Results for discipline "${discipline}":`, results);
-    // });
-    // console.log("Selected discipline:", selectedDiscipline);
-    // console.log("========================");
-  }
 
   // Show loading state
   if (loading) {
