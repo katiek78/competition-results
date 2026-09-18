@@ -331,7 +331,7 @@ input {
   }
 }
 
-.disciplineHeading--display {
+.disciplineHeadingDisplay {
   background-color: #b3d9f5; /* light blue to distinguish display-only tabs */
   border: 1px dashed #1a6fa0;
 

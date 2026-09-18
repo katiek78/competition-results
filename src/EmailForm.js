@@ -20,7 +20,9 @@ const EmailForm = ({ handleCancel, onSubmitEmail, form }) => {
 
       <div className="d-flex gap-2" style={{ flexDirection: "row" }}>
         <Button type="submit">Submit</Button>
-        <Button onClick={handleCancel}>Cancel</Button>
+        <Button type="button" onClick={handleCancel}>
+          Cancel
+        </Button>
       </div>
     </form>
   );

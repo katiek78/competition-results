@@ -46,6 +46,17 @@ const getFilenamePrefix = (comp_id, compName) => {
   );
 };
 
+const getRankableStatus = (rankableValue) => {
+  const rankable = rankableValue !== undefined ? rankableValue : false;
+  return rankable ? "y" : "n";
+};
+
+const getAdultRankableStatus = (rankableAdultValue) => {
+  const adultRankable =
+    rankableAdultValue !== undefined ? rankableAdultValue : false;
+  return adultRankable ? "y" : "n";
+};
+
 const CompetitionResults = () => {
   // Modal state and handler already declared above
   const [showCompetitorModal, setShowCompetitorModal] = useState(false);
@@ -166,12 +177,17 @@ const CompetitionResults = () => {
   // Helper: formatDate
   function formatDate(date) {
     if (!date) return "";
-    return date.toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    // return date in YYYY-MM-DD format
+
+    return date.toISOString().split("T")[0];
+
+    // return date.toLocaleDateString("en-CA", {
+    //   year: "numeric",
+    //   month: "2-digit",
+    //   day: "2-digit",
+    // });
   }
+
   // importMode state removed (was unused)
   const [pendingImports, setPendingImports] = useState([]);
   const [validImports, setValidImports] = useState([]);
@@ -1048,57 +1064,115 @@ const CompetitionResults = () => {
     const updateCompetitorTotals = () => {
       if (!competitionData.compUsers) return;
 
+      const activeDisciplines = new Set(competitionData.disciplines || []);
+
       const updatedCompUserTotals = competitionData.compUsers.map(
         (competitor) => {
           // Calculate the total points for this competitor
           let totalPoints = 0;
+          const debugPoints = [];
 
           // Track the highest score for disciplines "5N", "SC", or "K"
           const highestScores = {};
 
-          competitionData.compResults
-            .filter((result) => result.compUser === competitor)
-            .forEach((result) => {
-              const { discipline, rawScore, time } = result;
-
-              // Update highest score for "5N", "SC", or "K"
-              if (
-                discipline.includes("5N") ||
-                discipline.includes("SC") ||
-                discipline.includes("K")
-              ) {
-                const disciplineKey = discipline.replace(/\d+$/, ""); // Remove the digits at the end
-                if (
-                  !highestScores[disciplineKey] ||
-                  rawScore > highestScores[disciplineKey].rawScore
-                ) {
-                  highestScores[disciplineKey] = { rawScore, time, discipline };
-                } else if (
-                  rawScore === highestScores[disciplineKey].rawScore &&
-                  discipline.includes("SC") &&
-                  time < highestScores[disciplineKey].time
-                ) {
-                  highestScores[disciplineKey] = { rawScore, time, discipline };
-                }
-              } else {
-                // Add points for other disciplines directly
-                totalPoints += getUnroundedChampPoints(
-                  discipline,
-                  rawScore,
-                  time,
-                );
+          // Keep only one result per discipline for this competitor (most recent).
+          const latestResultByDiscipline = competitionData.compResults
+            .filter(
+              (result) =>
+                result.compUser === competitor &&
+                activeDisciplines.has(result.discipline),
+            )
+            .reduce((acc, result) => {
+              const existing = acc[result.discipline];
+              if (!existing) {
+                acc[result.discipline] = result;
+                return acc;
               }
-            });
+
+              if (result.timestamp && existing.timestamp) {
+                if (new Date(result.timestamp) > new Date(existing.timestamp)) {
+                  acc[result.discipline] = result;
+                }
+                return acc;
+              }
+
+              if (result.timestamp && !existing.timestamp) {
+                acc[result.discipline] = result;
+                return acc;
+              }
+
+              if (
+                !result.timestamp &&
+                !existing.timestamp &&
+                (result._id || "").localeCompare(existing._id || "") > 0
+              ) {
+                acc[result.discipline] = result;
+              }
+
+              return acc;
+            }, {});
+
+          Object.values(latestResultByDiscipline).forEach((result) => {
+            const { discipline, rawScore, time } = result;
+            if (!Number.isFinite(Number(rawScore))) return;
+
+            // Update highest score for "5N", "SC", or "K"
+            if (
+              discipline.includes("5N") ||
+              discipline.includes("SC") ||
+              discipline.includes("K")
+            ) {
+              const disciplineKey = discipline.replace(/\d+$/, ""); // Remove the digits at the end
+              if (
+                !highestScores[disciplineKey] ||
+                rawScore > highestScores[disciplineKey].rawScore
+              ) {
+                highestScores[disciplineKey] = { rawScore, time, discipline };
+              } else if (
+                rawScore === highestScores[disciplineKey].rawScore &&
+                discipline.includes("SC") &&
+                time < highestScores[disciplineKey].time
+              ) {
+                highestScores[disciplineKey] = { rawScore, time, discipline };
+              }
+            } else {
+              // Add points for other disciplines directly
+              const pts = getUnroundedChampPoints(discipline, rawScore, time);
+              totalPoints += pts;
+              debugPoints.push({
+                label: discipline,
+                pts,
+                rawScore,
+                time,
+              });
+            }
+          });
 
           // Add the highest scores for "5N", "SC", or "K" to the total points
           Object.values(highestScores).forEach(
             ({ rawScore, time, discipline }) => {
-              totalPoints += getUnroundedChampPoints(
-                discipline,
+              const pts = getUnroundedChampPoints(discipline, rawScore, time);
+              totalPoints += pts;
+              debugPoints.push({
+                label: discipline,
+                pts,
                 rawScore,
                 time,
-              );
+              });
             },
+          );
+
+          const competitorUser = users.find((u) => u._id === competitor);
+          const competitorName = competitorUser
+            ? `${competitorUser.firstName || ""} ${competitorUser.lastName || ""}`.trim()
+            : competitor;
+
+          const parts = debugPoints
+            .sort((a, b) => b.pts - a.pts)
+            .map((d) => `${d.label} ${d.pts.toFixed(2)}`);
+
+          console.log(
+            `[Totals Debug] ${competitorName}: ${parts.join(", ")} ... TOTAL ${totalPoints.toFixed(2)}`,
           );
 
           return {
@@ -1112,7 +1186,7 @@ const CompetitionResults = () => {
       setCompUserTotals(updatedCompUserTotals);
     };
     updateCompetitorTotals();
-  }, [competitionData, selectedDiscipline]);
+  }, [competitionData, selectedDiscipline, users]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -1397,20 +1471,10 @@ const CompetitionResults = () => {
       competitionData?.dateEnd
         ? formatDate(new Date(competitionData.dateEnd))
         : "N/A",
-      competitionData?.rankable !== undefined
-        ? competitionData.rankable
-        : competitionData?.Rankable !== undefined
-          ? competitionData.Rankable
-          : false,
-      competitionData?.adult_rankable !== undefined
-        ? competitionData.adult_rankable
-        : competitionData?.Adult_rankable !== undefined
-          ? competitionData.Adult_rankable
-          : competitionData?.adultRankable !== undefined
-            ? competitionData.adultRankable
-            : false,
+      getRankableStatus(competitionData?.rankable),
+      getAdultRankableStatus(competitionData?.adult_rankable),
       competitionData?.country || "N/A",
-      competitionData?.championship_type || "N/A",
+      competitionData?.championship_type?.toLowerCase() || "N/A",
       competitionData?.championship_status || "N/A",
     ];
     const compCsv =

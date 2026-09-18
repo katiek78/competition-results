@@ -69,36 +69,27 @@ export default function Login() {
     setShowEmailInput(false);
   };
 
-  const handlePasswordReset = async () => {
+  const handlePasswordReset = async (resetEmail) => {
     try {
-      // Generate a token to be sent
       const confirmationToken = generateToken();
       const confirmationURL = `${frontendUrl}/password-reset?token=${confirmationToken}`;
-      // )};
 
-      // Determine when the token expires
       const createdAt = new Date();
       const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
 
-      // Send a request to the backend to initiate password change
       const configuration = {
         method: "post",
         url: `${backendUrl}/initiate-password-change`,
-        headers: {
-          // Authorization: `Bearer ${token}`,
-        },
         data: {
           createdAt,
           expiresAt,
           dynamic_link: confirmationURL,
           token: confirmationToken,
-          email,
+          email: resetEmail,
         },
       };
 
       const response = await axios(configuration);
-
-      // Handle the response (e.g., show a message to the user)
       console.log("Initiate Password Change Response:", response.data);
       setConfirmPasswordRequestSent(
         "An email has been sent to the address you just entered. Click on the link in the email to reset your password.",
@@ -106,7 +97,6 @@ export default function Login() {
       setShowEmailInput(false);
     } catch (error) {
       console.error("Error initiating password reset:", error);
-      // Handle error (e.g., show an error message to the user)
     }
   };
 
