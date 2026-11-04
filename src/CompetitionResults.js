@@ -1763,7 +1763,6 @@ const CompetitionResults = () => {
           <div className="highlightButtonsDiv">
             {competitionData.hide_results && (
               <p className="highlightText">
-                Results are currently hidden from the public and competitors.{" "}
                 <button onClick={handleRevealResults}>Reveal results</button>
               </p>
             )}
