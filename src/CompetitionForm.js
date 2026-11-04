@@ -35,6 +35,9 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
   const [adultRankable, setAdultRankable] = useState(
     editing ? form.adult_rankable || false : false,
   );
+  const [hideResults, setHideResults] = useState(
+    editing ? form.hide_results || false : false,
+  );
   const [country, setCountry] = useState(editing ? form.country || "" : "");
   const [championshipType, setChampionshipType] = useState(
     editing ? form.championship_type || "Adult" : "Adult",
@@ -99,6 +102,7 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
       location,
       rankable,
       adult_rankable: adultRankable,
+      hide_results: hideResults,
       country,
       championship_type: championshipType,
       championship_status: championshipStatus,
@@ -117,6 +121,7 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
     setLocation("");
     setRankable(false);
     setAdultRankable(false);
+    setHideResults(false);
     setCountry("");
     setChampionshipType("Adult");
     setChampionshipStatus("None");
@@ -187,6 +192,20 @@ const CompetitionForm = ({ onSubmitCompetition, onCancel, form, editing }) => {
           type="checkbox"
           checked={adultRankable}
           onChange={(e) => setAdultRankable(e.target.checked)}
+          style={{
+            transform: "scale(2.5)",
+            verticalAlign: "middle",
+          }}
+        />
+
+        <br />
+        <label style={{ display: "inline-block", width: "160px" }}>
+          Keep results hidden:
+        </label>
+        <input
+          type="checkbox"
+          checked={hideResults}
+          onChange={(e) => setHideResults(e.target.checked)}
           style={{
             transform: "scale(2.5)",
             verticalAlign: "middle",

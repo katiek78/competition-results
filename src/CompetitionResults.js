@@ -1687,6 +1687,41 @@ const CompetitionResults = () => {
     );
   }
 
+  const handleRevealResults = async () => {
+    if (!window.confirm("Reveal results to everyone?")) return;
+    try {
+      await axios({
+        method: "put",
+        url: `${backendUrl}/competition/${id}`,
+        headers: { Authorization: `Bearer ${token}` },
+        data: { hide_results: false },
+      });
+      setCompetitionData((prev) => ({ ...prev, hide_results: false }));
+    } catch (error) {
+      console.error("Error revealing results:", error);
+      alert("Failed to reveal results. Please try again.");
+    }
+  };
+
+  const canSeeHiddenResults =
+    (isAdmin() ||
+      userData.role === "admin" ||
+      userData.role === "superAdmin") &&
+    !isParticipant();
+  if (competitionData?.hide_results && !canSeeHiddenResults) {
+    return (
+      <div style={{ textAlign: "center", padding: "2rem" }}>
+        <h1>{competitionData.name}</h1>
+        <h3>Results for this competition are currently hidden.</h3>
+        {isParticipant() && (
+          <p>
+            <Link to={`/competition_add_score/${id}`}>Enter your scores</Link>
+          </p>
+        )}
+      </div>
+    );
+  }
+
   // Show error state
   if (error) {
     return (
@@ -1726,6 +1761,12 @@ const CompetitionResults = () => {
           </h2>
 
           <div className="highlightButtonsDiv">
+            {competitionData.hide_results && (
+              <p className="highlightText">
+                Results are currently hidden from the public and competitors.{" "}
+                <button onClick={handleRevealResults}>Reveal results</button>
+              </p>
+            )}
             {isAdmin() && (
               <>
                 <p className="highlightText">

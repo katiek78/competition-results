@@ -1787,6 +1787,7 @@ const CompetitionDetail = () => {
                 location: competitionData.location,
                 rankable: competitionData.rankable,
                 adult_rankable: competitionData.adult_rankable,
+                hide_results: competitionData.hide_results,
                 country: competitionData.country,
                 championship_type: competitionData.championship_type,
                 championship_status: competitionData.championship_status,
