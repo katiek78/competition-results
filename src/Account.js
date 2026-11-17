@@ -90,14 +90,15 @@ export default function Account() {
         console.log("No users found");
         return;
       }
-      const existingUser = users.find((u) => u.email === newEmail);
+      const normalizedNewEmail = newEmail.toLowerCase().trim();
+      const existingUser = users.find((u) => u.email.toLowerCase() === normalizedNewEmail);
       if (existingUser) {
         alert(duplicateEmailMessage);
         return;
       }
 
       // Do not take action if new email is same as existing
-      if (newEmail === userData.email) {
+      if (normalizedNewEmail === userData.email.toLowerCase()) {
         alert("Email has not changed.");
         return;
       }

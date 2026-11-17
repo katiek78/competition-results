@@ -31,7 +31,7 @@ export default function Login() {
       method: "post",
       url: `${backendUrl}/login`,
       data: {
-        email,
+        email: email.toLowerCase().trim(),
         password,
       },
     };

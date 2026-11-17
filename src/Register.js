@@ -54,7 +54,7 @@ export default function Register() {
       method: "post",
       url: `${backendUrl}/register`,
       data: {
-        email,
+        email: email.toLowerCase().trim(),
         firstName,
         lastName,
         password,
