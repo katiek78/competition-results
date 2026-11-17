@@ -24,6 +24,7 @@ const Users = () => {
   const token = useMemo(() => getToken(), []);
   const { user } = useUser();
   const [users, setUsers] = useState([]);
+  const [competitions, setCompetitions] = useState(null);
   const [userData, setUserData] = useState({});
   const [editingCountryUserId, setEditingCountryUserId] = useState(null);
   const [editingCountryValue, setEditingCountryValue] = useState("");
@@ -49,9 +50,26 @@ const Users = () => {
 
   // Delete user handler (must be inside Users component)
   const handleDeleteUser = async (userId) => {
+    if (competitions === null) {
+      alert("Unable to load competitions. Please refresh the page and try again.");
+      return;
+    }
+
+    const userCompetitions = competitions.filter((competition) =>
+      Array.isArray(competition.compUsers) &&
+      competition.compUsers.some((competitorId) => String(competitorId) === String(userId)),
+    );
+    const competitionNames = userCompetitions
+      .map((competition) => competition.name || competition.comp_id || "Unnamed competition")
+      .map((name) => `- ${name}`)
+      .join("\n");
+    const competitionMessage = userCompetitions.length
+      ? `\n\nCompetitions:\n${competitionNames}`
+      : "\n\nThis user has not competed in any competitions.";
+
     if (
       !window.confirm(
-        "Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.",
+        `Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.${competitionMessage}`,
       )
     )
       return;
@@ -493,6 +511,20 @@ const Users = () => {
         if (fetchedData) {
           // Do something with the userData
           setUserData(fetchedData);
+
+          setCompetitions(null);
+          axios
+            .get(`${backendUrl}/competitions`)
+            .then((result) => {
+              if (!Array.isArray(result.data.competitions)) {
+                throw new Error("Competition response is missing its competitions list.");
+              }
+              setCompetitions(result.data.competitions);
+            })
+            .catch((error) => {
+              console.error("Error fetching competitions:", error);
+              setCompetitions(null);
+            });
 
           // set configurations
           const configuration = {
