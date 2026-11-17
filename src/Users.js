@@ -51,46 +51,59 @@ const Users = () => {
   // Delete user handler (must be inside Users component)
   const handleDeleteUser = async (userId) => {
     if (competitions === null) {
-      alert("Unable to load competitions. Please refresh the page and try again.");
+      alert(
+        "Unable to load competitions. Please refresh the page and try again.",
+      );
       return;
     }
 
-    const userCompetitions = competitions.filter((competition) =>
-      Array.isArray(competition.compUsers) &&
-      competition.compUsers.some((competitorId) => String(competitorId) === String(userId)),
-    );
-    const competitionNames = userCompetitions
-      .map((competition) => competition.name || competition.comp_id || "Unnamed competition")
-      .map((name) => `- ${name}`)
-      .join("\n");
-    const competitionMessage = userCompetitions.length
-      ? `\n\nCompetitions:\n${competitionNames}`
-      : "\n\nThis user has not competed in any competitions.";
-
-    if (
-      !window.confirm(
-        `Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.${competitionMessage}`,
-      )
-    )
-      return;
     try {
-      // set configurations
+      // Fetch competitions where this user is a participant
+      const result = await axios.get(
+        `${backendUrl}/user/${userId}/competitions`,
+        {
+          headers: {
+            Authorization: `Bearer ${getToken()}`,
+          },
+        },
+      );
+
+      const userCompetitions = result.data;
+
+      const competitionNames = userCompetitions
+        .map(
+          (competition) =>
+            competition.name || competition.comp_id || "Unnamed competition",
+        )
+        .map((name) => `- ${name}`)
+        .join("\n");
+      const competitionMessage = userCompetitions.length
+        ? `\n\nCompetitions:\n${competitionNames}`
+        : "\n\nThis user has not competed in any competitions.";
+
+      if (
+        !window.confirm(
+          `Are you sure you want to delete this user? Their name will be removed from all the competitions they've taken part in.${competitionMessage}`,
+        )
+      )
+        return;
+
       const configuration = {
         method: "delete",
         url: `${backendUrl}/users/${userId}`,
         headers: {
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${getToken()}`,
         },
       };
       const response = await axios(configuration);
       console.log("User deleted:", response.data);
       setUsers((prevUsers) => {
-        // Use filter to exclude the user with the specified userId
         const newUsers = prevUsers.filter((user) => user._id !== userId);
         return newUsers;
       });
     } catch (error) {
       console.error("Error deleting user:", error);
+      alert("Error loading user competitions. Please try again.");
     }
   };
 
@@ -517,7 +530,9 @@ const Users = () => {
             .get(`${backendUrl}/competitions`)
             .then((result) => {
               if (!Array.isArray(result.data.competitions)) {
-                throw new Error("Competition response is missing its competitions list.");
+                throw new Error(
+                  "Competition response is missing its competitions list.",
+                );
               }
               setCompetitions(result.data.competitions);
             })

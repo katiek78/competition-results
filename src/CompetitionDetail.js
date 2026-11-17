@@ -1910,11 +1910,11 @@ const CompetitionDetail = () => {
 
                           // Sort by lastName, then firstName
                           return (
-                            (a.user.lastName || "").localeCompare(
-                              b.user.lastName || "",
-                            ) ||
                             (a.user.firstName || "").localeCompare(
                               b.user.firstName || "",
+                            ) ||
+                            (a.user.lastName || "").localeCompare(
+                              b.user.lastName || "",
                             )
                           );
                         })
