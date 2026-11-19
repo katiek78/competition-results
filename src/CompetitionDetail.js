@@ -864,161 +864,178 @@ const CompetitionDetail = () => {
 
     const selections = {};
     userMatches.forEach((match, idx) => {
-      // Get the value from the select element for this participant
       const selectElem = document.getElementById(`participant-select-${idx}`);
       selections[idx] = selectElem ? selectElem.value : "new";
     });
 
-    // Store original state for rollback
     const originalCompUsers = competitionData.compUsers || [];
     const originalUsers = [...users];
     let createdUserIds = [];
-    let addedToCompetition = [];
+    let allUserIdsToAdd = [];
 
     try {
-      // 1. Prepare arrays for linking and creating
-      const toLink = []; // { participantIdx, userId }
-      const toCreate = []; // participantIdx (from userMatches)
-      const matchedIdxs = new Set();
-
-      userMatches.forEach((match, idx) => {
-        const selection = selections[idx];
-        if (selection && selection !== "new") {
-          toLink.push({ participantIdx: idx, userId: selection });
-          matchedIdxs.add(idx);
-        } else {
-          toCreate.push(idx);
-          matchedIdxs.add(idx);
+      // Map userMatches to their imported competitor indices
+      const userMatchToCompetitorIdx = new Map();
+      userMatches.forEach((match) => {
+        const idx = importedCompetitors.findIndex(
+          (c) =>
+            (c.firstName + (c.lastName ? " " + c.lastName : "")).trim() ===
+            match.participantFullName,
+        );
+        if (idx !== -1) {
+          userMatchToCompetitorIdx.set(match.participantFullName, idx);
         }
       });
 
-      // Find all imported competitors that were NOT matched by name (not in userMatches)
-      const unmatchedCompetitors = importedCompetitors
-        .map((c, idx) => ({ ...c, idx }))
-        .filter((c) => !matchedIdxs.has(c.idx));
+      // Track which competitor indices are being handled
+      const handledCompetitorIndices = new Set(
+        userMatchToCompetitorIdx.values(),
+      );
 
-      // 2. Link participants to existing users (avoid duplicates)
-      if (toLink.length > 0) {
-        const userIds = toLink.map((item) => item.userId);
-        // Only add userIds that are not already in compUsers
+      // Step 1: Process matched users - link existing or create new
+      const newUsersFromMatches = [];
+      const userIdsToLink = [];
+
+      userMatches.forEach((match, matchIdx) => {
+        const selection = selections[matchIdx];
+        const competitorIdx = userMatchToCompetitorIdx.get(
+          match.participantFullName,
+        );
+
+        if (selection && selection !== "new") {
+          userIdsToLink.push(selection);
+        } else {
+          newUsersFromMatches.push({
+            competitorIdx,
+            competitorData: importedCompetitors[competitorIdx],
+          });
+        }
+      });
+
+      // Step 2: Find unmatched competitors (not in userMatches)
+      const unmatchedCompetitorIndices = importedCompetitors
+        .map((_, idx) => idx)
+        .filter((idx) => !handledCompetitorIndices.has(idx));
+
+      const newUsersFromUnmatched = unmatchedCompetitorIndices.map((idx) => ({
+        competitorIdx: idx,
+        competitorData: importedCompetitors[idx],
+      }));
+
+      // Step 3: Create all new users (from both matches and unmatched)
+      const allNewUsersToCreate = [
+        ...newUsersFromMatches,
+        ...newUsersFromUnmatched,
+      ];
+      let createdUserIds_FromMatches = [];
+      let createdUserIds_FromUnmatched = [];
+
+      if (allNewUsersToCreate.length > 0) {
+        const response = await axios.post(
+          `${backendUrl}/users/bulk`,
+          {
+            users: allNewUsersToCreate.map((item) => ({
+              firstName: item.competitorData.firstName,
+              lastName: item.competitorData.lastName,
+              country: item.competitorData.country,
+              birthYear: item.competitorData.birthYear,
+              verified: true,
+              role: "user",
+            })),
+          },
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+
+        const createdIds = response.data.userIds || [];
+        createdUserIds = createdIds;
+
+        createdUserIds_FromMatches = createdIds.slice(
+          0,
+          newUsersFromMatches.length,
+        );
+        createdUserIds_FromUnmatched = createdIds.slice(
+          newUsersFromMatches.length,
+        );
+      }
+
+      // Step 4: Collect all user IDs to add to competition
+      allUserIdsToAdd = [
+        ...userIdsToLink,
+        ...createdUserIds_FromMatches,
+        ...createdUserIds_FromUnmatched,
+      ];
+
+      // Step 5: Add all users to competition (single consolidated PUT)
+      if (allUserIdsToAdd.length > 0) {
         const existingCompUsers = competitionData.compUsers || [];
-        const newUserIds = userIds.filter(
+        const userIdsNotAlreadyInCompetition = allUserIdsToAdd.filter(
           (id) => !existingCompUsers.includes(id),
         );
 
-        if (newUserIds.length > 0) {
+        if (userIdsNotAlreadyInCompetition.length > 0) {
           const updatedCompetition = {
-            compUsers: [...existingCompUsers, ...newUserIds],
+            compUsers: [
+              ...existingCompUsers,
+              ...userIdsNotAlreadyInCompetition,
+            ],
           };
+
           await axios.put(
             `${backendUrl}/competition/${id}`,
             updatedCompetition,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
+            { headers: { Authorization: `Bearer ${token}` } },
           );
+
           setCompetitionData((prev) => ({
             ...prev,
             compUsers: updatedCompetition.compUsers,
           }));
-          addedToCompetition = [...addedToCompetition, ...newUserIds];
         }
       }
 
-      // 3. Create new users for remaining participants (from userMatches)
-      let newUsers = [];
-      if (toCreate.length > 0) {
-        const newUsersData = toCreate.map((idx) => importedCompetitors[idx]);
-        const response = await axios.post(
-          `${backendUrl}/users/bulk`,
-          {
-            users: newUsersData.map((c) => ({
-              firstName: c.firstName,
-              lastName: c.lastName,
-              country: c.country,
-              birthYear: c.birthYear,
-              verified: true,
-              role: "user",
-            })),
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        const createdIds = response.data.userIds || [];
-        createdUserIds = [...createdUserIds, ...createdIds];
+      // Step 6: Update users state with newly created users
+      const allNewUsersForState = [];
 
-        const updatedCompetition = {
-          compUsers: competitionData.compUsers
-            ? [...competitionData.compUsers, ...createdIds]
-            : [...createdIds],
-        };
-        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCompetitionData((prev) => ({
-          ...prev,
-          compUsers: updatedCompetition.compUsers,
-        }));
-        addedToCompetition = [...addedToCompetition, ...createdIds];
+      newUsersFromMatches.forEach((item, mapIdx) => {
+        const userId = createdUserIds_FromMatches[mapIdx];
+        if (userId) {
+          allNewUsersForState.push({
+            _id: userId,
+            firstName: item.competitorData.firstName,
+            lastName: item.competitorData.lastName,
+            country: item.competitorData.country,
+            birthYear: item.competitorData.birthYear,
+            verified: true,
+            role: "user",
+          });
+        }
+      });
 
-        newUsers = createdIds.map((id, idx) => ({
-          _id: id,
-          ...newUsersData[idx],
-          verified: true,
-          role: "user",
-        }));
-        setUsers((prevUsers) => [...prevUsers, ...newUsers]);
-      }
+      newUsersFromUnmatched.forEach((item, mapIdx) => {
+        const userId = createdUserIds_FromUnmatched[mapIdx];
+        if (userId) {
+          allNewUsersForState.push({
+            _id: userId,
+            firstName: item.competitorData.firstName,
+            lastName: item.competitorData.lastName,
+            country: item.competitorData.country,
+            birthYear: item.competitorData.birthYear,
+            verified: true,
+            role: "user",
+          });
+        }
+      });
 
-      // 4. Create new users for all unmatched competitors (not in userMatches)
-      if (unmatchedCompetitors.length > 0) {
-        const response = await axios.post(
-          `${backendUrl}/users/bulk`,
-          {
-            users: unmatchedCompetitors.map((c) => ({
-              firstName: c.firstName,
-              lastName: c.lastName,
-              country: c.country,
-              birthYear: c.birthYear,
-              verified: true,
-              role: "user",
-            })),
-          },
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
-        const createdIds = response.data.userIds || [];
-        createdUserIds = [...createdUserIds, ...createdIds];
-
-        const updatedCompetition = {
-          compUsers: competitionData.compUsers
-            ? [...competitionData.compUsers, ...createdIds]
-            : [...createdIds],
-        };
-        await axios.put(`${backendUrl}/competition/${id}`, updatedCompetition, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setCompetitionData((prev) => ({
-          ...prev,
-          compUsers: updatedCompetition.compUsers,
-        }));
-        addedToCompetition = [...addedToCompetition, ...createdIds];
-
-        const newUsers = createdIds.map((id, idx) => ({
-          _id: id,
-          ...unmatchedCompetitors[idx],
-          verified: true,
-          role: "user",
-        }));
-        setUsers((prevUsers) => [...prevUsers, ...newUsers]);
+      if (allNewUsersForState.length > 0) {
+        setUsers((prevUsers) => [...prevUsers, ...allNewUsersForState]);
       }
 
       alert("Import complete!");
       setShowImportModal(false);
     } catch (err) {
-      // Rollback: Remove any created users and restore competition state
       console.error("Import failed, rolling back:", err);
 
       try {
-        // 1. Delete any users that were created during this import
         if (createdUserIds.length > 0) {
           await Promise.all(
             createdUserIds.map((userId) =>
@@ -1029,16 +1046,11 @@ const CompetitionDetail = () => {
           );
         }
 
-        // 2. Restore original competition users list
-        if (addedToCompetition.length > 0) {
+        if (allUserIdsToAdd.length > 0) {
           await axios.put(
             `${backendUrl}/competition/${id}`,
-            {
-              compUsers: originalCompUsers,
-            },
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
+            { compUsers: originalCompUsers },
+            { headers: { Authorization: `Bearer ${token}` } },
           );
           setCompetitionData((prev) => ({
             ...prev,
@@ -1046,7 +1058,6 @@ const CompetitionDetail = () => {
           }));
         }
 
-        // 3. Restore original users state
         setUsers(originalUsers);
 
         setImportError(
