@@ -6,11 +6,7 @@ import Login from "./Login";
 import axios from "axios";
 import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
-import {
-  fetchCurrentUserData,
-  getToken,
-  COUNTRIES,
-} from "./utils";
+import { fetchCurrentUserData, getToken, COUNTRIES } from "./utils";
 import { backendUrl, duplicateEmailMessage } from "./constants";
 
 export default function Account() {
@@ -90,14 +86,19 @@ export default function Account() {
         return;
       }
       const normalizedNewEmail = newEmail.toLowerCase().trim();
-      const existingUser = users.find((u) => u.email && u.email.toLowerCase() === normalizedNewEmail);
+      const existingUser = users.find(
+        (u) => u.email && u.email.toLowerCase() === normalizedNewEmail,
+      );
       if (existingUser) {
         alert(duplicateEmailMessage);
         return;
       }
 
       // Do not take action if new email is same as existing
-      if (userData.email && normalizedNewEmail === userData.email.toLowerCase()) {
+      if (
+        userData.email &&
+        normalizedNewEmail === userData.email.toLowerCase()
+      ) {
         alert("Email has not changed.");
         return;
       }
@@ -237,20 +238,13 @@ export default function Account() {
               {confirmEmailRequestSent && (
                 <span
                   style={{
-                    color: "#d9534f",
+                    color: "#0d7e20",
                     fontWeight: "bold",
                     display: "flex",
                     alignItems: "center",
                     gap: "8px",
                   }}
                 >
-                  <span
-                    role="img"
-                    aria-label="important"
-                    style={{ fontSize: "1.5em" }}
-                  >
-                    ❗
-                  </span>
                   {confirmEmailRequestSent}
                 </span>
               )}
