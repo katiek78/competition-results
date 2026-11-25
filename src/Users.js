@@ -280,8 +280,7 @@ const Users = () => {
       console.error("Error adding test user:", error);
     }
   };
-    }
-  };
+
   const handleEditCountry = (userId, currentCountry) => {
     setEditingCountryUserId(userId);
     setEditingCountryValue(currentCountry || "");

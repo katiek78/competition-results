@@ -8,11 +8,10 @@ import NameForm from "./NameForm";
 import EmailForm from "./EmailForm";
 import {
   fetchCurrentUserData,
-  generateToken,
   getToken,
   COUNTRIES,
 } from "./utils";
-import { backendUrl, frontendUrl, duplicateEmailMessage } from "./constants";
+import { backendUrl, duplicateEmailMessage } from "./constants";
 
 export default function Account() {
   const [showNameInputs, setShowNameInputs] = useState(false);

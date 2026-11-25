@@ -3,9 +3,8 @@ import { useUser } from "./UserProvider";
 import { Form, Button } from "react-bootstrap";
 import axios from "axios";
 import Cookies from "universal-cookie";
-import { generateToken } from "./utils";
 import EmailForm from "./EmailForm";
-import { backendUrl, frontendUrl } from "./constants";
+import { backendUrl } from "./constants";
 
 const cookies = new Cookies();
 
