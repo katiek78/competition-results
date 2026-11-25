@@ -103,14 +103,6 @@ export default function Account() {
         return;
       }
 
-      // Generate a token to be sent
-      const confirmationToken = generateToken();
-      const confirmationURL = `${frontendUrl}/email-change?token=${confirmationToken}&userId=${user.userId}`;
-
-      // Determine when the token expires
-      const createdAt = new Date();
-      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
-
       // Send a request to the backend to initiate email change
       const configuration = {
         method: "post",
@@ -120,11 +112,6 @@ export default function Account() {
         },
         data: {
           to: newEmail,
-          createdAt,
-          expiresAt,
-          dynamic_link: confirmationURL,
-          token: confirmationToken,
-          userId: user.userId,
         },
       };
 
@@ -138,7 +125,7 @@ export default function Account() {
       setShowEmailInput(false);
     } catch (error) {
       console.error("Error initiating email change:", error);
-      // Handle error (e.g., show an error message to the user)
+      setErrorMessage("Failed to initiate email change. Please try again.");
     }
   };
 
@@ -147,15 +134,6 @@ export default function Account() {
     setConfirmMessage("");
 
     try {
-      // Generate a token to be sent
-      const confirmationToken = generateToken();
-      const confirmationURL = `${frontendUrl}/password-reset?token=${confirmationToken}`;
-
-      // Determine when the token expires
-      const createdAt = new Date();
-      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
-
-      // Send a request to the backend to initiate password change
       const configuration = {
         method: "post",
         url: `${backendUrl}/initiate-password-change`,
@@ -163,10 +141,6 @@ export default function Account() {
           Authorization: `Bearer ${token}`,
         },
         data: {
-          createdAt,
-          expiresAt,
-          dynamic_link: confirmationURL,
-          token: confirmationToken,
           email: userData.email,
         },
       };

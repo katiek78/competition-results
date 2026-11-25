@@ -71,20 +71,10 @@ export default function Login() {
 
   const handlePasswordReset = async (resetEmail) => {
     try {
-      const confirmationToken = generateToken();
-      const confirmationURL = `${frontendUrl}/password-reset?token=${confirmationToken}`;
-
-      const createdAt = new Date();
-      const expiresAt = new Date(Date.now() + 3600 * 1000); // Token expires in 1 hour
-
       const configuration = {
         method: "post",
         url: `${backendUrl}/initiate-password-change`,
         data: {
-          createdAt,
-          expiresAt,
-          dynamic_link: confirmationURL,
-          token: confirmationToken,
           email: resetEmail,
         },
       };

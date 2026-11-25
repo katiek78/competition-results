@@ -244,7 +244,7 @@ const Users = () => {
         );
       }
 
-      // If email is present, send verification email with password and suggestion
+      // If email is present, send verification email separately
       if (userPayload.email && userId) {
         try {
           await axios.post(
@@ -278,6 +278,8 @@ const Users = () => {
       }
     } catch (error) {
       console.error("Error adding test user:", error);
+    }
+  };
     }
   };
   const handleEditCountry = (userId, currentCountry) => {

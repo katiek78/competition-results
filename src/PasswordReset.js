@@ -10,6 +10,7 @@ const PasswordReset = () => {
   const token = urlParams.get("token");
   const [password, setPassword] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -29,52 +30,59 @@ const PasswordReset = () => {
 
       await axios(configuration);
       setSuccessMessage("Your password has been reset successfully.");
+      setErrorMessage("");
     } catch (error) {
       console.error("Error resetting password:", error);
-      setSuccessMessage(
-        "Sorry, an error occurred. Your password has not been reset. " +
-          error.response.data.message
-      );
+      if (error.response?.status === 400 && error.response?.data?.message) {
+        setErrorMessage(error.response.data.message);
+      } else {
+        setErrorMessage(
+          "Sorry, an error occurred. Your password has not been reset. " +
+            (error.response?.data?.message || "Please try again.")
+        );
+      }
+      setSuccessMessage("");
     }
   };
 
   useEffect(() => {
-    //check token validity
     if (!token) {
-      setSuccessMessage("The link has expired or is invalid.");
+      setErrorMessage("The link has expired or is invalid.");
     }
   }, [token]);
 
   return (
     <div>
       <h1 className="text-center">Password reset</h1>
-      <Form onSubmit={(e) => handleSubmit(e)}>
-        {/* password */}
-        <Form.Group controlId="formBasicPassword">
-          <Form.Label>New password</Form.Label>
-          <Form.Control
-            type="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your new password"
-          />
-        </Form.Group>
+      {errorMessage ? (
+        <div className="alert alert-danger" role="alert">
+          {errorMessage}
+        </div>
+      ) : (
+        <Form onSubmit={(e) => handleSubmit(e)}>
+          <Form.Group controlId="formBasicPassword">
+            <Form.Label>New password</Form.Label>
+            <Form.Control
+              type="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your new password"
+            />
+          </Form.Group>
 
-        {/* submit button */}
-        <Button
-          variant="primary"
-          type="submit"
-          onClick={(e) => handleSubmit(e)}
-        >
-          Reset my password
-        </Button>
-
-        {/* {register && (
-          <p className="text-success">Registered successfully</p>
-        )} */}
-      </Form>
-      <p className="success-message">{successMessage}</p>
+          <Button
+            variant="primary"
+            type="submit"
+            onClick={(e) => handleSubmit(e)}
+          >
+            Reset my password
+          </Button>
+        </Form>
+      )}
+      {successMessage && (
+        <p className="success-message">{successMessage}</p>
+      )}
       <br />
       <Link to={`/login/`}>Log in</Link>
     </div>
