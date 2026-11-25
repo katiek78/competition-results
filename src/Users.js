@@ -267,15 +267,13 @@ const Users = () => {
         }
       }
 
-      // Merge the original user data with the returned userId
-      const userToAdd = { ...userPayload, _id: userId };
-      // Only add to state if verified (or verified is undefined for legacy)
-      if (userToAdd.verified !== false) {
-        setUsers((prevUsers) => {
-          const newUsers = [...prevUsers, userToAdd];
-          return newUsers;
-        });
-      }
+      // Merge the backend response with the original user data
+      const userToAdd = { ...userPayload, ...response.data, _id: userId };
+      // Always add to state so admins can see all users (verified and unverified)
+      setUsers((prevUsers) => {
+        const newUsers = [...prevUsers, userToAdd];
+        return newUsers;
+      });
     } catch (error) {
       console.error("Error adding test user:", error);
     }

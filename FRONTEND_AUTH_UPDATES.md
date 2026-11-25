@@ -85,7 +85,7 @@ Updated frontend to work with new backend auth flow where:
 
 - [x] Password reset: Generate valid flow end-to-end
 - [ ] Password reset: Test expired token handling (400 error)
-- [ ] Email change: Generate valid flow end-to-end
+- [x] Email change: Generate valid flow end-to-end
 - [ ] Email change: Test expired token handling (404 error)
 - [ ] Email change: Verify user forced to re-login
 - [ ] Admin user creation: Verify verification email sent
