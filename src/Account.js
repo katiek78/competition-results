@@ -90,14 +90,14 @@ export default function Account() {
         return;
       }
       const normalizedNewEmail = newEmail.toLowerCase().trim();
-      const existingUser = users.find((u) => u.email.toLowerCase() === normalizedNewEmail);
+      const existingUser = users.find((u) => u.email && u.email.toLowerCase() === normalizedNewEmail);
       if (existingUser) {
         alert(duplicateEmailMessage);
         return;
       }
 
       // Do not take action if new email is same as existing
-      if (normalizedNewEmail === userData.email.toLowerCase()) {
+      if (userData.email && normalizedNewEmail === userData.email.toLowerCase()) {
         alert("Email has not changed.");
         return;
       }
