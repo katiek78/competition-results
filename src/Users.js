@@ -214,15 +214,9 @@ const Users = () => {
   const saveUser = async (newUser) => {
     try {
       let userPayload = { ...newUser };
-      let generatedPassword = "";
-      // If no email, mark as verified
-      if (!userPayload.email) {
-        userPayload.verified = true;
-      } else {
-        // If email, generate a strong password and set it
-        generatedPassword = generateStrongPassword();
-        userPayload.password = generatedPassword;
-      }
+      // Backend handles password creation during account activation
+      // No password needed for account creation
+      
       // set configurations
       const configuration = {
         method: "post",
@@ -244,28 +238,10 @@ const Users = () => {
         );
       }
 
-      // If email is present, send verification email separately
-      if (userPayload.email && userId) {
-        try {
-          await axios.post(
-            `${backendUrl}/send-verification-email`,
-            {
-              email: userPayload.email,
-              userId,
-              password: generatedPassword,
-              message: `Your account has been created. Please log in using this password and change it after your first login.`,
-            },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-          console.log("Verification email sent to user.");
-        } catch (err) {
-          console.error("Error sending verification email:", err);
-        }
-      }
+      // Backend automatically sends verification email; no separate call needed
+      console.log(
+        "User created. Verification email will be sent by backend.",
+      );
 
       // Merge the backend response with the original user data
       const userToAdd = { ...userPayload, ...response.data, _id: userId };
@@ -275,7 +251,7 @@ const Users = () => {
         return newUsers;
       });
     } catch (error) {
-      console.error("Error adding test user:", error);
+      console.error("Error adding user:", error);
     }
   };
 
@@ -331,17 +307,6 @@ const Users = () => {
       console.error("Error updating user email:", error);
     }
   };
-
-  // Helper to generate a strong password
-  function generateStrongPassword(length = 12) {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=";
-    let password = "";
-    for (let i = 0; i < length; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  }
 
   const handleSaveCountry = async (userId) => {
     try {
