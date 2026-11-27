@@ -56,6 +56,9 @@ const CompetitionDetail = () => {
   const [noWrapOption, setNoWrapOption] = useState(false);
   // Binary block height option
   const [binaryBlockHeight, setBinaryBlockHeight] = useState(1);
+  // Add discipline modal state
+  const [showAddDisciplineModal, setShowAddDisciplineModal] = useState(false);
+  const [selectedDiscipline, setSelectedDiscipline] = useState("");
 
   // Utility: Find possible matches for imported participants
   // importedParticipants: [{ fullName, country, ... }]
@@ -1103,6 +1106,34 @@ const CompetitionDetail = () => {
     }
   };
 
+  const addDiscipline = async (disciplineRef) => {
+    try {
+      const updatedDisciplines = [...(competitionData.disciplines || []), disciplineRef];
+
+      const response = await axios.put(
+        `${backendUrl}/competition/${competitionData._id}`,
+        {
+          disciplines: updatedDisciplines,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      console.log("Competition saved:", response.data);
+      setCompetitionData((prevData) => ({
+        ...prevData,
+        disciplines: updatedDisciplines,
+      }));
+      setShowAddDisciplineModal(false);
+      setSelectedDiscipline("");
+    } catch (error) {
+      console.error("Error saving competition:", error);
+      alert("Failed to add discipline. Please try again.");
+    }
+  };
+
   const handleDownloadFile = (discipline) => {
     if (discipline.includes("N") || discipline.includes("B")) {
       //download a text file with all the digits for this discipline
@@ -2106,7 +2137,25 @@ const CompetitionDetail = () => {
                 </Col>
 
                 <Col>
-                  <h2>Disciplines:</h2>
+                  <h2>
+                    Disciplines:
+                    {(userData.role === "superAdmin" ||
+                      (competitionData.compAdmins &&
+                        competitionData.compAdmins.includes(userData._id) &&
+                        !(
+                          competitionData.compUsers &&
+                          competitionData.compUsers.includes(userData._id)
+                        ))) && (
+                      <Button
+                        variant="success"
+                        size="sm"
+                        onClick={() => setShowAddDisciplineModal(true)}
+                        style={{ marginLeft: 12, fontSize: "0.8em" }}
+                      >
+                        + Add Discipline
+                      </Button>
+                    )}
+                  </h2>
                   <table className="setupTable disciplineTable niceTable">
                     <thead>
                       <tr>
@@ -2522,6 +2571,47 @@ const CompetitionDetail = () => {
             )}
           </Modal.Footer>
         </Form>
+      </Modal>
+      <Modal show={showAddDisciplineModal} onHide={() => setShowAddDisciplineModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Discipline</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Select a discipline to add:</Form.Label>
+            <Form.Select
+              value={selectedDiscipline}
+              onChange={(e) => setSelectedDiscipline(e.target.value)}
+            >
+              <option value="">-- Choose a discipline --</option>
+              {disciplines
+                .filter((d) => !competitionData.disciplines?.includes(d.ref))
+                .map((discipline) => (
+                  <option key={discipline.ref} value={discipline.ref}>
+                    {discipline.label}
+                  </option>
+                ))}
+            </Form.Select>
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setShowAddDisciplineModal(false);
+              setSelectedDiscipline("");
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => addDiscipline(selectedDiscipline)}
+            disabled={!selectedDiscipline}
+          >
+            Add Discipline
+          </Button>
+        </Modal.Footer>
       </Modal>
     </>
   );
