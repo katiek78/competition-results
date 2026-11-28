@@ -39,8 +39,6 @@ const CompetitionDetail = () => {
   const [competitionData, setCompetitionData] = useState({});
   const [users, setUsers] = useState([]);
   const [competitionParticipants, setCompetitionParticipants] = useState([]);
-  const [participantsLoading, setParticipantsLoading] = useState(false);
-  const [participantsError, setParticipantsError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showParticipantForm, setShowParticipantForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
@@ -840,10 +838,10 @@ const CompetitionDetail = () => {
     // Fetch existing competition participants (all, regardless of verification status)
     // This is used to resolve names in the participants table for unverified competitors
     if (!id) return;
-    
+
     setParticipantsLoading(true);
     setParticipantsError(false);
-    
+
     const configuration = {
       method: "get",
       url: `${backendUrl}/users/public/${id}`,
@@ -851,7 +849,7 @@ const CompetitionDetail = () => {
         Authorization: `Bearer ${token}`,
       },
     };
-    
+
     axios(configuration)
       .then((result) => {
         setCompetitionParticipants(result.data.users || []);
@@ -1142,7 +1140,10 @@ const CompetitionDetail = () => {
 
   const addDiscipline = async (disciplineRef) => {
     try {
-      const updatedDisciplines = [...(competitionData.disciplines || []), disciplineRef];
+      const updatedDisciplines = [
+        ...(competitionData.disciplines || []),
+        disciplineRef,
+      ];
 
       const response = await axios.put(
         `${backendUrl}/competition/${competitionData._id}`,
@@ -2606,7 +2607,10 @@ const CompetitionDetail = () => {
           </Modal.Footer>
         </Form>
       </Modal>
-      <Modal show={showAddDisciplineModal} onHide={() => setShowAddDisciplineModal(false)}>
+      <Modal
+        show={showAddDisciplineModal}
+        onHide={() => setShowAddDisciplineModal(false)}
+      >
         <Modal.Header closeButton>
           <Modal.Title>Add Discipline</Modal.Title>
         </Modal.Header>
