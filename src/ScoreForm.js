@@ -54,10 +54,11 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
   }, [competitionData, userHasNotAddedScoreForThisDiscipline]);
 
   useEffect(() => {
-    // set configurations
+    // Fetch existing competition participants (all, regardless of verification status)
+    // This allows arbiters to enter scores for unverified competitors
     const configuration = {
       method: "get",
-      url: `${backendUrl}/users`,
+      url: `${backendUrl}/users/public/${competitionId}`,
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -65,17 +66,13 @@ const ScoreForm = ({ onSubmitScore, form, editing, competitionId }) => {
     // make the API call
     axios(configuration)
       .then((result) => {
-        // Filter out unverified users (treat undefined as verified for legacy users)
-        const verifiedUsers = result.data.users.filter(
-          (user) => user.verified !== false
-        );
-        setUsers(verifiedUsers);
+        setUsers(result.data.users || []);
       })
       .catch((error) => {
         error = new Error();
         console.log(error);
       });
-  }, []);
+  }, [competitionId]);
 
   useEffect(() => {
     if (editing) return;
