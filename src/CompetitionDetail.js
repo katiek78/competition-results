@@ -38,6 +38,9 @@ const CompetitionDetail = () => {
   const { id } = useParams();
   const [competitionData, setCompetitionData] = useState({});
   const [users, setUsers] = useState([]);
+  const [competitionParticipants, setCompetitionParticipants] = useState([]);
+  const [participantsLoading, setParticipantsLoading] = useState(false);
+  const [participantsError, setParticipantsError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showParticipantForm, setShowParticipantForm] = useState(false);
   const [showAdminForm, setShowAdminForm] = useState(false);
@@ -832,6 +835,37 @@ const CompetitionDetail = () => {
         console.log(error);
       });
   }, [token]);
+
+  useEffect(() => {
+    // Fetch existing competition participants (all, regardless of verification status)
+    // This is used to resolve names in the participants table for unverified competitors
+    if (!id) return;
+    
+    setParticipantsLoading(true);
+    setParticipantsError(false);
+    
+    const configuration = {
+      method: "get",
+      url: `${backendUrl}/users/public/${id}`,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    
+    axios(configuration)
+      .then((result) => {
+        setCompetitionParticipants(result.data.users || []);
+        setParticipantsError(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching competition participants:", error);
+        setParticipantsError(true);
+        // Keep existing data on error to avoid showing "Deleted User" for fetch failures
+      })
+      .finally(() => {
+        setParticipantsLoading(false);
+      });
+  }, [id, token]);
 
   const handleDeleteAdmin = (id) => {
     if (window.confirm("Are you sure you wish to delete this admin?"))
@@ -1938,8 +1972,8 @@ const CompetitionDetail = () => {
                     <tbody>
                       {competitionData.compUsers
                         ?.map((userId) => {
-                          // Find the user with the matching ID in the users array
-                          const user = users.find(
+                          // Find the user with the matching ID in competitionParticipants (includes unverified)
+                          const user = competitionParticipants.find(
                             (user) => user._id === userId,
                           );
                           return { userId, user };
