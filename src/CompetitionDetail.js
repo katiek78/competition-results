@@ -838,10 +838,7 @@ const CompetitionDetail = () => {
     // Fetch existing competition participants (all, regardless of verification status)
     // This is used to resolve names in the participants table for unverified competitors
     if (!id) return;
-
-    setParticipantsLoading(true);
-    setParticipantsError(false);
-
+    
     const configuration = {
       method: "get",
       url: `${backendUrl}/users/public/${id}`,
@@ -849,19 +846,14 @@ const CompetitionDetail = () => {
         Authorization: `Bearer ${token}`,
       },
     };
-
+    
     axios(configuration)
       .then((result) => {
         setCompetitionParticipants(result.data.users || []);
-        setParticipantsError(false);
       })
       .catch((error) => {
         console.error("Error fetching competition participants:", error);
-        setParticipantsError(true);
         // Keep existing data on error to avoid showing "Deleted User" for fetch failures
-      })
-      .finally(() => {
-        setParticipantsLoading(false);
       });
   }, [id, token]);
 
